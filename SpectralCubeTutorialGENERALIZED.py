@@ -1,5 +1,5 @@
 
-# 5.03.16 - Spectral Cube Tutorial
+# 5.04.16 - Spectral Cube Tutorial - GENERALIZED
 
 
 from spectral_cube import SpectralCube

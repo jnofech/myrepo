@@ -70,6 +70,8 @@ def image_make():
 	plt.title('S_2 for dz = 0')
 	plt.xlabel('dx')
 	plt.ylabel('dy')
+	
+	plt.colorbar()
 
 	plt.subplot(223)
 	plt.imshow(S_2[2*dX], interpolation = 'none', extent = [-dX,dX,-dY,dY], vmin=0, vmax=S_2.max(), aspect='auto')

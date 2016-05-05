@@ -6,13 +6,15 @@ from spectral_cube import SpectralCube
 import matplotlib.pyplot as plt
 import astropy.units as u
 import numpy as np
+import scipy.stats as ss
+import math
 
 
 def image_make():
 	cube12 = SpectralCube.read("paws-30m-12co10-23as-cube.fits")
 	cube13 = SpectralCube.read("paws-30m-13co10-23as-cube.fits")
-	subcube12 = cube12[:,50:120,40:60]
-	subcube13 = cube13[:,50:120,40:60]
+	subcube12 = cube12[:,50:100,50:100]
+	subcube13 = cube13[:,50:100,50:100]
 
 	# 1. Extracting a RECTANGULAR subcube
 	# 2. Compute a moment0 map (add up in the spectral direction using `moment0 = subcube.moment(0)` Remember to take `moment0.value` for what follows.
@@ -22,9 +24,11 @@ def image_make():
 
 	moment012 = subcube12.moment(0,axis=0)
 	moment013 = subcube13.moment(0,axis=0)
+	moment012 = subcube12.apply_numpy_function(np.nanmax,axis=0)*u.K
+	moment013 = subcube13.apply_numpy_function(np.nanmax,axis=0)*u.K
 
 
-	dX = 10                      # This is simply the maximum absolute value of "dx". So if dX = 1, then dx = {-1,0,1}.
+	dX = 25                      # This is simply the maximum absolute value of "dx". So if dX = 1, then dx = {-1,0,1}.
 	dY = np.copy(dX)                      # Same as above, but for "dy". For simplicity, let it be the same as dX.
 	nmax = abs(2*dX)+1
 	S_2_12 = np.zeros([nmax,nmax])
@@ -77,7 +81,6 @@ def image_make():
 		
 	
 	plt.figure(1)
-	plt.figure(1)
 	plt.subplot(121)
 	plt.imshow(S_2_12, interpolation = 'none', extent = [-dX,dX,-dY,dY], vmin=0, vmax=S_2_13.max(), aspect='auto')
 	plt.title('S_2 for 12CO')
@@ -93,4 +96,29 @@ def image_make():
 	plt.savefig('image1213.png')
 
 
+	# Goal: Create a 1D plot, for each of 12CO and 13CO, of the average value of structure function (inside a thin ring
+	#       at radius r) versus radius.
+	x = np.linspace(-dX,dX,nmax)
+	y = np.linspace(-dY,dY,nmax)
+	xx, yy = np.meshgrid(x,y)
 
+	maxradius = math.floor( (dX**2 + dY**2)**0.5 )
+	mult = 1                        # Increases or decreases the numbers of bins used. Most accurate results at mult=1.
+	reselements = math.floor(mult*maxradius)
+		                        # This is the number of "resolution elements" (i.e. the number of points
+		                        #      on the struct_funct vs. radius plot) that we're dealing with.
+
+	radiusmap = (xx**2 + yy**2)**0.5
+	struct_funct12, edges12, counts12 = ss.binned_statistic(
+	    radiusmap[radiusmap<maxradius], S_2_12[radiusmap<maxradius], statistic=np.nanmean, bins = reselements)
+	struct_funct13, edges13, counts13 = ss.binned_statistic(
+	    radiusmap[radiusmap<maxradius], S_2_13[radiusmap<maxradius], statistic=np.nanmean, bins = reselements)
+
+	plt.figure(2)
+	plt.plot(np.arange(reselements)/mult,struct_funct12,'r.',label='12CO')
+	plt.plot(np.arange(reselements)/mult,struct_funct13,'b-',label='13CO')
+	plt.title('Average Structure Function vs. Radial "Distance" from Center of S_2 Plots')
+	plt.xlabel(' "Radius" ')
+	plt.ylabel('Average S_2')
+	plt.legend(loc='upper left')
+	plt.savefig('plot1213.png')

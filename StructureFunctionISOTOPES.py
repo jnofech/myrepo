@@ -30,11 +30,9 @@ def image_make():
 	S_2_12 = np.zeros([nmax,nmax])
 	S_2_13 = np.zeros([nmax,nmax])
 
-	n12 = moment012.shape[(0)]     # The matrix "M" referred to above has n rows.
-	m12 = moment012.shape[(1)]     # The matrix "M" referred to above has m columns.
+	n12,m12 = moment012.shape     # The matrix "M" referred to above has n rows and m columns.
 
-	n13 = moment013.shape[(0)]
-	m13 = moment013.shape[(1)]
+	n13,m13 = moment013.shape
 
 
 	for dx in range (-dX,dX+1):
@@ -44,51 +42,55 @@ def image_make():
 		P12 = np.arange(n12*m12).reshape(n12,m12) # This will be used to track the shifting "pixels" of M(r) and M(r+dr).
 		D12 = np.zeros([n12,m12])   # This will be the difference between M(r) and M(r+dr).
 		
-		D12 = M12 - np.roll(np.roll(M12,-dy,axis=0),-dx,axis=1)
+		RollMap12 = np.roll(np.roll(M12,-dy,axis=0),-dx,axis=1)
+		D12 = M12 - RollMap12
 		
 		goodpix12 = (P12 - np.roll(P12,-dy,axis=0) == -dy*m12) * (P12 - np.roll(P12,-dx,axis=1) == -dx)
 		        # Note: The "-dy*m" is because, for P, a pixel's value is separated from that of a
 		        #        pixel above or below it by exactly m. So, the difference between a pixel's value and
 		        #        that of a pixel "dy" rows below is simply dy*m.
 		        # In "goodpix", pixels that have wrapped around are treated as "False".
-		goodpix12 = goodpix12.astype('float')
-		goodpix12[goodpix12==0] = 'nan'     # Now, we can disregard the wraparound pixels entirely.
 		        
-		S_2_12[(dy+dY,dx+dX)] = (np.nanmean(D12 * goodpix12))**2
+		OrigMapPower12 = (np.nanmean(M12[goodpix12])**2)
+		RollMapPower12 = (np.nanmean(RollMap12[goodpix12])**2)
+		
+		S_2_12[(dy+dY,dx+dX)] = (np.nanmean(D12[goodpix12])**2) / (OrigMapPower12 + RollMapPower12)
 		
 		
 		M13 = moment013.value         # This is the matrix "M" referred to above.
 		P13 = np.arange(n13*m13).reshape(n13,m13) # This will be used to track the shifting "pixels" of M(r) and M(r+dr).
 		D13 = np.zeros([n13,m13])   # This will be the difference between M(r) and M(r+dr).
 		
-		D13 = M13 - np.roll(np.roll(M13,-dy,axis=0),-dx,axis=1)
+		RollMap13 = np.roll(np.roll(M13,-dy,axis=0),-dx,axis=1)
+		D13 = M13 - RollMap13
 		
 		goodpix13 = (P13 - np.roll(P13,-dy,axis=0) == -dy*m13) * (P13 - np.roll(P13,-dx,axis=1) == -dx)
 		        # Note: The "-dy*m" is because, for P, a pixel's value is separated from that of a
 		        #        pixel above or below it by exactly m. So, the difference between a pixel's value and
 		        #        that of a pixel "dy" rows below is simply dy*m.
 		        # In "goodpix", pixels that have wrapped around are treated as "False".
-		goodpix13 = goodpix13.astype('float')
-		goodpix13[goodpix13==0] = 'nan'     # Now, we can disregard the wraparound pixels entirely.
 		        
-		S_2_13[(dy+dY,dx+dX)] = (np.nanmean(D13 * goodpix13))**2
+		OrigMapPower13 = (np.nanmean(M13[goodpix13])**2)
+		RollMapPower13 = (np.nanmean(RollMap13[goodpix13])**2)
+		
+		S_2_13[(dy+dY,dx+dX)] = (np.nanmean(D13[goodpix13])**2) / (OrigMapPower13 + RollMapPower13)
 		
 	
 	plt.figure(1)
-	plt.imshow(S_2_12, interpolation = 'none', extent = [-dX,dX,-dY,dY])
-	plt.colorbar()
+	plt.figure(1)
+	plt.subplot(121)
+	plt.imshow(S_2_12, interpolation = 'none', extent = [-dX,dX,-dY,dY], vmin=0, vmax=S_2_13.max(), aspect='auto')
 	plt.title('S_2 for 12CO')
 	plt.xlabel('dx')
 	plt.ylabel('dy')
-	plt.savefig('image12.png')
 
-	plt.figure(2)
-	plt.imshow(S_2_13, interpolation = 'none', extent = [-dX,dX,-dY,dY])
-	plt.colorbar()
-	plt.title('S_2 for 13CO')
+	plt.subplot(122)
+	plt.imshow(S_2_13, interpolation = 'none', extent = [-dX,dX,-dY,dY], vmin=0, vmax=S_2_13.max(), aspect='auto')
+	plt.title('S_2 for 13C0')
 	plt.xlabel('dx')
 	plt.ylabel('dy')
-	plt.savefig('image13.png')
+	plt.colorbar()
+	plt.savefig('image1213.png')
 
 
 

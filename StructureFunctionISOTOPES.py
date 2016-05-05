@@ -97,7 +97,7 @@ def image_make():
 
 
 	# Goal: Create a 1D plot, for each of 12CO and 13CO, of the average value of structure function (inside a thin ring
-	#       at radius r) versus radius.
+	#       at radius r) versus radius. The plot includes a shaded region indicating standard deviation.
 	x = np.linspace(-dX,dX,nmax)
 	y = np.linspace(-dY,dY,nmax)
 	xx, yy = np.meshgrid(x,y)
@@ -111,14 +111,34 @@ def image_make():
 	radiusmap = (xx**2 + yy**2)**0.5
 	struct_funct12, edges12, counts12 = ss.binned_statistic(
 	    radiusmap[radiusmap<maxradius], S_2_12[radiusmap<maxradius], statistic=np.nanmean, bins = reselements)
+	std12, edges12, counts12 = ss.binned_statistic(
+	    radiusmap[radiusmap<maxradius], S_2_12[radiusmap<maxradius], statistic=np.std, bins = reselements)
+
 	struct_funct13, edges13, counts13 = ss.binned_statistic(
 	    radiusmap[radiusmap<maxradius], S_2_13[radiusmap<maxradius], statistic=np.nanmean, bins = reselements)
+	std13, edges13, counts13 = ss.binned_statistic(
+	    radiusmap[radiusmap<maxradius], S_2_13[radiusmap<maxradius], statistic=np.std, bins = reselements)
 
+		# PLOTTING
 	plt.figure(2)
-	plt.plot(np.arange(reselements)/mult,struct_funct12,'r.',label='12CO')
-	plt.plot(np.arange(reselements)/mult,struct_funct13,'b-',label='13CO')
+	plt.plot(np.arange(reselements)/mult,struct_funct12,'r.',label='12CO average')
+	plt.plot(np.arange(reselements)/mult,struct_funct13,'b.',label='13CO average')
+
+	plt.fill_between(np.arange(reselements)/mult, struct_funct12+std12, struct_funct13+std13, where=struct_funct12+std12 >= struct_funct13+std13, facecolor='red')
+	plt.fill_between(np.arange(reselements)/mult, struct_funct12-std12, struct_funct13-std13, where=struct_funct12-std12 <= struct_funct13-std13, facecolor='red')
+
+	plt.fill_between(np.arange(reselements)/mult, struct_funct12+std12, struct_funct13+std13, where=struct_funct13+std13 >= struct_funct12+std12, facecolor='blue')
+	plt.fill_between(np.arange(reselements)/mult, struct_funct12-std12, struct_funct13-std13, where=struct_funct13-std13 <= struct_funct12-std12, facecolor='blue')
+
+	plt.fill_between(np.arange(reselements)/mult, struct_funct12-std12, struct_funct13+std13, where=struct_funct13+std13 >= struct_funct12-std12, facecolor='purple')
+	plt.fill_between(np.arange(reselements)/mult, struct_funct12-std12, struct_funct13+std13, where=struct_funct12+std12 >= struct_funct13-std13, facecolor='purple')
+
+	# The region within the 12CO average's standard deviation is RED. The region within the 13CO average's standard deviation is BLUE.
+	# The overlapping region is PURPLE.
+
 	plt.title('Average Structure Function vs. Radial "Distance" from Center of S_2 Plots')
 	plt.xlabel(' "Radius" ')
 	plt.ylabel('Average S_2')
 	plt.legend(loc='upper left')
+
 	plt.savefig('plot1213.png')

@@ -19,7 +19,7 @@ def image_make():
 
 	moment0 = subcube.moment(0,axis=0)
 
-
+ 
 	dX = 1                      		# This is simply the maximum absolute value of "dx". So if dX = 1, then dx = {-1,0,1}.
 	dY = dX                      		# Same as above, but for "dy". For simplicity, let it be the same as dX.
 	n = abs(2*dX)+1

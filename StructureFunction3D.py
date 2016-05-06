@@ -71,6 +71,8 @@ def image_make():
 	plt.title('S_2 for dV = 0')
 	plt.xlabel('dx')
 	plt.ylabel('dy')
+	
+	plt.colorbar()
 
 	plt.colorbar()
 

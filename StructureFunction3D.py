@@ -14,7 +14,7 @@ def image_make():
 	cube = SpectralCube.read("paws_norot.fits")
 	data = cube.filled_data[:]   # Pulls "cube"'s information (position, spectral info (?)) into a 3D Numpy array.
 
-	subcube = cube[30:80,400:500,600:700]
+	subcube = cube[40:60,400:500,600:700]
 
 	# 1. Extracting a 3D subcube
 	# 2. Compute a `data0` map (add up in the spectral direction using `data0 = subcube.filled_data[:]` Remember to take `data0.value` for what follows.
@@ -52,10 +52,10 @@ def image_make():
 		    #goodpix = goodpix.astype('float')
 		    #goodpix[goodpix==0] = 'nan'     # Now, we can disregard the wraparound pixels entirely.
 
-		    OrigMapPower = np.nanmean((M[goodpix])**2)
-		    RollMapPower = np.nanmean((RollMap[goodpix])**2)
+		    OrigMapPower = np.nanmean(M[goodpix]**2)
+		    RollMapPower = np.nanmean(RollMap[goodpix]**2)
 
-		    S_2[(dz+dZ,dy+dY,dx+dX)] = (np.nanmean(D[goodpix])**2) / (OrigMapPower + RollMapPower)
+		    S_2[(dz+dZ,dy+dY,dx+dX)] = (np.nanmean(D[goodpix]**2)) / (OrigMapPower + RollMapPower)
 		
 	       
 	# 2D Display (layer by layer)
@@ -114,5 +114,5 @@ def image_make():
 	plt.title('Avg. Struct. Funct. vs. Radial "Distance" from Center of S_2 Plots')
 	plt.xlabel(' "Radius" ')
 	plt.ylabel('Average S_2')
-	plt.legend(loc='upper left')
+	plt.legend(loc='lower right')
 	plt.savefig('plot3Dcube.png')

@@ -28,7 +28,7 @@ def image_make():
 	moment013 = subcube13.apply_numpy_function(np.nanmax,axis=0)*u.K
 
 
-	dX = 25                      # This is simply the maximum absolute value of "dx". So if dX = 1, then dx = {-1,0,1}.
+	dX = 30                      # This is simply the maximum absolute value of "dx". So if dX = 1, then dx = {-1,0,1}.
 	dY = np.copy(dX)                      # Same as above, but for "dy". For simplicity, let it be the same as dX.
 	nmax = abs(2*dX)+1
 	S_2_12 = np.zeros([nmax,nmax])
@@ -55,10 +55,10 @@ def image_make():
 		        #        that of a pixel "dy" rows below is simply dy*m.
 		        # In "goodpix", pixels that have wrapped around are treated as "False".
 		        
-		OrigMapPower12 = (np.nanmean(M12[goodpix12])**2)
-		RollMapPower12 = (np.nanmean(RollMap12[goodpix12])**2)
+		OrigMapPower12 = (np.nanmean(M12[goodpix12]**2))
+		RollMapPower12 = (np.nanmean(RollMap12[goodpix12]**2))
 		
-		S_2_12[(dy+dY,dx+dX)] = (np.nanmean(D12[goodpix12])**2) / (OrigMapPower12 + RollMapPower12)
+		S_2_12[(dy+dY,dx+dX)] = (np.nanmean(D12[goodpix12]**2)) / (OrigMapPower12 + RollMapPower12)
 		
 		
 		M13 = moment013.value         # This is the matrix "M" referred to above.
@@ -74,21 +74,21 @@ def image_make():
 		        #        that of a pixel "dy" rows below is simply dy*m.
 		        # In "goodpix", pixels that have wrapped around are treated as "False".
 		        
-		OrigMapPower13 = (np.nanmean(M13[goodpix13])**2)
-		RollMapPower13 = (np.nanmean(RollMap13[goodpix13])**2)
+		OrigMapPower13 = (np.nanmean(M13[goodpix13]**2))
+		RollMapPower13 = (np.nanmean(RollMap13[goodpix13]**2))
 		
-		S_2_13[(dy+dY,dx+dX)] = (np.nanmean(D13[goodpix13])**2) / (OrigMapPower13 + RollMapPower13)
+		S_2_13[(dy+dY,dx+dX)] = (np.nanmean(D13[goodpix13]**2)) / (OrigMapPower13 + RollMapPower13)
 		
 	
 	plt.figure(1)
 	plt.subplot(121)
-	plt.imshow(S_2_12, interpolation = 'none', extent = [-dX,dX,-dY,dY], vmin=0, vmax=S_2_13.max(), aspect='auto')
+	plt.imshow(S_2_12, interpolation = 'none', extent = [-dX,dX,-dY,dY], vmin=0, vmax=max(S_2_12.max(),S_2_13.max()), aspect='auto')
 	plt.title('S_2 for 12CO')
 	plt.xlabel('dx')
 	plt.ylabel('dy')
 
 	plt.subplot(122)
-	plt.imshow(S_2_13, interpolation = 'none', extent = [-dX,dX,-dY,dY], vmin=0, vmax=S_2_13.max(), aspect='auto')
+	plt.imshow(S_2_13, interpolation = 'none', extent = [-dX,dX,-dY,dY], vmin=0, vmax=max(S_2_12.max(),S_2_13.max()), aspect='auto')
 	plt.title('S_2 for 13C0')
 	plt.xlabel('dx')
 	plt.ylabel('dy')
@@ -96,8 +96,9 @@ def image_make():
 	plt.savefig('image1213.png')
 
 
+
 	# Goal: Create a 1D plot, for each of 12CO and 13CO, of the average value of structure function (inside a thin ring
-	#       at radius r) versus radius. The plot includes a shaded region indicating standard deviation.
+	#       at radius r) versus radius. One plot includes a shaded region indicating standard deviation.
 	x = np.linspace(-dX,dX,nmax)
 	y = np.linspace(-dY,dY,nmax)
 	xx, yy = np.meshgrid(x,y)
@@ -120,7 +121,22 @@ def image_make():
 	    radiusmap[radiusmap<maxradius], S_2_13[radiusmap<maxradius], statistic=np.std, bins = reselements)
 
 		# PLOTTING
+	# No shading
 	plt.figure(2)
+	plt.plot(np.arange(reselements)/mult,struct_funct12,'r.',label='12CO')
+	plt.plot(np.arange(reselements)/mult,struct_funct12+std12,'r:')
+	plt.plot(np.arange(reselements)/mult,struct_funct12-std12,'r:')
+	plt.plot(np.arange(reselements)/mult,struct_funct13,'b--',label='13CO')
+	plt.plot(np.arange(reselements)/mult,struct_funct13+std13,'b-')
+	plt.plot(np.arange(reselements)/mult,struct_funct13-std13,'b-')
+	plt.title('Average Structure Function vs. Radial "Distance" from Center of S_2 Plots')
+	plt.xlabel(' "Radius" ')
+	plt.ylabel('Average S_2')
+	plt.legend(loc='upper left')
+	plt.savefig('plot1213_noshading.png')
+
+	# Yes, shading
+	plt.figure(3)
 	plt.plot(np.arange(reselements)/mult,struct_funct12,'k.',label='12CO average')
 	plt.plot(np.arange(reselements)/mult,struct_funct13,'k:',label='13CO average')
 
@@ -143,5 +159,4 @@ def image_make():
 	plt.xlabel(' "Radius" ')
 	plt.ylabel('Average S_2')
 	plt.legend(loc='upper left')
-
-	plt.savefig('plot1213.png')
+	plt.savefig('plot1213_yesshading.png')

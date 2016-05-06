@@ -121,8 +121,11 @@ def image_make():
 
 		# PLOTTING
 	plt.figure(2)
-	plt.plot(np.arange(reselements)/mult,struct_funct12,'r.',label='12CO average')
-	plt.plot(np.arange(reselements)/mult,struct_funct13,'b.',label='13CO average')
+	plt.plot(np.arange(reselements)/mult,struct_funct12,'k.',label='12CO average')
+	plt.plot(np.arange(reselements)/mult,struct_funct13,'k:',label='13CO average')
+
+	plt.fill_between(np.arange(reselements)/mult, struct_funct12-std12, struct_funct13+std13, where=struct_funct13+std13 >= struct_funct12-std12, facecolor='purple')
+	plt.fill_between(np.arange(reselements)/mult, struct_funct12-std12, struct_funct13+std13, where=struct_funct12+std12 >= struct_funct13-std13, facecolor='purple')
 
 	plt.fill_between(np.arange(reselements)/mult, struct_funct12+std12, struct_funct13+std13, where=struct_funct12+std12 >= struct_funct13+std13, facecolor='red')
 	plt.fill_between(np.arange(reselements)/mult, struct_funct12-std12, struct_funct13-std13, where=struct_funct12-std12 <= struct_funct13-std13, facecolor='red')
@@ -130,8 +133,8 @@ def image_make():
 	plt.fill_between(np.arange(reselements)/mult, struct_funct12+std12, struct_funct13+std13, where=struct_funct13+std13 >= struct_funct12+std12, facecolor='blue')
 	plt.fill_between(np.arange(reselements)/mult, struct_funct12-std12, struct_funct13-std13, where=struct_funct13-std13 <= struct_funct12-std12, facecolor='blue')
 
-	plt.fill_between(np.arange(reselements)/mult, struct_funct12-std12, struct_funct13+std13, where=struct_funct13+std13 >= struct_funct12-std12, facecolor='purple')
-	plt.fill_between(np.arange(reselements)/mult, struct_funct12-std12, struct_funct13+std13, where=struct_funct12+std12 >= struct_funct13-std13, facecolor='purple')
+	plt.fill_between(np.arange(reselements)/mult, struct_funct12-std12, struct_funct13+std13, where=struct_funct13+std13 <= struct_funct12-std12, facecolor='white')
+	plt.fill_between(np.arange(reselements)/mult, struct_funct13-std13, struct_funct12+std13, where=struct_funct13-std13 >= struct_funct12+std12, facecolor='white')
 
 	# The region within the 12CO average's standard deviation is RED. The region within the 13CO average's standard deviation is BLUE.
 	# The overlapping region is PURPLE.

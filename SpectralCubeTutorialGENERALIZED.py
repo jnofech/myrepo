@@ -1,7 +1,7 @@
 
 # 5.04.16 - Spectral Cube Tutorial (GENERALIZED)
 # UPDATE (5.06.16) - Calculation for S_2 is incorrect. Do not use.
-
+ 
 from spectral_cube import SpectralCube
 import matplotlib.pyplot as plt
 import astropy.units as u

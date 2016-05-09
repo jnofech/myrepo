@@ -11,6 +11,13 @@ import math
 
 
 def image_make(vmin,vmax,ymin,ymax,xmin,xmax, deltaX=30, deltaV=3):
+	"""Argument format: "(vmin,vmax, ymin,ymax, xmin,xmax, deltaX, deltaV.)"
+		^ The first four arguments are the parameters of the desired subcube.
+		WARNING: Selecting too large of a subcube will hugely increase processing time.
+
+		"deltaX" (default: 30) is the maximum value of dX and dY. "deltaV" (default: 3)
+		is the maximum value of dV.
+		These latter two arguments are optional."""
 	cube = SpectralCube.read('paws_norot.fits')
 	data = cube.filled_data[:]   # Pulls "cube"'s information (position, spectral info (?)) into a 3D Numpy array.
 

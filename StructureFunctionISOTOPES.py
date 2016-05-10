@@ -1,5 +1,5 @@
 
-# 5.05.16 - Spectral Cube: Comparison between 12CO and 13CO Maps
+# 5.05.16 - Spectral Cube: Comparison between 12CO and 13CO Maps.
 
 
 from spectral_cube import SpectralCube

@@ -1,5 +1,5 @@
 
-# 5.10.16 - Working with Subcubes from "paws_norot.fits", in spatial and spectral dimensions.
+# 5.10.16 - Comparing 12CO and 13CO maps using spectral cubes, in spatial dimensions only.
 
 
 from spectral_cube import SpectralCube

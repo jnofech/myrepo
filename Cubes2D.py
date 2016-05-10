@@ -1,5 +1,5 @@
 
-# 5.10.16 - Working with Subcubes from "paws_norot.fits", in spatial and spectral dimensions.
+# 5.10.16 - Working with Subcubes from "paws_norot.fits", in spatial dimensions only.
 
 
 from spectral_cube import SpectralCube

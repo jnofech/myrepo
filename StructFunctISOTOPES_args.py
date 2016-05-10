@@ -1,5 +1,5 @@
 
-# 5.05.16 - Spectral Cube: Comparison between 12CO and 13CO Maps
+# 5.09.16 - Spectral Cube: Comparing 12CO and 13CO Maps
 
 
 from spectral_cube import SpectralCube
@@ -10,11 +10,15 @@ import scipy.stats as ss
 import math
 
 
-def image_make():
+def image_make(ymin,ymax,xmin,xmax, deltaX=30):
+	"""Argument format: "(ymin,ymax, xmin,xmax, deltaX.)"
+		^ The first four arguments are the parameters of the desired subcube.
+
+		"deltaX" (default: 30) is the maximum value of dX and dY."""
 	cube12 = SpectralCube.read("paws-30m-12co10-23as-cube.fits")
 	cube13 = SpectralCube.read("paws-30m-13co10-23as-cube.fits")
-	subcube12 = cube12[:,50:100,50:100]
-	subcube13 = cube13[:,50:100,50:100]
+	subcube12 = cube12[:,ymin:ymax,xmin:xmax]
+	subcube13 = cube13[:,ymin:ymax,xmin:xmax]
 
 	# 1. Extracting a RECTANGULAR subcube
 	# 2. Compute a moment0 map (add up in the spectral direction using `moment0 = subcube.moment(0)` Remember to take `moment0.value` for what follows.
@@ -28,7 +32,7 @@ def image_make():
 	moment013 = subcube13.apply_numpy_function(np.nanmax,axis=0)*u.K
 
 
-	dX = 30                      # This is simply the maximum absolute value of "dx". So if dX = 1, then dx = {-1,0,1}.
+	dX = deltaX                      # This is simply the maximum absolute value of "dx". So if dX = 1, then dx = {-1,0,1}.
 	dY = np.copy(dX)                      # Same as above, but for "dy". For simplicity, let it be the same as dX.
 	nmax = abs(2*dX)+1
 	S_2_12 = np.zeros([nmax,nmax])
@@ -40,7 +44,7 @@ def image_make():
 
 
 	for dx in range (-dX,dX+1):
-	    for dy in range (-dY,dY+1):
+	    for dy in range (0,dY+1):
 		
 		M12 = moment012.value         # This is the matrix "M" referred to above.
 		P12 = np.arange(n12*m12).reshape(n12,m12) # This will be used to track the shifting "pixels" of M(r) and M(r+dr).
@@ -59,7 +63,7 @@ def image_make():
 		RollMapPower12 = (np.nanmean(RollMap12[goodpix12]**2))
 		
 		S_2_12[(dy+dY,dx+dX)] = (np.nanmean(D12[goodpix12]**2)) / (OrigMapPower12 + RollMapPower12)
-		
+		S_2_12[-(dy+dY+1),-(dx+dX+1)] = S_2_12[(dy+dY,dx+dX)]
 		
 		M13 = moment013.value         # This is the matrix "M" referred to above.
 		P13 = np.arange(n13*m13).reshape(n13,m13) # This will be used to track the shifting "pixels" of M(r) and M(r+dr).
@@ -78,6 +82,7 @@ def image_make():
 		RollMapPower13 = (np.nanmean(RollMap13[goodpix13]**2))
 		
 		S_2_13[(dy+dY,dx+dX)] = (np.nanmean(D13[goodpix13]**2)) / (OrigMapPower13 + RollMapPower13)
+		S_2_13[-(dy+dY+1),-(dx+dX+1)] = S_2_13[(dy+dY,dx+dX)]
 		
 	
 	plt.figure(1)
@@ -93,7 +98,7 @@ def image_make():
 	plt.xlabel('dx')
 	plt.ylabel('dy')
 	plt.colorbar()
-	plt.savefig('image1213.png')
+	plt.savefig('image1213V2.png')
 
 
 
@@ -133,7 +138,7 @@ def image_make():
 	plt.xlabel(' "Radius" ')
 	plt.ylabel('Average S_2')
 	plt.legend(loc='upper left')
-	plt.savefig('plot1213_noshading.png')
+	plt.savefig('plot1213_noshadingV2.png')
 
 	# Yes, shading
 	plt.figure(3)
@@ -159,4 +164,4 @@ def image_make():
 	plt.xlabel(' "Radius" ')
 	plt.ylabel('Average S_2')
 	plt.legend(loc='upper left')
-	plt.savefig('plot1213_yesshading.png')
+	plt.savefig('plot1213_yesshadingV2.png')

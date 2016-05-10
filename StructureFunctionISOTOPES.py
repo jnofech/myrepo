@@ -1,5 +1,5 @@
 
-# 5.04.16 - Spectral Cube Tutorial (GENERALIZED)
+# 5.09.16 - Spectral Cube: Comparison between 12CO and 13CO Maps
 
 
 from spectral_cube import SpectralCube

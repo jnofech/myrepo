@@ -3,6 +3,7 @@
 
 
 from spectral_cube import SpectralCube
+import matplotlib
 import matplotlib.pyplot as plt
 import astropy.units as u
 import numpy as np
@@ -11,20 +12,42 @@ import math
 
 print('"Cubes.py" \n \nAvailable functions within Cubes: \n  cubegen - generates a subcube. \n  structgen - generates a structure function map from a given subcube. \n  mapgen - generates some 2D maps of the structure function, for each "dv". \n  plotgen - generates a 1D plot of averaged structure function versus radius.')
 
-def cubegen(vmin,vmax,ymin,ymax,xmin,xmax, filename = "paws_norot"):
+def cubegen(vmin,vmax,ymin,ymax,xmin,xmax, filename = "paws_norot", drawmap = "False", mapname="3Dcube"):
 	"""Returns a subcube of the specified dimensions from the .fits file.
+	   Also displays the subcube as it appears on the galaxy map if drawmap='True'.
 
-	   Argument format: "(vmin,vmax, ymin,ymax, xmin,xmax, filename)".
+
+	   Argument format: "(vmin,vmax, ymin,ymax, xmin,xmax, filename='paws_norot',
+	   drawmap='False', mapname='3Dcube')".
 	   ^ These are the parameters of the desired subcube. The filename (default:
-	     "paws_norot") is the name of the .fits file, minus the .fits extension.
+	     'paws_norot') is the name of the .fits file, minus the .fits extension.
+	     Note that the mapname is not needed if drawmap="False".
 
 	   WARNING: Selecting too large of a subcube will hugely increase processing time.
 	   If you use a large cube, be sure to set deltadeltaX to be larger in structgen."""
 
 	cube = SpectralCube.read(filename+".fits")
 	data = cube.filled_data[:]   # Pulls "cube"'s information (position, spectral info (?)) into a 3D Numpy array.
+	yshape = data.shape[1]/2.0
+	xshape = data.shape[2]/2.0
+
+	pixelwidthDEG = cube.header['CDELT2']			# The width of each pixel, in degrees.
+	distancePC = cube.header['DIST']			# The distance to the galaxy that the .fits file deals with, in parsecs.  (???) Is this number accurate, though?
+	pixelwidthPC = pixelwidthDEG*np.pi/180.0*distancePC	# The width of each pixel, in pc.
 
 	subcube = cube[vmin:vmax,ymin:ymax,xmin:xmax]
+	if drawmap == "True":
+		plt.figure(1)
+
+		plt.imshow(np.nanmax(data[40:80,ymin:ymax,xmin:xmax].value,axis=0), extent=[(xmin-xshape)*pixelwidthPC,(xmax-xshape)*pixelwidthPC, -(ymax-yshape)*pixelwidthPC,-(ymin-yshape)*pixelwidthPC])
+		fig = matplotlib.pyplot.gcf()
+		#fig.set_size_inches(5, 5)	# Enlarges the image so as to prevent squishing.
+		plt.xlabel('Distance from Centre in x-direction (pc)')
+		plt.ylabel('Distance from Centre in y-direction (pc)')
+
+		plt.savefig('galaxy_'+mapname+'.png')
+		plt.clf()			# Clears the image after saving.
+
 	return subcube
 
 def structgen(subcube0, deltaX=30, deltaV=3, deltadeltaX=1, normalization=True):
@@ -117,7 +140,11 @@ def mapgen(S_2, deltaX=30, deltaV=3, mapname="3Dcube", filename = "paws_norot"):
 	velocityres = cube.header['CDELT3']	# Velocity resolution in km/s.
 
 	# 2D Display (layer by layer)
-	plt.figure(1)
+	plt.figure(2)
+
+	fig = matplotlib.pyplot.gcf()
+	fig.set_size_inches(15, 7)
+
 	plt.subplot(121)
 	plt.imshow(S_2[0], interpolation = 'none', extent = [-dX*pixelwidthPC,dX*pixelwidthPC,-dY*pixelwidthPC,dY*pixelwidthPC], vmin=0, vmax=S_2.max(), aspect='auto')
 	plt.title('S_2 at 0 km/s')
@@ -130,12 +157,12 @@ def mapgen(S_2, deltaX=30, deltaV=3, mapname="3Dcube", filename = "paws_norot"):
 	#plt.xlabel('Distance from Initial Location in x-direction (pc)')
 	#plt.ylabel('Distance from Initial Location in y-direction (pc)')
 
-	plt.text(-dX*pixelwidthPC*1.2, -dY*pixelwidthPC*1.25, 'Distance from Initial Location in x-direction (pc)', ha='center')
-	plt.text(-dX*pixelwidthPC*4.7, dY*pixelwidthPC, 'Distance from Initial Location in y-direction (pc)', ha='center', rotation='vertical')
+	plt.text(-dX*pixelwidthPC*1.2, -dY*pixelwidthPC*1.2, 'Distance from Initial Location in x-direction (pc)', ha='center', va='center')
+	plt.text(-dX*pixelwidthPC*4.3, 0, 'Distance from Initial Location in y-direction (pc)', ha='center', va='center', rotation='vertical')
 
 	plt.colorbar()
 	plt.savefig('map_'+mapname+'.png')
-	plt.clf()			# Clears the figure, allowing "Figure 1" to be used again if a function calls on mapgen more than once.
+	plt.clf()			# Clears the figure, allowing "Figure 2" to be used again if a function calls on mapgen more than once.
 
 def plotgen(S_2, deltaX=30, deltaV=3, deltadeltaX=1, mapname="3Dcube", filename="paws_norot"):
 	"""Generates and saves a 1D plot of the azimuthally-averaged structure function versus 
@@ -180,7 +207,9 @@ def plotgen(S_2, deltaX=30, deltaV=3, deltadeltaX=1, mapname="3Dcube", filename=
 	    struct_funct[i], edges, counts = ss.binned_statistic(
 		radiusmap[radiusmap<maxradius], S_2[i][radiusmap<maxradius], statistic=np.nanmean, bins = reselements)
 
-	plt.figure(2)
+	plt.figure(3)
+	fig = matplotlib.pyplot.gcf()	
+	fig.set_size_inches(15, 7)	# Enlarges the image so as to prevent squishing.
 	X = (np.arange(reselements)/mult) / ((reselements-1)/mult) * (dX**2 + dY**2)**0.5 * pixelwidthPC
 	for i in range (0, dZ+1):
 		plt.plot(X, struct_funct[i],label='S_2 at +'+str(i*velocityres)+' km/s')

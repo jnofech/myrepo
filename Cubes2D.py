@@ -123,7 +123,7 @@ def plotgen(S_2, deltaX=30, SHADING=False):
 	# No shading
 	if SHADING==False:
 		plt.figure(2)
-		plt.plot(np.arange(reselements)/mult,struct_funct,'r.',label='CO')
+		plt.plot(np.arange(reselements)/mult,struct_funct,'r.',label='S_2 Average')
 		plt.plot(np.arange(reselements)/mult,struct_funct+std,'r:')
 		plt.plot(np.arange(reselements)/mult,struct_funct-std,'r:')
 		plt.title('Average Structure Function vs. Radial "Distance" from Center of S_2 Plots')

@@ -7,6 +7,10 @@ import astropy.io.fits as fits
 import math
 import os.path
 
+from astropy.wcs import WCS
+from reproject import reproject_interp
+
+
 print('\nWelcome to Cubes_rotremoval! \n \nAvailable function: \n  cleaning: Creates a rotation-corrected version of a given .fits file.\n \n')
 
 def cleaning(filename_cube='paws-pdbi+30m-12co10-1as.cube.fixed', filename_rotmap='paws_rotmod'):
@@ -20,10 +24,27 @@ def cleaning(filename_cube='paws-pdbi+30m-12co10-1as.cube.fixed', filename_rotma
 
 	"""
 
-	cube = SpectralCube.read(filename_cube+".fits")     	# This is the cube of the raw, uncorrected data.
+	cube = SpectralCube.read(filename_cube+".fits")     # This is the cube of the raw, uncorrected data.
+	rot = fits.open(filename_rotmap+'.fits')[0]
 
-	rotmap = fits.getdata(filename_rotmap+".fits")      	# This is the 2D array of the rotational velocity map.
-	rotheader = fits.getheader(filename_rotmap+".fits") 	# This is all the physical data implied by the 2D array.
+
+	# Checks if 'reprojection' is necessary, then reprojects the rotational velocity map to match
+	#    the cube's dimensions if necessary.
+
+	data = cube.filled_data[:]   # Pulls "cube"'s information (position, spectral info (?)) into a 3D Numpy array.
+	data0 = data.value
+
+	if (cube.shape[1] == rot.shape[0]) and (cube.shape[2] == rot.shape[1]):
+	    array = rot.data
+	else:
+	    moment0 = cube.moment(axis=0,order=0)
+	    if os.path.isfile(filename_cube+'.mom0.fits') == False:
+		moment0.write(filename_cube+'.mom0.fits')
+	    else:
+		print "WARNING: "+filename_cube+".mom0.fits' already exists. Please delete the file and try again."
+	    array, footprint = reproject_interp(rot, moment0.header)
+
+
 
 	velocityres = cube.header['CDELT3']
 	velocityres = velocityres / 1000.0			# This is the velocity resolution of the raw data file in km/s.
@@ -45,7 +66,6 @@ def cleaning(filename_cube='paws-pdbi+30m-12co10-1as.cube.fixed', filename_rotma
 
 
 
-
 	vmax,ymax,xmax = data0.shape
 
 	cleancube = np.zeros(vmax*ymax*xmax).reshape(vmax,ymax,xmax)    # This is the final rotation-corrected cube that we'll use.
@@ -64,7 +84,7 @@ def cleaning(filename_cube='paws-pdbi+30m-12co10-1as.cube.fixed', filename_rotma
 		
 			s = np.fft.fftfreq(len(fx_temp)) 	# These are the frequencies corresponding to each F(s) value.
 		
-			shift = rotmap[j,i] / velocityres
+			shift = array[j,i] / velocityres
 			phase = np.exp(2*np.pi*s*1j * shift) 	# This "j" is not to be confused with the parameter used in the For loop.
 		
 			fxa = np.fft.ifft(Fs*phase) 	# This is f(x-a). We just need to turn all those near-zero values back to NaN.

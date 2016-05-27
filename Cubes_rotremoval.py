@@ -28,15 +28,18 @@ def cleaning(filename_cube='paws-pdbi+30m-12co10-1as.cube.fixed', filename_rotma
 	rot = fits.open(filename_rotmap+'.fits')[0]
 
 
-	# Checks if 'reprojection' is necessary, then reprojects the rotational velocity map to match
-	#    the cube's dimensions if necessary.
+	# Checks if 'reprojection' is necessary. If so, then it reprojects the rotational velocity map to match
+	#    the cube's dimensions.
 
 	data = cube.filled_data[:]   # Pulls "cube"'s information (position, spectral info (?)) into a 3D Numpy array.
 	data0 = data.value
 
 	if (cube.shape[1] == rot.shape[0]) and (cube.shape[2] == rot.shape[1]):
+	    # The spatial dimensions of the cube and its rotation map match. Reprojection is not necessary.
 	    array = rot.data
 	else:
+	    # The spatial dimensions of the cube and its rotation map DO NOT match. Reprojection is necessary,
+	    # 	and the cube information must appear in a moment map for it to work.
 	    moment0 = cube.moment(axis=0,order=0)
 	    if os.path.isfile(filename_cube+'.mom0.fits') == False:
 		moment0.write(filename_cube+'.mom0.fits')
@@ -59,10 +62,6 @@ def cleaning(filename_cube='paws-pdbi+30m-12co10-1as.cube.fixed', filename_rotma
 	#  2. Use that e<sup>$-i2\pi as$</sup> *F(s)* to find *f(x-a)*, and populate an empty matrix with the cube's dimensions with it. 
 	#	When all *f(x-a)* values are found, the result SHOULD BE a 3D matrix like"cube", but corrected for rotational velocity.
 
-	
-
-	data = cube.filled_data[:]   				# Pulls "cube"'s information (position, spectral info (?)) into a 3D Numpy array.
-	data0 = data.value
 
 
 

@@ -1,5 +1,5 @@
 
-# 5.10.16 - Working with Subcubes from "paws_norot.fits", in spatial and spectral dimensions.
+# 5.13.16 - Working with Subcubes from "paws_norot.fits", in spatial and spectral dimensions.
 
 
 from spectral_cube import SpectralCube
@@ -32,7 +32,10 @@ def cubegen(vmin,vmax,ymin,ymax,xmin,xmax, filename = "paws_norot", drawmap = "F
 	xshape = data.shape[2]/2.0
 
 	pixelwidthDEG = cube.header['CDELT2']			# The width of each pixel, in degrees.
-	distancePC = cube.header['DIST']			# The distance to the galaxy that the .fits file deals with, in parsecs.  (???) Is this number accurate, though?
+	if filename =='m33.co21_iram_CLEANED':			# Checks if the galaxy's Header file contains its distance.
+		distancePC = 840000.0				# The distance to the galaxy that M33's .fits file deals with, in parsecs. ONLY works on the CLEANED file!
+	else:
+		distancePC = cube.header['DIST']		# The distance to the galaxy that M51's .fits file deals with, in parsecs.  (???) Is this number accurate, though?
 	pixelwidthPC = pixelwidthDEG*np.pi/180.0*distancePC	# The width of each pixel, in pc.
 
 	subcube = cube[vmin:vmax,ymin:ymax,xmin:xmax]
@@ -50,16 +53,18 @@ def cubegen(vmin,vmax,ymin,ymax,xmin,xmax, filename = "paws_norot", drawmap = "F
 
 	return subcube
 
-def structgen(subcube0, deltaX=30, deltaV=3, deltadeltaX=1, normalization=True):
+def structgen(subcube0, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV = 1, normalization=False):
 
 	"""Returns a 3D structure function map from a given subcube.
 	
 	   Argument format: "(<subcube>, deltaX (default=30), deltaV (default=3)),
-	   deltadeltaX (default=1), normalization (default=False), mapname (default
-	   ="3Dcube"))".
+	   deltadeltaX (default=1), deltadeltaV (default=1), normalization (default=False), 
+	   mapname (default="3Dcube"))".
 	   "deltaX" is the maximum value of dX and dY. "deltaV" is the maximum 
 	   value of dV. "deltadeltaX" is the step size along both dx and dy for the
-	   structure function calculation, and it should be a factor of dX.
+	   structure function calculation, and it should be a factor of deltaX. "deltadeltaV"
+	   is the step size along dv for structure function calculation, and it should be a 
+	   factor of deltaV.
 
 	   Enabling normalization will normalize the structure function within the [0,1]
 	   interval. Disabling normalization will prevent this.
@@ -73,69 +78,73 @@ def structgen(subcube0, deltaX=30, deltaV=3, deltadeltaX=1, normalization=True):
 
 	dX = deltaX                    	# This is simply the maximum absolute value of "dx". So if dX = 1, then dx = {-1,0,1}.
 	dY = np.copy(dX)                # Same as above, but for "dy". For simplicity, let it be the same as dX.
-	dZ = deltaV		     	# Same as above, but for "dv". We call it "dZ" here since that may make it easier to visualize.
-	ddX = deltadeltaX		# "Step size", for the S_2 calculation. Make sure it's a factor of dX. Leave at 1 for full calculation.
+	dV = deltaV		     	# Same as above, but for "dv".
+	ddX = deltadeltaX		# "Step size" (in units of spatial resolutions), for the S_2 calculation. Make sure it's a factor of dX. Leave at 1 for full calculation.
 	ddY = np.copy(ddX)            	# Same as above, but for dY.
+	ddV = deltadeltaV		# Same as above, but for dV (in units of spectral resolutions). Not the same as ddX or ddY.
 	nmax = abs(2*dX/ddX)+1
-	S_2 = np.zeros([dZ+1,nmax,nmax])
+	S_2 = np.zeros([dV/ddV+1,nmax,nmax])
 
 	p,n,m = data0.shape     # The subcube has n rows, m columns, and p "height units".
 
 
-	for delz in range (0,dZ+1):                     # "delz" defined as "dz / ddZ"
+	for delv in range (0,dV/ddV+1):                 # "delv" defined as "dv / ddV"
 	    for delx in range (-dX/ddX,dX/ddX+1):       # "delx" defined as "dx / ddX"
 		for dely in range (-dY/ddY,dY/ddY+1):   # "dely" defined as "dy / ddY"
 
 		    dx = delx*ddX
 		    dy = dely*ddY
-		    dz = delz				# ddZ = 1. Cannot be changed in this program.
+		    dv = delv*ddV
 		
 		    M = data0.value         		# This is the subcube information (unitless).
 		    P = np.arange(p*n*m).reshape(p,n,m) # This will be used to track the shifting "pixels" of M(r) and M(r+dr).
 		    D = np.zeros([p,n,m])   		# This will be the difference between M(r) and M(r+dr).
 
-		    RollMap = np.roll((np.roll(np.roll(M,-dz,axis=0),-dy,axis=1)),-dx,axis=2)
+		    RollMap = np.roll((np.roll(np.roll(M,-dv,axis=0),-dy,axis=1)),-dx,axis=2)
 		    D = M - RollMap
 
-		    goodpix = (P - np.roll(P,-dz,axis=0) == -dz*n*m) * (P - np.roll(P,-dy,axis=1) == -dy*m) * (P - np.roll(P,-dx,axis=2) == -dx)
+		    goodpix = (P - np.roll(P,-dv,axis=0) == -dv*n*m) * (P - np.roll(P,-dy,axis=1) == -dy*m) * (P - np.roll(P,-dx,axis=2) == -dx)
 		            # Note: The "-dy*m" is because, for P, a pixel's value is separated from that of a
 		            #        pixel above or below it by exactly m. So, the difference between a pixel's value and
 		            #        that of a pixel "dy" rows below is simply dy*m.
-			    #	    Similar case for a pixel "dz" layers below.
+			    #	    Similar case for a pixel "dv" layers below.
 			    #
 		            # In "goodpix", pixels that have wrapped around are treated as "False".
 		    if normalization==True:
 			    OrigMapPower = np.nanmean(M[goodpix]**2)
 			    RollMapPower = np.nanmean(RollMap[goodpix]**2)
 
-			    S_2[(dz,(dy+dY)/ddY,(dx+dX)/ddX)] = (np.nanmean(D[goodpix]**2)) / (OrigMapPower + RollMapPower)
+			    S_2[(dv/ddV,(dy+dY)/ddY,(dx+dX)/ddX)] = (np.nanmean(D[goodpix]**2)) / (OrigMapPower + RollMapPower)
 		    else:
-			    S_2[(dz,(dy+dY)/ddY,(dx+dX)/ddX)] = (np.nanmean(D[goodpix]**2))
+			    S_2[(dv/ddV,(dy+dY)/ddY,(dx+dX)/ddX)] = (np.nanmean(D[goodpix]**2))
 
 
 	return S_2
 
 
-def mapgen(S_2, deltaX=30, deltaV=3, mapname="3Dcube", filename = "paws_norot"):
+def mapgen(S_2, deltaX=30, deltaV=3, deltadeltaV=1, mapname="3Dcube", filename = "paws_norot"):
 	"""Generates and saves several 2D colour plots of the structure function versus
 	   position; one for no shift in spectral dimension and one for "maximum" shift
 	   in spectral dimension.
 
-	   Argument format: (S_2, deltaX=30, deltaV=3, mapname="3Dcube", filename=
-	   "paws_norot"). Plots are created using the resulting 3D matrix from structgen,
-	   and the same deltaX, deltaV that were used in structgen. Use the same filename
-	   as in cubegen.
+	   Argument format: (S_2, deltaX=30, deltaV=3, deltadeltaV=1, mapname="3Dcube", 
+	   filename="paws_norot"). Plots are created using the resulting 3D matrix from 
+	   structgen, and the same deltaX, deltaV, deltadeltaV that were used in structgen. 
+	   Use the same filename as in cubegen.
 
 	   Be sure that your filename and desired map name are in quotes."""
 
 	dX = deltaX                  	# This is simply the maximum absolute value of "dx". So if dX = 1, then dx = {-1,0,1}.
 	dY = np.copy(dX)                # Same as above, but for "dy". For simplicity, let it be the same as dX.
-	dZ = deltaV		     	# Same as above, but for "dv". We call it "dZ" here since that may make it easier to visualize.
-
+	dV = deltaV		     	# Same as above, but for "dv".
+	ddV = deltadeltaV
 	cube = SpectralCube.read(filename+".fits")
 
 	pixelwidthDEG = cube.header['CDELT2']	# The width of each pixel, in degrees.
-	distancePC = cube.header['DIST']	# The distance to the galaxy that the .fits file deals with, in parsecs.
+	if filename =='m33.co21_iram_CLEANED':			# Checks if the galaxy's Header file contains its distance.
+		distancePC = 840000.0				# The distance to the galaxy that M33's .fits file deals with, in parsecs. ONLY works on the CLEANED file!
+	else:
+		distancePC = cube.header['DIST']		# The distance to the galaxy that M51's .fits file deals with, in parsecs.  (???) Is this number accurate, though?
 	pixelwidthPC = pixelwidthDEG*np.pi/180.0*distancePC	# The width of each pixel, in pc.
 	velocityres = cube.header['CDELT3']	# Velocity resolution in km/s.
 
@@ -152,8 +161,8 @@ def mapgen(S_2, deltaX=30, deltaV=3, mapname="3Dcube", filename = "paws_norot"):
 	#plt.ylabel('Distance from Initial Location in y-direction (pc)')
 
 	plt.subplot(122)
-	plt.imshow(S_2[dZ], interpolation = 'none', extent = [-dX*pixelwidthPC,dX*pixelwidthPC,-dY*pixelwidthPC,dY*pixelwidthPC], vmin=0, vmax=S_2.max(), aspect='auto')
-	plt.title('S_2 at +'+str(dZ*velocityres)+' km/s')
+	plt.imshow(S_2[dV/ddV], interpolation = 'none', extent = [-dX*pixelwidthPC,dX*pixelwidthPC,-dY*pixelwidthPC,dY*pixelwidthPC], vmin=0, vmax=S_2.max(), aspect='auto')
+	plt.title('S_2 at +'+str(dV*velocityres)+' km/s')
 	#plt.xlabel('Distance from Initial Location in x-direction (pc)')
 	#plt.ylabel('Distance from Initial Location in y-direction (pc)')
 
@@ -164,7 +173,7 @@ def mapgen(S_2, deltaX=30, deltaV=3, mapname="3Dcube", filename = "paws_norot"):
 	plt.savefig('map_'+mapname+'.png')
 	plt.clf()			# Clears the figure, allowing "Figure 2" to be used again if a function calls on mapgen more than once.
 
-def plotgen(S_2, deltaX=30, deltaV=3, deltadeltaX=1, mapname="3Dcube", filename="paws_norot"):
+def plotgen(S_2, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV=3, mapname="3Dcube", filename="paws_norot"):
 	"""Generates and saves a 1D plot of the azimuthally-averaged structure function versus 
 	   radius, for each value of "dv".
 
@@ -179,14 +188,18 @@ def plotgen(S_2, deltaX=30, deltaV=3, deltadeltaX=1, mapname="3Dcube", filename=
 
 	dX = deltaX                    	# This is simply the maximum absolute value of "dx". So if dX = 1, then dx = {-1,0,1}.
 	dY = np.copy(dX)                # Same as above, but for "dy". For simplicity, let it be the same as dX.
-	dZ = deltaV		     	# Same as above, but for "dv". We call it "dZ" here since that may make it easier to visualize.
+	dV = deltaV		     	# Same as above, but for "dv".
 	ddX = deltadeltaX
 	ddY = np.copy(ddX)
+	ddV = deltadeltaV
 	nmax = abs(2*dX/ddX)+1
 
 	cube = SpectralCube.read(filename+".fits")
 	pixelwidthDEG = cube.header['CDELT2']	# The width of each pixel, in degrees.
-	distancePC = cube.header['DIST']	# The distance to the galaxy that the .fits file deals with, in parsecs.
+	if filename =='m33.co21_iram_CLEANED':			# Checks if the galaxy's Header file contains its distance.
+		distancePC = 840000.0				# The distance to the galaxy that M33's .fits file deals with, in parsecs. ONLY works on the CLEANED file!
+	else:
+		distancePC = cube.header['DIST']		# The distance to the galaxy that M51's .fits file deals with, in parsecs.  (???) Is this number accurate, though?
 	pixelwidthPC = pixelwidthDEG*np.pi/180.0*distancePC	# The width of each pixel, in pc.
 	velocityres = cube.header['CDELT3']	# Velocity resolution in km/s.
 
@@ -203,16 +216,16 @@ def plotgen(S_2, deltaX=30, deltaV=3, deltadeltaX=1, mapname="3Dcube", filename=
 
 	struct_funct = np.arange(nmax*reselements).reshape(nmax,reselements)
 
-	for i in range (0, dZ+1):
-	    struct_funct[i], edges, counts = ss.binned_statistic(
+	for i in range (0, dV/ddV+1):	# "delv" defined as "dv/ddV".
+		struct_funct[i], edges, counts = ss.binned_statistic(
 		radiusmap[radiusmap<maxradius], S_2[i][radiusmap<maxradius], statistic=np.nanmean, bins = reselements)
 
 	plt.figure(3)
 	fig = matplotlib.pyplot.gcf()	
 	fig.set_size_inches(15, 7)	# Enlarges the image so as to prevent squishing.
 	X = (np.arange(reselements)/mult) / ((reselements-1)/mult) * (dX**2 + dY**2)**0.5 * pixelwidthPC
-	for i in range (0, dZ+1):
-		plt.plot(X, struct_funct[i],label='S_2 at +'+str(i*velocityres)+' km/s')
+	for i in range (0, dV/ddV+1):
+		plt.plot(X, struct_funct[i],label='S_2 at +'+str(i*ddV*velocityres)+' km/s')
 	plt.title('Avg. Struct. Funct. vs. Radial "Distance" from Center of S_2 Plots')
 	plt.xlabel('Distance from Initial Location (pc)')
 	plt.ylabel('Average S_2')

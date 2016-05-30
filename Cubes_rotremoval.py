@@ -55,12 +55,15 @@ def cleaning(filename_cube='paws-pdbi+30m-12co10-1as.cube.fixed', filename_rotma
 	    if filename_cube =='m33.co21_iram':
 		array = array/1000.			# Converts M33's data from m/s to km/s.
 
-
+#	(!!!)	INCOMPLETE	(!!!)
+#	This "spec_peak" is not the central velocity of "array". But it should be.
 	if filename_cube =='m33.co21_iram':                                 # Checks if we're dealing with M33 or M51.
 	    spec_peak = cube.spectral_axis[data0.shape[0]/2].value / 1000.  # M33's data's velocity axis is NOT centered at
 		                                                            #  zero. Will be accounted for later.
 	else:
 	    spec_peak = 0
+	
+	array = array - spec_peak			# Creates a ROTATIONAL velocity map, centered at zero km/s.
 
 	velocityres = cube.header['CDELT3']
 	velocityres = velocityres / 1000.		# This is the velocity resolution of the raw data file in km/s.
@@ -96,7 +99,7 @@ def cleaning(filename_cube='paws-pdbi+30m-12co10-1as.cube.fixed', filename_rotma
 		
 			s = np.fft.fftfreq(len(fx_temp)) 	# These are the frequencies corresponding to each F(s) value.
 		
-			shift = (array[j,i] - spec_peak) / velocityres
+			shift = (array[j,i]) / velocityres
 			phase = np.exp(2*np.pi*s*1j * shift) 	# This "j" is not to be confused with the parameter used in the For loop.
 		
 			fxa = np.fft.ifft(Fs*phase) 	# This is f(x-a). We just need to turn all those near-zero values back to NaN.

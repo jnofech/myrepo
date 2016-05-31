@@ -62,8 +62,11 @@ def cleaning(filename_cube='paws-pdbi+30m-12co10-1as.cube.fixed', filename_rotma
 		                                                            #  zero. Will be accounted for later.
 	else:
 	    spec_peak = 0
-	
-	array = array - spec_peak			# Creates a ROTATIONAL velocity map, centered at zero km/s.
+
+#	(!!!)  PICK ONE. At the moment, 'spec_peak' is not the correct value to use.
+#			Neither is np.mean(array), but it's much closer.	
+#	array = array - spec_peak			# Creates a ROTATIONAL velocity map, centered at zero km/s.
+	array = array - np.mean(array)			# Creates a ROTATIONAL velocity map, centered at zero km/s.
 
 	velocityres = cube.header['CDELT3']
 	velocityres = velocityres / 1000.		# This is the velocity resolution of the raw data file in km/s.

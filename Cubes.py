@@ -120,7 +120,7 @@ def structgen(subcube0, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV = 1, nor
 
 
 	return S_2
-
+ 
 
 def mapgen(S_2, deltaX=30, deltaV=3, deltadeltaV=1, mapname="3Dcube", filename = "paws_norot"):
 	"""Generates and saves several 2D colour plots of the structure function versus

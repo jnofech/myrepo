@@ -1,5 +1,5 @@
 
-# 5.13.16 - Working with Subcubes from "paws_norot.fits", in spatial and spectral dimensions.
+# 5.13.16 - Working with Subcubes from rotation-corrected .fits files, in spatial and spectral dimensions. Does NOT remove noise by default.
 
 
 from spectral_cube import SpectralCube
@@ -184,9 +184,9 @@ def plotgen(S_2, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV=3, mapname="3Dc
 	"""Generates and saves a 1D plot of the azimuthally-averaged structure function versus 
 	   radius, for each value of "dv".
 
-	   Argument format: (S_2, deltaX, deltaV, deltadeltaX, mapname="3Dcube", filename=
-	   "paws_norot"). Plots are created using the resulting 3D matrix from structgen, 
-	   and the same deltaX, deltaV, deltadeltaX that were used in structgen.
+	   Argument format: (S_2, deltaX, deltaV, deltadeltaX, deltadeltaV, mapname="3Dcube", 
+	   filename="paws_norot"). Plots are created using the resulting 3D matrix from structgen, 
+	   and the same deltaX, deltaV, deltadeltaX, deltadeltaV that were used in structgen.
 
 	   Be sure that your filename and desired plot name (same as in mapgen) are in quotes."""
 

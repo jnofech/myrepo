@@ -96,7 +96,7 @@ def plotgen(S_2, deltaX=30, SHADING=False):
 
 	   NOTE: If SHADING is set to "True", then a shaded plot will be generated.
 	   There may be some bugs, however; so False (default) is recommended."""
- 
+
 	dX = deltaX                      # This is simply the maximum absolute value of "dx". So if dX = 1, then dx = {-1,0,1}.
 	dY = np.copy(dX)                      # Same as above, but for "dy". For simplicity, let it be the same as dX.
 	nmax = abs(2*dX)+1

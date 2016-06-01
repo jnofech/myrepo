@@ -12,16 +12,16 @@ import math
 
 print('"Cubes.py" \n \nAvailable functions within Cubes: \n  cubegen - generates a subcube. \n  structgen - generates a structure function map from a given subcube. \n  mapgen - generates some 2D maps of the structure function, for each "dv". \n  plotgen - generates a 1D plot of averaged structure function versus radius.')
 
-def cubegen(vmin,vmax,ymin,ymax,xmin,xmax, filename = "paws_norot", drawmap = "False", mapname="3Dcube"):
+def cubegen(vmin,vmax,ymin,ymax,xmin,xmax, filename = "paws_norot", drawmap = False, mapname="3Dcube"):
 	"""Returns a subcube of the specified dimensions from the .fits file.
-	   Also displays the subcube as it appears on the galaxy map if drawmap='True'.
+	   Also displays the subcube as it appears on the galaxy map if drawmap=True.
 
 
 	   Argument format: "(vmin,vmax, ymin,ymax, xmin,xmax, filename='paws_norot',
-	   drawmap='False', mapname='3Dcube')".
+	   drawmap=False, mapname='3Dcube')".
 	   ^ These are the parameters of the desired subcube. The filename (default:
 	     'paws_norot') is the name of the .fits file, minus the .fits extension.
-	     Note that the mapname is not needed if drawmap="False".
+	     Note that the mapname is not needed if drawmap=False.
 
 	   WARNING: Selecting too large of a subcube will hugely increase processing time.
 	   If you use a large cube, be sure to set deltadeltaX to be larger in structgen."""
@@ -39,7 +39,7 @@ def cubegen(vmin,vmax,ymin,ymax,xmin,xmax, filename = "paws_norot", drawmap = "F
 	pixelwidthPC = pixelwidthDEG*np.pi/180.0*distancePC	# The width of each pixel, in pc.
 
 	subcube = cube[vmin:vmax,ymin:ymax,xmin:xmax]
-	if drawmap == "True":
+	if drawmap == True:
 		plt.figure(1)
 
 		plt.imshow(np.nanmax(data[40:80,ymin:ymax,xmin:xmax].value,axis=0), extent=[(xmin-xshape)*pixelwidthPC,(xmax-xshape)*pixelwidthPC, -(ymax-yshape)*pixelwidthPC,-(ymin-yshape)*pixelwidthPC])
@@ -109,7 +109,7 @@ def structgen(subcube0, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV = 1, nor
 		            #        that of a pixel "dy" rows below is simply dy*m.
 			    #	    Similar case for a pixel "dv" layers below.
 			    #
-		            # In "goodpix", pixels that have wrapped around are treated as "False".
+		            # In "goodpix", pixels that have wrapped around are treated as False.
 		    if normalization==True:
 			    OrigMapPower = np.nanmean(M[goodpix]**2)
 			    RollMapPower = np.nanmean(RollMap[goodpix]**2)

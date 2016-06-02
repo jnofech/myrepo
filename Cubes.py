@@ -140,7 +140,7 @@ def mapgen(S_2, deltaX=30, deltaV=3, deltadeltaV=1, mapname="3Dcube", filename =
 	ddV = deltadeltaV
 	cube = SpectralCube.read(filename+".fits")
 
-	pixelwidthDEG = cube.header['CDELT2']	# The width of each pixel, in degrees.
+	pixelwidthDEG = cube.header['CDELT2']			# The width of each pixel, in degrees.
 	if filename =='m33.co21_iram_CLEANED':			# Checks if the galaxy's Header file contains its distance.
 		distancePC = 840000.0				# The distance to the galaxy that M33's .fits file deals with, in parsecs. ONLY works on the CLEANED file!
 	else:
@@ -245,4 +245,85 @@ def plotgen(S_2, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV=3, mapname="3Dc
 #	plt.ylim([0.9,1.1])
 	plt.legend(loc='lower right')
 	plt.savefig('plot_'+mapname+'.png')
+	plt.clf()
+
+def everythinggen(vmin, vmax, ymin, ymax, xmin, xmax, S_2, deltaX, deltaV, deltadeltaX, deltadeltaV, imagename, filename):
+	
+	cube = SpectralCube.read(filename+".fits")
+	data = cube.filled_data[:]   # Pulls "cube"'s information (position, spectral info (?)) into a 3D Numpy array.
+	yshape = data.shape[1]/2.0
+	xshape = data.shape[2]/2.0
+
+	pixelwidthDEG = cube.header['CDELT2']			# The width of each pixel, in degrees.
+	if filename =='m33.co21_iram_CLEANED':			# Checks if the galaxy's Header file contains its distance.
+		distancePC = 840000.0				# The distance to the galaxy that M33's .fits file deals with, in parsecs. ONLY works on the CLEANED file!
+	else:
+		distancePC = cube.header['DIST']		# The distance to the galaxy that M51's .fits file deals with, in parsecs.  (???) Is this number accurate, though?
+	pixelwidthPC = pixelwidthDEG*np.pi/180.0*distancePC	# The width of each pixel, in pc.
+
+	velocityres = cube.header['CDELT3']			# Velocity resolution in m/s or km/s.
+	if filename != 'paws_norot':                 		# 'paws_norot' already has its velocity resolution in km/s.
+	    velocityres = velocityres / 1000.0
+
+	dX = deltaX                    	# This is simply the maximum absolute value of "dx". So if dX = 1, then dx = {-1,0,1}.
+	dY = np.copy(dX)                # Same as above, but for "dy". For simplicity, let it be the same as dX.
+	dV = deltaV		     	# Same as above, but for "dv".
+	ddX = deltadeltaX
+	ddY = np.copy(ddX)
+	ddV = deltadeltaV
+	nmax = abs(2*dX/ddX)+1
+
+	x = np.linspace(-dX/ddX,dX/ddX,nmax)
+	y = np.linspace(-dY/ddY,dY/ddY,nmax)
+	xx, yy = np.meshgrid(x,y)
+
+	maxradius = ( (dX/ddX)**2 + (dY/ddY)**2 )**0.5
+	mult = 1                        # Increases or decreases the numbers of bins used. Most accurate results at mult=1.
+	reselements = math.floor(mult*maxradius)
+		                        # This is the number of "resolution elements" (i.e. the number of points
+		                        #      on the struct_funct vs. radius plot) that we're dealing with.
+	radiusmap = (xx**2 + yy**2)**0.5
+
+	struct_funct = np.arange(nmax*reselements).reshape(nmax,reselements)
+
+	for i in range (0, dV/ddV+1):	# "delv" defined as "dv/ddV".
+		struct_funct[i], edges, counts = ss.binned_statistic(
+		radiusmap[radiusmap<maxradius], S_2[i][radiusmap<maxradius], statistic=np.nanmean, bins = reselements)
+	X = (np.arange(reselements)/mult) / ((reselements-1)/mult) * (dX**2 + dY**2)**0.5 * pixelwidthPC
+
+
+	fig = plt.figure(9001)
+	fig.set_figsize=(10,4)
+
+	ax1 = fig.add_subplot(131)
+	### Map
+	ax1.imshow(np.nanmax(data[40:80,ymin:ymax,xmin:xmax].value,axis=0), extent=[(xmin-xshape)*pixelwidthPC,(xmax-xshape)*pixelwidthPC, -(ymax-yshape)*pixelwidthPC,-(ymin-yshape)*pixelwidthPC])
+	ax1.set_xlabel('Distance from Centre in x-direction (pc)')
+	ax1.set_ylabel('Distance from Centre in y-direction (pc)')
+	### /Map
+
+	ax2 = fig.add_subplot(132)
+	### Surface
+	ax2.imshow(S_2[0], interpolation = 'none', extent = [-dX*pixelwidthPC,dX*pixelwidthPC,-dY*pixelwidthPC,dY*pixelwidthPC], vmin=0, vmax=S_2.max(), aspect='auto')
+	levels = np.array([0.2,0.4,0.6,0.8])*S_2[0].max()
+	ax2.contour(S_2[0], levels, extent=[-dX*pixelwidthPC,dX*pixelwidthPC,-dY*pixelwidthPC,dY*pixelwidthPC])
+	ax2.set_title('S_2 at 0 km/s')
+	ax2.set_xlabel('Distance from Initial Location in x-direction (pc)')
+	ax2.set_ylabel('Distance from Initial Location in y-direction (pc)')
+	### /Surface
+
+	ax3 = fig.add_subplot(133)
+	### Plot
+	for i in range (0, dV/ddV+1):
+	    if velocityres > 0:
+		ax3.plot(X, struct_funct[i],label='S_2 at +'+str('{0:.2f}'.format(i*ddV*velocityres))+' km/s')
+	    else:
+		ax3.plot(X, struct_funct[i],label='S_2 at '+str('{0:.2f}'.format(i*ddV*velocityres))+' km/s')
+	ax3.set_title('Avg. Struct. Funct. vs. Radial "Distance" from Center of S_2 Plots')
+	ax3.set_xlabel('Distance from Initial Location (pc)')
+	ax3.set_ylabel('Average S_2')
+	ax3.legend(loc='lower right')
+	### /Plot
+
+	plt.savefig('00test'+imagename+'.png')
 	plt.clf()

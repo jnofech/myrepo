@@ -93,7 +93,7 @@ def cleaning(filename_cube='paws-pdbi+30m-12co10-1as.cube.fixed', filename_rotma
 		    for j in range (0,ymax):
 			fx = data0[:,j,i]      	# This is the f(x) mentioned above.
 			fx_bad = np.array(np.isnan(fx), dtype=np.float)   	# This is an array of all the values in "fx" that are NaN.
-			fx_temp = np.nan_to_num(fx)
+			fx_temp = np.nan_to_num(fx)	# Copy of fx, but all NaN values are now zeroes.
 		
 			Fs = np.fft.fft(fx_temp)    	# This is the F(s) of f(x), including all the NaN values which were
 				                    	#     (inaccurately) turned into zeroes.

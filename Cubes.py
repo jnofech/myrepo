@@ -311,7 +311,7 @@ def everythinggen(vmin, vmax, ymin, ymax, xmin, xmax, S_2, deltaX, deltaV, delta
 	### Surface
 	ax2.imshow(S_2[0], interpolation = 'none', extent = [-dX*pixelwidthPC,dX*pixelwidthPC,-dY*pixelwidthPC,dY*pixelwidthPC], vmin=0, vmax=S_2.max(), aspect='auto')
 	levels = np.array([0.2,0.4,0.6,0.8])*S_2[0].max()
-	ax2.contour(S_2[0], levels, extent=[-dX*pixelwidthPC,dX*pixelwidthPC,-dY*pixelwidthPC,dY*pixelwidthPC], colors='k')
+	ax2.contour(np.fliplr(S_2[0]), levels, extent=[-dX*pixelwidthPC,dX*pixelwidthPC,-dY*pixelwidthPC,dY*pixelwidthPC], vmin=0, vmax=S_2.max(), colors='k')
 	ax2.set_title('S_2 at 0 km/s')
 	ax2.set_xlabel('Distance from Initial Location in x-direction (pc)')
 	ax2.set_ylabel('Distance from Initial Location in y-direction (pc)')

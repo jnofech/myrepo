@@ -292,27 +292,31 @@ def everythinggen(vmin, vmax, ymin, ymax, xmin, xmax, S_2, deltaX, deltaV, delta
 	X = (np.arange(reselements)/mult) / ((reselements-1)/mult) * (dX**2 + dY**2)**0.5 * pixelwidthPC
 
 
-	fig = plt.figure(9001)
-	fig.set_figsize=(10,4)
+	fig, axarr = plt.subplots(nrows=1,ncols=3)
+	#fig.subplots_adjust(wspace=0.8,bottom=0.2,right=0.85)
+	#fig.set_figsize=(10,4)
+	ax1, ax2, ax3 = axarr
+	fig = plt.gcf()
+	fig.set_size_inches(20,6)	# Enlarges the image so as to prevent squishing.
 
-	ax1 = fig.add_subplot(131)
+	#ax1 = fig.add_subplot(131)
 	### Map
 	ax1.imshow(np.nanmax(data[40:80,ymin:ymax,xmin:xmax].value,axis=0), extent=[(xmin-xshape)*pixelwidthPC,(xmax-xshape)*pixelwidthPC, -(ymax-yshape)*pixelwidthPC,-(ymin-yshape)*pixelwidthPC])
 	ax1.set_xlabel('Distance from Centre in x-direction (pc)')
 	ax1.set_ylabel('Distance from Centre in y-direction (pc)')
 	### /Map
 
-	ax2 = fig.add_subplot(132)
+	#ax2 = fig.add_subplot(132)
 	### Surface
 	ax2.imshow(S_2[0], interpolation = 'none', extent = [-dX*pixelwidthPC,dX*pixelwidthPC,-dY*pixelwidthPC,dY*pixelwidthPC], vmin=0, vmax=S_2.max(), aspect='auto')
 	levels = np.array([0.2,0.4,0.6,0.8])*S_2[0].max()
-	ax2.contour(S_2[0], levels, extent=[-dX*pixelwidthPC,dX*pixelwidthPC,-dY*pixelwidthPC,dY*pixelwidthPC])
+	ax2.contour(S_2[0], levels, extent=[-dX*pixelwidthPC,dX*pixelwidthPC,-dY*pixelwidthPC,dY*pixelwidthPC], colors='k')
 	ax2.set_title('S_2 at 0 km/s')
 	ax2.set_xlabel('Distance from Initial Location in x-direction (pc)')
 	ax2.set_ylabel('Distance from Initial Location in y-direction (pc)')
 	### /Surface
 
-	ax3 = fig.add_subplot(133)
+	#ax3 = fig.add_subplot(133)
 	### Plot
 	for i in range (0, dV/ddV+1):
 	    if velocityres > 0:
@@ -324,6 +328,6 @@ def everythinggen(vmin, vmax, ymin, ymax, xmin, xmax, S_2, deltaX, deltaV, delta
 	ax3.set_ylabel('Average S_2')
 	ax3.legend(loc='lower right')
 	### /Plot
-
-	plt.savefig('00test'+imagename+'.png')
+	plt.tight_layout()
+	plt.savefig('entire'+imagename+'.png')
 	plt.clf()

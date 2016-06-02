@@ -13,7 +13,7 @@ import astropy.units as u
 import math
 import scipy.stats as ss
 from tempfile import TemporaryFile
- 
+    
 def S2_array(vmin, vmax, ymin, ymax, xmin, xmax, deltaX = 100, deltaV = 3, deltadeltaX = 10, deltadeltaV = 1, filename="paws_norot", drawmap=False, galaxyname='M51'):
 	"""
 	   Generates a noise-corrected array of S_2, from subcube of the 

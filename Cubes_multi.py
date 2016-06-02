@@ -81,7 +81,7 @@ def S2_draw(vmin, vmax, ymin, ymax, xmin, xmax, deltaX = 100, deltaV = 3, deltad
 
 	Cubes.mapgen(S_2, deltaX, deltaV, deltadeltaV, imagename, filename)
 	Cubes.plotgen(S_2, deltaX, deltaV, deltadeltaX, deltadeltaV, imagename, filename)
-
+	Cubes.everythinggen(vmin, vmax, ymin, ymax, xmin, xmax, S_2, deltaX, deltaV, deltadeltaX, deltadeltaV, imagename, filename)
 
 
 def S2_arrayM51(vmin=40,vmax=80, deltaX=40, deltaV=3, deltadeltaX=10, deltadeltaV=1, drawmap = False):
@@ -380,12 +380,26 @@ def compare_S2draw(vmin=40,vmax=80, deltaX=40, deltadeltaX=10):
 	struct_functM51 = np.arange(nmax*reselements).reshape(nmax,reselements)
 	struct_functM33 = np.arange(nmax*reselements).reshape(nmax,reselements)
 
+
 	for i in range (0, dV/ddV+1):	# "i" defined as "dv/ddV".
 		struct_functM51[i], edges, counts = ss.binned_statistic(
 		radiusmap[radiusmap<maxradius], S2_M51[i][radiusmap<maxradius], statistic=np.nanmean, bins = reselements)
 	for i in range (0, dV/ddV+1):	# "i" defined as "dv/ddV".
 		struct_functM33[i], edges, counts = ss.binned_statistic(
 		radiusmap[radiusmap<maxradius], S2_M33[i][radiusmap<maxradius], statistic=np.nanmean, bins = reselements)
+
+	for j in range (0,np.int(reselements)):
+		if np.isnan(struct_functM51[0,(reselements-1)-j]) == False:
+			lowestM51 = struct_functM51[0,(reselements-1)-j]
+		if np.isnan(struct_functM51[0,j]) == False:
+			highestM51 = struct_functM51[0,j]
+		if np.isnan(struct_functM33[0,(reselements-1)-j]) == False:
+			lowestM33 = struct_functM33[0,(reselements-1)-j]
+		if np.isnan(struct_functM33[0,j]) == False:
+			highestM33 = struct_functM33[0,j]
+
+	multM51 = highestM51
+	multM33 = highestM33
 
 	plt.figure(3)
 	fig = matplotlib.pyplot.gcf()	
@@ -395,22 +409,26 @@ def compare_S2draw(vmin=40,vmax=80, deltaX=40, deltadeltaX=10):
 	X_M33 = (np.arange(reselements)/mult) / ((reselements-1)/mult) * (dX**2 + dY**2)**0.5 * pixelwidthPC_M33
 	for i in range (0, dV/ddV+1):							# Plot for M51.
 	    if velocityresM51 > 0:
-		plt.loglog(X_M51, struct_functM51[i],label='S_2 at +'+str('{0:.2f}'.format(i*ddV*velocityresM51))+' km/s for M51')
+		plt.plot(X_M51, struct_functM51[i]/multM51,label='S_2 at +'+str('{0:.2f}'.format(i*ddV*velocityresM51))+' km/s for M51')
 	    else:
-		plt.loglog(X_M51, struct_functM51[i],label='S_2 at '+str('{0:.2f}'.format(i*ddV*velocityresM51))+' km/s for M51')
+		plt.plot(X_M51, struct_functM51[i]/multM51,label='S_2 at '+str('{0:.2f}'.format(i*ddV*velocityresM51))+' km/s for M51')
 
 	for i in range (0, dV/ddV+1):							# Plot for M33.
 	    if velocityresM33 > 0:
-		plt.loglog(X_M33, struct_functM33[i],label='S_2 at +'+str('{0:.2f}'.format(i*ddV*velocityresM33))+' km/s for M33')
+		plt.plot(X_M33, struct_functM33[i]/multM33,label='S_2 at +'+str('{0:.2f}'.format(i*ddV*velocityresM33))+' km/s for M33')
 	    else:
-		plt.loglog(X_M33, struct_functM33[i],label='S_2 at '+str('{0:.2f}'.format(i*ddV*velocityresM33))+' km/s for M33')
+		plt.plot(X_M33, struct_functM33[i]/multM33,label='S_2 at '+str('{0:.2f}'.format(i*ddV*velocityresM33))+' km/s for M33')
+
+	print lowestM51
+	print highestM51
+	print lowestM33
+	print highestM33
 
 	plt.title('Avg. Struct. Funct. vs. Radial "Distance" from Center of S_2 Plots')
 	plt.xlabel('Distance from Initial Location (pc)')
-	plt.ylabel('Average S_2')
+	plt.ylabel('Average S_2 (Normalized)')
 	plt.legend(loc='upper left')
 	plt.savefig('plot_M51andM33_comparison.png')
 	plt.clf()
-
 
 

@@ -304,6 +304,7 @@ def everythinggen(vmin, vmax, ymin, ymax, xmin, xmax, S_2, deltaX, deltaV, delta
 	ax1.imshow(np.nanmax(data[40:80,ymin:ymax,xmin:xmax].value,axis=0), extent=[(xmin-xshape)*pixelwidthPC,(xmax-xshape)*pixelwidthPC, -(ymax-yshape)*pixelwidthPC,-(ymin-yshape)*pixelwidthPC])
 	ax1.set_xlabel('Distance from Centre in x-direction (pc)')
 	ax1.set_ylabel('Distance from Centre in y-direction (pc)')
+	ax1.set_title('T_max Map')
 	### /Map
 
 	#ax2 = fig.add_subplot(132)

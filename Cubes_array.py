@@ -2,7 +2,7 @@
 # 6.08.16 - Works with S_2 surface maps that we've produced.
 
 
-print('\nWelcome to Cubes_array! \n \nAvailable functions: \n  slicer: Generates a thin "slice" of a S_2 surface map. \n  anglefinder: Finds the position angle of a given matrix.' )
+print('\nWelcome to Cubes_array! \n \nAvailable functions: \n  generate: Activates "anglefinder" and "slicer" for a given map.\n  slicer: Generates a thin "slice" of a S_2 surface map. \n  anglefinder: Finds the position angle of a given matrix.' )
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -10,8 +10,55 @@ import numpy as np
 from tempfile import TemporaryFile
 import scipy.interpolate as si
 
+def generate(galaxyname='M51',vmin=40, vmax=80, ymin=200, ymax=400, xmin=360, xmax=560, deltaX=40, deltaV=3, deltadeltaX=1, deltadeltaV=1, nmax=201):
+	"""
+	Takes a S_2 surface map whose name matches the given parameters, finds the angle
+		at which a line cutting through the origin has minimal S_2, and then
+		returns a 1D array containing the (interpolated) values of S_2 along this
+		line.
+
+	Parameters:
+	-----------
+	galaxyname : string
+		Name of the galaxy we're dealing with ('M51' or 'M33').
+	vmin,...,deltadeltaV : int
+		Parameters used in relevant S_2 map.
+	nmax : int
+		Number of values in final 1D array (preferably odd). 
+		Higher is better.
+	
+	Returns:
+	-----------
+	theta : float
+		Angle from x-axis at which a line cutting through 
+		origin has minimal S_2.
+	linearray : array (1D, float)	
+		A list of S_2 values along this line, with the 
+		origin in the middle of the list.
+	linearrayx : array (1D, float)
+		A list of "radius" values along this line, 
+		corresponding to the data appearing in 'linearray'.
+		(It goes from -maxradius to +maxradius, where 
+	  	'maxradius' is the maximum radius of the S_2 
+		surface map.)
+	"""
+	imagename = galaxyname+"_"+str(vmin)+"to"+str(vmax)+"_"+str(ymin)+"to"+str(ymax)+"_"+str(xmin)+"to"+str(xmax)
+	if deltadeltaX == 1 and deltadeltaV == 1:
+		tempname = 'saved_S2array_'+imagename+'_dV_is_'+str(deltaV)+'_dX_is_'+str(deltaX)+'_MAXRES'
+	else:
+		tempname = 'saved_S2array_'+imagename+'_dV_is_'+str(deltaV)+'_dX_is_'+str(deltaX)
+
+	f = file(tempname+".bin","rb")
+	array = np.load(f)
+	f.close()
+
+
+	theta = anglefinder(array[0].max()-array[0],False)
+	linearray, linearrayx = slicer(theta, array[0], nmax)
+
+	return(theta,linearray,linearrayx)
+
 def anglefinder(weight, ReturnSizes=False):
-	sumwts = np.nansum(weight)
 
 	'''
 	Calculates the position angle (measured counter-clockwise from the
@@ -44,6 +91,7 @@ def anglefinder(weight, ReturnSizes=False):
 	#    D = sum of m_{ij}y_{ij}**2
 	# .    
 
+	sumwts = np.nansum(weight)
 	jmax,imax = weight.shape
 
 	a = np.zeros(jmax*imax).reshape(jmax,imax)
@@ -54,71 +102,58 @@ def anglefinder(weight, ReturnSizes=False):
 	jcen = (jmax-1)/2.   # Central j-value, or central y-value.
 
 	for j in range(0,jmax):
-	for i in range(0,imax):
-	    a[j,i] = weight[j,i]*(i-icen)**2
-	    b[j,i] = weight[j,i]*(j-jcen)*(i-icen)
-	    d[j,i] = weight[j,i]*(j-jcen)**2
+		for i in range(0,imax):
+			a[j,i] = weight[j,i]*(i-icen)**2
+			b[j,i] = weight[j,i]*(j-jcen)*(i-icen)
+			d[j,i] = weight[j,i]*(j-jcen)**2
 
 	A = np.nanmean(a)
 	B = np.nanmean(b)
 	C = B
 	D = np.nanmean(d)
 
-	matrix = 1/sumwts*np.array([[A,B],
-		                [C,D]])
-
-	plt.imshow(matrix,interpolation='none')
-	plt.colorbar()
-
+	matrix = 1/sumwts*np.array([[A,B],[C,D]])
 	determ = np.linalg.det(matrix)
 
 	if ~np.isfinite(determ) or determ == 0:
-	return(np.nan)
+		return(np.nan)
 	evals, evecs = np.linalg.eigh(matrix)
 	bigvec = evecs[-1,:]
 	pa = np.arctan2(bigvec[1],bigvec[0])
 	if ReturnSizes:
-	major = evals[-1]
-	minor = evals[0]
-	return (pa,major,minor)
+		major = evals[-1]
+		minor = evals[0]
+		return (pa,major,minor)
 	return(np.pi-pa)
 
 
 
-def slicer(theta, galaxyname='M51',vmin=40, vmax=80, ymin=200, ymax=400, xmin=360, xmax=560, deltaX=40, deltaV=3, deltadeltaX=1, deltadeltaV=1, nmax=201):
+def slicer(theta, array, nmax=201):
 	"""
-	Takes a S_2 surface map whose name matches the given parameters, cuts a thin "slice" through the middle at
-		angle 'theta', and returns a 1D array containing the values of that slice.
+	Takes a S_2 surface map, cuts a thin "slice" through the middle at angle 
+		'theta', and returns a 1D array containing the values of that slice.
 
 	Parameters:
-		theta 		- Angle from origin at which slicing should occur (rad).
-		galaxyname	- Name of the galaxy we're dealing with.
-		vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,deltadeltaX,deltadeltaV
-				- Parameters used in relevant S_2 map.
-		nmax		- Number of values in final 1D array. Higher is better.
+	-----------
+	theta : float
+		Angle from origin at which slicing should occur (rad).
+	array : array
+		The S_2 map that we're dealing with.
+	nmax (int)
+		Number of values in final 1D array. Higher
+		is better.
+	----------
 	"""
 
-	imagename = galaxyname+"_"+str(vmin)+"to"+str(vmax)+"_"+str(ymin)+"to"+str(ymax)+"_"+str(xmin)+"to"+str(xmax)
-	if deltadeltaX == 1 and deltadeltaV == 1:
-		tempname = 'saved_S2array_'+imagename+'_dV_is_'+str(deltaV)+'_dX_is_'+str(deltaX)+'_MAXRES'
-	else:
-		tempname = 'saved_S2array_'+imagename+'_dV_is_'+str(deltaV)+'_dX_is_'+str(deltaX)
-
-	
-
-	f = file(tempname+".bin","rb")
-	array = np.load(f)
-	f.close()
-
-	jmax, imax = array[0].shape
+	jmax, imax = array.shape
 
 	X = np.arange(imax) - (imax-1)/2   # This is a vector going from (-deltaX,-deltaX+1,...,0,...,deltaX-1,deltaX).
 	Y = np.arange(jmax) - (jmax-1)/2
 	fxy = array                        # This is f(x,y). We'll interpolate so that it's a smooth surface,
 		                           #        rather than being made up of countless "pixels".
 
-	fxy1 = si.interp2d(X,Y,array[0])   # This is f(x,y), or "array", but interpolated.
-	fxy1(40,0)                         # Note the parentheses, not brackets.
+	fxy1 = si.interp2d(X,Y,fxy)	   # This is f(x,y), or "array", but interpolated.
+	#print fxy1(40,0)                  # Note the parentheses, not brackets.
 		                           #  ALSO note: the coordinates are reversed!
 
 	maxradius = np.sqrt( ((imax-1)/2)**2 + ((jmax-1)/2)**2 )    	# Largest "distance" from center of 'fxy'.
@@ -142,4 +177,4 @@ def slicer(theta, galaxyname='M51',vmin=40, vmax=80, ymin=200, ymax=400, xmin=36
 #	plt.plot(linearrayx,linearray,'.')
 #	plt.show()
 #	plt.clf()
-	return linearray#,linearrayx
+	return linearray,linearrayx

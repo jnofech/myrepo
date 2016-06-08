@@ -2,13 +2,87 @@
 # 6.08.16 - Works with S_2 surface maps that we've produced.
 
 
-print('\nWelcome to Cubes_array! \n \nAvailable functions: \n  slicer: Generates a thin "slice" of a S_2 surface map. \n' )
+print('\nWelcome to Cubes_array! \n \nAvailable functions: \n  slicer: Generates a thin "slice" of a S_2 surface map. \n  anglefinder: Finds the position angle of a given matrix.' )
 
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 from tempfile import TemporaryFile
 import scipy.interpolate as si
+
+def anglefinder(weight, ReturnSizes=False):
+	sumwts = np.nansum(weight)
+
+	'''
+	Calculates the position angle (measured counter-clockwise from the
+	x-axis) for a weight matrix "weight".  This is the
+	moment-of-inertia approach.
+	
+	Parameters
+	----------
+	weight : float
+		2D matrix showing weight for each point.  
+		Should be non-negative.
+	ReturnSizes : bool
+		If True, return major and minor axis sizes along with 
+		position angle.
+	-------
+	'''
+
+	#
+	#                _     _
+	#               |       |
+	#               | A   B |
+	#      matrix = |       |
+	#               | C   D |
+	#               |_     _|
+	#
+	# where:
+	#    A = sum of m_{ij}x_{ij}**2
+	#    B = sum of m_{ij}y_{ij}x_{ij}
+	#    C = B
+	#    D = sum of m_{ij}y_{ij}**2
+	# .    
+
+	jmax,imax = weight.shape
+
+	a = np.zeros(jmax*imax).reshape(jmax,imax)
+	b = np.zeros(jmax*imax).reshape(jmax,imax)
+	d = np.zeros(jmax*imax).reshape(jmax,imax)
+
+	icen = (imax-1)/2.   # Central i-value, or central x-value.
+	jcen = (jmax-1)/2.   # Central j-value, or central y-value.
+
+	for j in range(0,jmax):
+	for i in range(0,imax):
+	    a[j,i] = weight[j,i]*(i-icen)**2
+	    b[j,i] = weight[j,i]*(j-jcen)*(i-icen)
+	    d[j,i] = weight[j,i]*(j-jcen)**2
+
+	A = np.nanmean(a)
+	B = np.nanmean(b)
+	C = B
+	D = np.nanmean(d)
+
+	matrix = 1/sumwts*np.array([[A,B],
+		                [C,D]])
+
+	plt.imshow(matrix,interpolation='none')
+	plt.colorbar()
+
+	determ = np.linalg.det(matrix)
+
+	if ~np.isfinite(determ) or determ == 0:
+	return(np.nan)
+	evals, evecs = np.linalg.eigh(matrix)
+	bigvec = evecs[-1,:]
+	pa = np.arctan2(bigvec[1],bigvec[0])
+	if ReturnSizes:
+	major = evals[-1]
+	minor = evals[0]
+	return (pa,major,minor)
+	return(np.pi-pa)
+
 
 
 def slicer(theta, galaxyname='M51',vmin=40, vmax=80, ymin=200, ymax=400, xmin=360, xmax=560, deltaX=40, deltaV=3, deltadeltaX=1, deltadeltaV=1, nmax=201):

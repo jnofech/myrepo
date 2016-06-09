@@ -2,8 +2,9 @@
 # 6.08.16 - Works with S_2 surface maps that we've produced.
 
 
-print('\nWelcome to Cubes_array! \n \nAvailable functions: \n  generate: Activates "anglefinder" and "slicer" for a given map.\n  slicer: Generates a thin "slice" of a S_2 surface map. \n  anglefinder: Finds the position angle of a given matrix.' )
+print('\nWelcome to Cubes_array! \n \nAvailable functions: \n  generate: Activates "anglefinder" and "slicer" for a given map.\n  slicer: Generates a thin "slice" of a S_2 surface map. \n  anglefinder: Finds the position angle of a given matrix. \n  plot: Generates a map showing the line of minimal S_2, along with a plot \n        showing the values along this line. \n  presetM51: Runs "generate" for various preset regions of M51.\n  presetM33: Same as above, but for M33.' )
 
+from spectral_cube import SpectralCube
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
@@ -52,11 +53,20 @@ def generate(galaxyname='M51',vmin=40, vmax=80, ymin=200, ymax=400, xmin=360, xm
 	array = np.load(f)
 	f.close()
 
+	if galaxyname=='M51':
+		filename = "paws_norot"
+	else:
+		if galaxyname=='M33':
+			filename = "m33.co21_iram_CLEANED"
+		else:
+			print 'ERROR: Galaxy must be M51 or M33.'
+			return
 
 	theta = anglefinder(array[0].max()-array[0],False)
-	linearray, linearrayx = slicer(theta, array[0], nmax)
+	linearray, linearrayx, maxradius2 = slicer(theta, array[0], nmax)
+	plot(theta,maxradius2,array,linearray,linearrayx, filename, imagename, deltaX, deltaV)
 
-	return(theta,linearray,linearrayx)
+#	return(theta,linearray,linearrayx)
 
 def anglefinder(weight, ReturnSizes=False):
 
@@ -124,7 +134,7 @@ def anglefinder(weight, ReturnSizes=False):
 		major = evals[-1]
 		minor = evals[0]
 		return (pa,major,minor)
-	return(np.pi-pa)
+	return(pa)
 
 
 
@@ -174,7 +184,142 @@ def slicer(theta, array, nmax=201):
 		linearray[i] = np.nan
 		
 	linearrayx = np.linspace(-1,1,nmax) * maxradius
-#	plt.plot(linearrayx,linearray,'.')
-#	plt.show()
-#	plt.clf()
-	return linearray,linearrayx
+
+
+	return linearray,linearrayx,maxradius2
+
+
+def plot(theta,maxradius2,array,linearray,linearrayx, filename="paws_norot", imagename="defaultname", deltaX=40, deltaV=3):
+	'''
+	Given a map, its position angle, the values along
+		the low-S_2 "slice", and other information,
+		generates a map showing the position angle
+		and a plot showing the values along the 
+		low-S_2 "slice".
+
+	Parameters:
+	-----------
+	theta : float
+		Angle of minimal S_2 along the provided map,
+		counterclockwise from x-axis, in radians.
+		Found using "Cubes_array.slicer".
+	maxradius2 : float
+		Distance between a line drawn at the map's
+		centre (at angle 'theta') and the border of
+		the map, in pixels.
+		Found using "Cubes_array.slicer".
+	array : array
+		The S_2 map that we're dealing with.
+	linearray : array (1D, float)
+		A list of S_2 values along the line of
+		minimal S_2, with the origin in the middle 
+		of the list.
+		Found using "Cubes_array.slicer".
+	linearrayx : array (1D, float)
+		A list of "radius" values along this line, 
+		corresponding to the data appearing in 'linearray'.
+		(It goes from -maxradius to +maxradius, where 
+	  	'maxradius' is the maximum radius of the S_2 
+		surface map.)
+		Found using "Cubes_array.slicer".
+	filename : string
+		Name of the .fits file that the array came
+		from. "paws_norot" for M51, "m33.co21_iram_CLEANED"
+		for M33.
+	imagename : string
+		Name of the image that will be saved.
+	deltaX, deltaV : int
+		Parameters used in the relevant S_2 map.
+	'''
+
+	cube = SpectralCube.read(filename+".fits")
+	data = cube.filled_data[:]   # Pulls "cube"'s information (position, spectral info (?)) into a 3D Numpy array.
+	yshape = data.shape[1]/2.0
+	xshape = data.shape[2]/2.0
+
+	pixelwidthDEG = cube.header['CDELT2']			# The width of each pixel, in degrees.
+	if filename =='m33.co21_iram_CLEANED':			# Checks if the galaxy's Header file contains its distance.
+	    distancePC = 840000.0				# The distance to the galaxy that M33's .fits file deals with, in parsecs. ONLY works on the CLEANED file!
+	else:
+	    distancePC = cube.header['DIST']		# The distance to the galaxy that M51's .fits file deals with, in parsecs.  (???) Is this number accurate, though?
+	pixelwidthPC = pixelwidthDEG*np.pi/180.0*distancePC	# The width of each pixel, in pc.
+
+	dX = deltaX                    	# This is simply the maximum absolute value of "dx". So if dX = 1, then dx = {-1,0,1}.
+	dY = np.copy(dX)                # Same as above, but for "dy". For simplicity, let it be the same as dX.
+	dV = deltaV		     	# Same as above, but for "dv".
+
+	jmax,imax = array[0].shape
+
+	# PLOTTING EVERYTHING
+	# -------------------
+	fig, axarr = plt.subplots(nrows=1,ncols=2)
+	ax1, ax2 = axarr
+	fig = plt.gcf()
+	fig.set_size_inches(12,6)	# Enlarges the image so as to prevent squishing.
+
+	ax1.imshow(array[0], interpolation = 'none', extent = [-dX*pixelwidthPC,dX*pixelwidthPC,-dY*pixelwidthPC,dY*pixelwidthPC], vmin=0, vmax=array.max(), aspect='auto')
+	ax1.set_title('S_2 at 0 km/s')
+	ax1.set_xlabel('Distance from Initial Location in x-direction (pc)')
+	ax1.set_ylabel('Distance from Initial Location in y-direction (pc)')
+	xmin = max(-maxradius2*np.cos(theta) , -(imax-1)/2 )
+	xmax = min( maxradius2*np.cos(theta) , (imax-1)/2 )
+	ymin = max(-maxradius2*np.sin(theta) , -(jmax-1)/2 )
+	ymax = min( maxradius2*np.sin(theta) , (jmax-1)/2 )
+	ax1.plot([xmin*pixelwidthPC,xmax*pixelwidthPC], [ymin*pixelwidthPC,ymax*pixelwidthPC], 'k-')
+	ax1.set_xlim(-dX*pixelwidthPC-0.5,dX*pixelwidthPC-0.5)
+	ax1.set_ylim(-dY*pixelwidthPC+0.5,dY*pixelwidthPC+0.5)
+
+	ax2.plot(linearrayx,linearray,'k-')
+	ax2.set_title('S_2 along "Line of Lowest S_2", versus Radius')
+	ax2.set_xlabel('Distance from Center along Line (pc)')
+	ax2.set_ylabel('S_2')
+
+	plt.tight_layout()
+	plt.savefig("S2_minimal_"+imagename+".png")
+	plt.clf()
+	# -------------------
+
+def presetM51(vmin=40,vmax=80, deltaX=40, deltaV=3, deltadeltaX=1, deltadeltaV=1):
+	'''
+	Activates Cubes_array.generate using each of
+		the preset regions of M51.
+
+	Parameters:
+	-----------
+	vmin,...,deltadeltaV : int
+		Parameters used in the relevant S_2 map.
+	'''
+	
+	galaxyname = 'M51'
+
+	ymin = np.array([350,200,220,350,350,100,200])	# These are the minimum "y" values of the regions that we're dealing with.
+	ymax = np.array([550,400,420,550,550,300,400])	# These are the corresponding maximum "y" values of these regions.
+	xmin = np.array([500,425,260,120,250,570,360])	# These are the corresponding minimum "x" values of these regions.
+	xmax = np.array([700,625,460,320,450,770,560])	# These are the corresponding maximum "x" values of these regions. (Example: The first region has ymin=350, ymax=550, xmin=500, xmax=700.)
+	sets = np.ravel(ymin.shape)[0]		# This is the number of regions that we're dealing with.
+
+	for i in range(0,sets):
+		generate(galaxyname, vmin,vmax,ymin[i],ymax[i],xmin[i],xmax[i],deltaX,deltaV,deltadeltaX,deltadeltaV,401)
+
+def presetM33(vmin=40,vmax=80, deltaX=40, deltaV=6, deltadeltaX=1, deltadeltaV=1):
+	'''
+	Activates Cubes_array.generate using each of
+		the preset regions of M33.
+
+	Parameters:
+	-----------
+	vmin,...,deltadeltaV : int
+		Parameters used in the relevant S_2 map.
+	'''
+	
+	galaxyname = 'M33'
+
+	ymin = np.array([350,600,650,525,300,250])	# These are the minimum "y" values of the regions that we're dealing with.
+	ymax = np.array([550,800,850,725,500,450])	# These are the corresponding maximum "y" values of these regions.
+	xmin = np.array([500,100,400,288,200,550])	# These are the corresponding minimum "x" values of these regions.
+	xmax = np.array([700,300,600,488,400,750])	# These are the corresponding maximum "x" values of these regions. (Example: The first region has ymin=350, ymax=550, xmin=500, xmax=700.)
+	sets = np.ravel(ymin.shape)[0]		# This is the number of regions that we're dealing with.
+
+	for i in range(0,sets):
+		generate(galaxyname, vmin,vmax,ymin[i],ymax[i],xmin[i],xmax[i],deltaX,deltaV,deltadeltaX,deltadeltaV,401)
+

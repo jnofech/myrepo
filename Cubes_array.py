@@ -33,12 +33,12 @@ def generate(galaxyname='M51',vmin=40, vmax=80, ymin=200, ymax=400, xmin=360, xm
 	theta : float
 		Angle from x-axis at which a line cutting through 
 		origin has minimal S_2.
-	linearray : array (1D, float)	
+	linearray1 : array (1D, float)	
 		A list of S_2 values along this line, with the 
 		origin in the middle of the list.
 	linearrayx : array (1D, float)
 		A list of "radius" values along this line, 
-		corresponding to the data appearing in 'linearray'.
+		corresponding to the data appearing in 'linearray1'.
 		(It goes from -maxradius to +maxradius, where 
 	  	'maxradius' is the maximum radius of the S_2 
 		surface map.)
@@ -63,10 +63,10 @@ def generate(galaxyname='M51',vmin=40, vmax=80, ymin=200, ymax=400, xmin=360, xm
 			return
 
 	theta = anglefinder(array[0].max()-array[0],False)
-	linearray, linearrayx, maxradius2 = slicer(theta, array[0], nmax)
-	plot(theta,maxradius2,array,linearray,linearrayx, filename, imagename, deltaX, deltaV)
+	linearrayx, linearray1, linearray2, maxradius1, maxradius2 = slicer(theta, array[0], nmax)
+	plot(theta,maxradius1,maxradius2,array,linearrayx,linearray1,linearray2, filename, imagename, deltaX, deltaV)
 
-#	return(theta,linearray,linearrayx)
+#	return(theta,linearray1,linearrayx)
 
 def anglefinder(weight, ReturnSizes=False):
 
@@ -167,29 +167,41 @@ def slicer(theta, array, nmax=201):
 		                           #  ALSO note: the coordinates are reversed!
 
 	maxradius = np.sqrt( ((imax-1)/2)**2 + ((jmax-1)/2)**2 )    	# Largest "distance" from center of 'fxy'.
-	nmax = nmax                                                 	# Must be odd for 'linearray' to be perfectly 
+	nmax = nmax                                                 	# Must be odd for 'linearray1' to be perfectly 
 		                                                    	#    zero in the middle. Other than that, even is fine.
 
-	linearray = np.linspace(0,0,nmax)				# This will be the final array returned. It should be plotted against 'linearrayx', which is below.
+	linearray1 = np.linspace(0,0,nmax)				# This will be the final array returned. It should be plotted against 'linearrayx', which is below.
+	linearray2 = np.linspace(0,0,nmax)
+
+	theta2 = theta + np.pi/2.
 
 	for i in range(0,nmax):
 	    r = (i-(nmax-1.)/2.) / ((nmax-1.)/2.) * maxradius
 	    x = r*np.cos(theta)
 	    y = r*np.sin(theta)
 	    if np.abs(x) <= (imax-1.)/2. and np.abs(y) <= (jmax-1.)/2.:
-		linearray[i] = fxy1(x,y)
-		maxradius2 = r                                      # Largest "distance" from center of 'fxy1' along the
+		linearray1[i] = fxy1(x,y)
+		maxradius1 = r                                      # Largest "distance" from center of 'fxy1' along the
 		                                                    #    straight line at angle 'theta' from origin.
 	    else:
-		linearray[i] = np.nan
+		linearray1[i] = np.nan
+
+	    x2 = r*np.cos(theta2)
+	    y2 = r*np.sin(theta2)
+	    if np.abs(x2) <= (imax-1.)/2. and np.abs(y2) <= (jmax-1.)/2.:
+		linearray2[i] = fxy1(x2,y2)
+		maxradius2 = r                                      # Largest "distance" from center of 'fxy1' along the
+		                                                    #    straight line at angle 'theta' from origin PLUS 90 DEGREES.
+	    else:
+		linearray2[i] = np.nan
 		
 	linearrayx = np.linspace(-1,1,nmax) * maxradius
 
 
-	return linearray,linearrayx,maxradius2
+	return linearrayx,linearray1,linearray2,maxradius1,maxradius2
 
 
-def plot(theta,maxradius2,array,linearray,linearrayx, filename="paws_norot", imagename="defaultname", deltaX=40, deltaV=3):
+def plot(theta,maxradius1,maxradius2,array,linearrayx,linearray1,linearray2, filename="paws_norot", imagename="defaultname", deltaX=40, deltaV=3):
 	'''
 	Given a map, its position angle, the values along
 		the low-S_2 "slice", and other information,
@@ -203,24 +215,31 @@ def plot(theta,maxradius2,array,linearray,linearrayx, filename="paws_norot", ima
 		Angle of minimal S_2 along the provided map,
 		counterclockwise from x-axis, in radians.
 		Found using "Cubes_array.slicer".
-	maxradius2 : float
+	maxradius1 : float
 		Distance between a line drawn at the map's
 		centre (at angle 'theta') and the border of
 		the map, in pixels.
 		Found using "Cubes_array.slicer".
+	maxradius2 : float
+		Same as above, but at angle 'theta + pi/2'.
 	array : array
 		The S_2 map that we're dealing with.
-	linearray : array (1D, float)
-		A list of S_2 values along the line of
-		minimal S_2, with the origin in the middle 
-		of the list.
-		Found using "Cubes_array.slicer".
 	linearrayx : array (1D, float)
 		A list of "radius" values along this line, 
 		corresponding to the data appearing in 'linearray'.
 		(It goes from -maxradius to +maxradius, where 
 	  	'maxradius' is the maximum radius of the S_2 
 		surface map.)
+		Found using "Cubes_array.slicer".
+	linearray1 : array (1D, float)
+		A list of S_2 values along the line of
+		minimal S_2, with the origin in the middle 
+		of the list.
+		Found using "Cubes_array.slicer".
+	linearray2 : array (1D, float)
+		A list of S_2 values perpendicular to the line of
+		minimal S_2, with the origin in the middle 
+		of the list.
 		Found using "Cubes_array.slicer".
 	filename : string
 		Name of the .fits file that the array came
@@ -250,29 +269,39 @@ def plot(theta,maxradius2,array,linearray,linearrayx, filename="paws_norot", ima
 
 	jmax,imax = array[0].shape
 
+	theta2 = theta + np.pi/2.
+
 	# PLOTTING EVERYTHING
 	# -------------------
 	fig, axarr = plt.subplots(nrows=1,ncols=2)
 	ax1, ax2 = axarr
 	fig = plt.gcf()
-	fig.set_size_inches(12,6)	# Enlarges the image so as to prevent squishing.
+	fig.set_size_inches(15,7.5)	# Enlarges the image so as to prevent squishing.
 
 	ax1.imshow(array[0], interpolation = 'none', extent = [-dX*pixelwidthPC,dX*pixelwidthPC,-dY*pixelwidthPC,dY*pixelwidthPC], vmin=0, vmax=array.max(), aspect='auto')
 	ax1.set_title('S_2 at 0 km/s')
 	ax1.set_xlabel('Distance from Initial Location in x-direction (pc)')
 	ax1.set_ylabel('Distance from Initial Location in y-direction (pc)')
-	xmin = max(-maxradius2*np.cos(theta) , -(imax-1)/2 )
-	xmax = min( maxradius2*np.cos(theta) , (imax-1)/2 )
-	ymin = max(-maxradius2*np.sin(theta) , -(jmax-1)/2 )
-	ymax = min( maxradius2*np.sin(theta) , (jmax-1)/2 )
+	xmin = max(-maxradius1*np.cos(theta) , -(imax-1)/2 )
+	xmax = min( maxradius1*np.cos(theta) , (imax-1)/2 )
+	ymin = max(-maxradius1*np.sin(theta) , -(jmax-1)/2 )
+	ymax = min( maxradius1*np.sin(theta) , (jmax-1)/2 )
 	ax1.plot([xmin*pixelwidthPC,xmax*pixelwidthPC], [ymin*pixelwidthPC,ymax*pixelwidthPC], 'k-')
+	xmin2 = max(-maxradius2*np.cos(theta2) , -(imax-1)/2 )
+	xmax2 = min( maxradius2*np.cos(theta2) , (imax-1)/2 )
+	ymin2 = max(-maxradius2*np.sin(theta2) , -(jmax-1)/2 )
+	ymax2 = min( maxradius2*np.sin(theta2) , (jmax-1)/2 )
+	ax1.plot([xmin2*pixelwidthPC,xmax2*pixelwidthPC], [ymin2*pixelwidthPC,ymax2*pixelwidthPC], 'k:')
+
 	ax1.set_xlim(-dX*pixelwidthPC-0.5,dX*pixelwidthPC-0.5)
 	ax1.set_ylim(-dY*pixelwidthPC+0.5,dY*pixelwidthPC+0.5)
 
-	ax2.plot(linearrayx,linearray,'k-')
+	ax2.plot(linearrayx,linearray1,'k-',label='Principal Axis')
+	ax2.plot(linearrayx,linearray2,'k:',label='Principal Axis + pi/2')
 	ax2.set_title('S_2 along "Line of Lowest S_2", versus Radius')
 	ax2.set_xlabel('Distance from Center along Line (pc)')
 	ax2.set_ylabel('S_2')
+	ax2.legend(loc='lower left')
 
 	plt.tight_layout()
 	plt.savefig("S2_minimal_"+imagename+".png")

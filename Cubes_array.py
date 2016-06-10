@@ -213,7 +213,7 @@ def slicer(theta, array, nmax=201):
 		linearray1[i] = np.nan
 
 	    x2 = r*np.cos(theta2)
-	    y2 = r*np.sin(theta2)
+	    y2 = -r*np.sin(theta2)
 	    if np.abs(x2) <= (imax-1.)/2. and np.abs(y2) <= (jmax-1.)/2.:
 		linearray2[i] = fxy1(x2,y2)
 		maxradius2 = r                                      # Largest "distance" from center of 'fxy1' along the

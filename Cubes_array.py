@@ -28,7 +28,7 @@ def generate(galaxyname='M51',vmin=40, vmax=80, ymin=200, ymax=400, xmin=360, xm
 		Number of values in final 1D array (preferably odd). 
 		Higher is better.
 	
-	Returns:
+	Returns (DISABLED at the moment):
 	-----------
 	theta : float
 		Angle from x-axis at which a line cutting through 
@@ -75,7 +75,7 @@ def anglefinder(weight, ReturnSizes=False):
 	x-axis) for a weight matrix "weight".  This is the
 	moment-of-inertia approach.
 	
-	Parameters
+	Parameters:
 	----------
 	weight : float
 		2D matrix showing weight for each point.  
@@ -83,6 +83,10 @@ def anglefinder(weight, ReturnSizes=False):
 	ReturnSizes : bool
 		If True, return major and minor axis sizes along with 
 		position angle.
+
+	Returns:
+	pa : float
+		Position angle of the provided matrix.
 	-------
 	'''
 
@@ -153,6 +157,28 @@ def slicer(theta, array, nmax=201):
 		Number of values in final 1D array. Higher
 		is better.
 	----------
+	
+	Returns:
+	-----------
+	linearrayx : array (1D, float)
+		A list of "radius" values that corresponds
+		to linearray1 and linearray2's data. It goes
+		from -maxradius to +maxradius, where 'maxradius'
+		is the maximum radius of the S_2 surface map.
+	linearray1 : array (1D, float)	
+		A list of S_2 values along the principal axis
+		(i.e. the line of minimal S_2), with the 
+		origin in the middle of the list.
+	linearray2 : array (1D, float)
+		Same as linearray1, but for the line
+		perpendicular to the principal axis.
+	maxradius1 : float
+		The length of a line drawn along the principal
+		axis from the center of the S_2 surface map
+		to the map's outer edge. Important for plotting.
+	maxradius2 : float
+		Same as maxradius1, but for the line
+		perpendicular to the principal axis.
 	"""
 
 	jmax, imax = array.shape
@@ -178,7 +204,7 @@ def slicer(theta, array, nmax=201):
 	for i in range(0,nmax):
 	    r = (i-(nmax-1.)/2.) / ((nmax-1.)/2.) * maxradius
 	    x = r*np.cos(theta)
-	    y = r*np.sin(theta)
+	    y = -r*np.sin(theta)
 	    if np.abs(x) <= (imax-1.)/2. and np.abs(y) <= (jmax-1.)/2.:
 		linearray1[i] = fxy1(x,y)
 		maxradius1 = r                                      # Largest "distance" from center of 'fxy1' along the
@@ -296,8 +322,8 @@ def plot(theta,maxradius1,maxradius2,array,linearrayx,linearray1,linearray2, fil
 	ax1.set_xlim(-dX*pixelwidthPC-0.5,dX*pixelwidthPC-0.5)
 	ax1.set_ylim(-dY*pixelwidthPC+0.5,dY*pixelwidthPC+0.5)
 
-	ax2.plot(linearrayx,linearray1,'k-',label='Principal Axis')
-	ax2.plot(linearrayx,linearray2,'k:',label='Principal Axis + pi/2')
+	ax2.plot(linearrayx*pixelwidthPC,linearray1,'k-',label='Principal Axis')
+	ax2.plot(linearrayx*pixelwidthPC,linearray2,'k:',label='Principal Axis + pi/2')
 	ax2.set_title('S_2 along "Line of Lowest S_2", versus Radius')
 	ax2.set_xlabel('Distance from Center along Line (pc)')
 	ax2.set_ylabel('S_2')

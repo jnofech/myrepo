@@ -121,10 +121,10 @@ def anglefinder(weight, ReturnSizes=False):
 			b[j,i] = weight[j,i]*(j-jcen)*(i-icen)
 			d[j,i] = weight[j,i]*(j-jcen)**2
 
-	A = np.nanmean(a)
-	B = np.nanmean(b)
+	A = np.nansum(a)
+	B = np.nansum(b)
 	C = B
-	D = np.nanmean(d)
+	D = np.nansum(d)
 
 	matrix = 1/sumwts*np.array([[A,B],[C,D]])
 	determ = np.linalg.det(matrix)

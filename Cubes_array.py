@@ -138,7 +138,7 @@ def anglefinder(weight, ReturnSizes=False):
 		major = evals[-1]
 		minor = evals[0]
 		return (pa,major,minor)
-	return(pa)
+	return(-pa)
 
 
 
@@ -204,7 +204,7 @@ def slicer(theta, array, nmax=201):
 	for i in range(0,nmax):
 	    r = (i-(nmax-1.)/2.) / ((nmax-1.)/2.) * maxradius
 	    x = r*np.cos(theta)
-	    y = -r*np.sin(theta)
+	    y = r*np.sin(theta)
 	    if np.abs(x) <= (imax-1.)/2. and np.abs(y) <= (jmax-1.)/2.:
 		linearray1[i] = fxy1(x,y)
 		maxradius1 = r                                      # Largest "distance" from center of 'fxy1' along the
@@ -213,7 +213,7 @@ def slicer(theta, array, nmax=201):
 		linearray1[i] = np.nan
 
 	    x2 = r*np.cos(theta2)
-	    y2 = -r*np.sin(theta2)
+	    y2 = r*np.sin(theta2)
 	    if np.abs(x2) <= (imax-1.)/2. and np.abs(y2) <= (jmax-1.)/2.:
 		linearray2[i] = fxy1(x2,y2)
 		maxradius2 = r                                      # Largest "distance" from center of 'fxy1' along the
@@ -304,7 +304,8 @@ def plot(theta,maxradius1,maxradius2,array,linearrayx,linearray1,linearray2, fil
 	fig = plt.gcf()
 	fig.set_size_inches(15,7.5)	# Enlarges the image so as to prevent squishing.
 
-	ax1.imshow(array[0], interpolation = 'none', extent = [-dX*pixelwidthPC,dX*pixelwidthPC,-dY*pixelwidthPC,dY*pixelwidthPC], vmin=0, vmax=array.max(), aspect='auto')
+	ax1.imshow(array[0], interpolation = 'none', extent = [-dX*pixelwidthPC,dX*pixelwidthPC,-dY*pixelwidthPC,dY*pixelwidthPC],\
+		   vmin=0, vmax=array.max(), aspect='auto', origin='lower')
 	ax1.set_title('S_2 at 0 km/s')
 	ax1.set_xlabel('Distance from Initial Location in x-direction (pc)')
 	ax1.set_ylabel('Distance from Initial Location in y-direction (pc)')

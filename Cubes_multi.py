@@ -117,7 +117,7 @@ def S2_arrayM51(vmin=40,vmax=80, deltaX=40, deltaV=3, deltadeltaX=10, deltadelta
 		plt.figure(0)
 		yshape = data.shape[1]/2.0
 		xshape = data.shape[2]/2.0
-		plt.imshow(np.nanmax(data[vmin:vmax].value,axis=0), vmin=0, extent=[-xshape*pixelwidthPC,xshape*pixelwidthPC,-yshape*pixelwidthPC,yshape*pixelwidthPC])
+		plt.imshow(np.nanmax(data[vmin:vmax].value,axis=0), vmin=0, extent=[-xshape*pixelwidthPC,xshape*pixelwidthPC,-yshape*pixelwidthPC,yshape*pixelwidthPC], origin='lower')
 		plt.colorbar()
 		fig = plt.gcf()
 		fig.set_size_inches(15,7)	# Enlarges the image so as to prevent squishing.
@@ -131,7 +131,7 @@ def S2_arrayM51(vmin=40,vmax=80, deltaX=40, deltaV=3, deltadeltaX=10, deltadelta
 		ax1 = galaxymap.add_subplot(111)
 		yshape = data.shape[1]/2.0
 		xshape = data.shape[2]/2.0
-		plt.imshow(np.nanmax(data[vmin:vmax].value,axis=0), vmin=0)
+		plt.imshow(np.nanmax(data[vmin:vmax].value,axis=0), vmin=0, origin='lower')
 		for i in range(0,sets):				# Adds red rectangles highlighting the regions that we're using.
 			ax1.add_patch( patches.Rectangle((xmin[i], ymin[i]), (xmax[i]-xmin[i]), (ymax[i]-ymin[i]), fill=False, edgecolor='red'))
 		fig = plt.gcf()
@@ -211,7 +211,7 @@ def S2_arrayM33(vmin=40,vmax=80, deltaX=40, deltaV=6, deltadeltaX=10, deltadelta
 		plt.figure(0)
 		yshape = data.shape[1]/2.0
 		xshape = data.shape[2]/2.0
-		plt.imshow(np.nanmax(data[vmin:vmax].value,axis=0), vmin=0, vmax=1, extent=[-xshape*pixelwidthPC,xshape*pixelwidthPC,-yshape*pixelwidthPC,yshape*pixelwidthPC])
+		plt.imshow(np.nanmax(data[vmin:vmax].value,axis=0), vmin=0, vmax=1, extent=[-xshape*pixelwidthPC,xshape*pixelwidthPC,-yshape*pixelwidthPC,yshape*pixelwidthPC], origin='lower')
 		plt.colorbar()
 		fig = plt.gcf()
 		fig.set_size_inches(7, 10)	# Enlarges the image so as to prevent squishing.
@@ -225,7 +225,7 @@ def S2_arrayM33(vmin=40,vmax=80, deltaX=40, deltaV=6, deltadeltaX=10, deltadelta
 		ax1 = galaxymap.add_subplot(111)
 		yshape = data.shape[1]/2.0
 		xshape = data.shape[2]/2.0
-		plt.imshow(np.nanmax(data[vmin:vmax].value,axis=0), vmin=0, vmax=1)
+		plt.imshow(np.nanmax(data[vmin:vmax].value,axis=0), vmin=0, vmax=1, origin='lower')
 		for i in range(0,sets):				# Adds red rectangles highlighting the regions that we're using.
 			ax1.add_patch( patches.Rectangle((xmin[i], ymin[i]), (xmax[i]-xmin[i]), (ymax[i]-ymin[i]), fill=False, edgecolor='red'))
 		fig = plt.gcf()

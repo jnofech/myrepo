@@ -42,7 +42,7 @@ def cubegen(vmin,vmax,ymin,ymax,xmin,xmax, filename = "paws_norot", drawmap = Fa
 	if drawmap == True:
 		plt.figure(1)
 
-		plt.imshow(np.nanmax(data[40:80,ymin:ymax,xmin:xmax].value,axis=0), extent=[(xmin-xshape)*pixelwidthPC,(xmax-xshape)*pixelwidthPC, -(ymax-yshape)*pixelwidthPC,-(ymin-yshape)*pixelwidthPC])
+		plt.imshow(np.nanmax(data[40:80,ymin:ymax,xmin:xmax].value,axis=0), extent=[(xmin-xshape)*pixelwidthPC,(xmax-xshape)*pixelwidthPC, -(ymax-yshape)*pixelwidthPC,-(ymin-yshape)*pixelwidthPC], origin='lower')
 		fig = matplotlib.pyplot.gcf()
 		#fig.set_size_inches(5, 5)	# Enlarges the image so as to prevent squishing.
 		plt.xlabel('Distance from Centre in x-direction (pc)')
@@ -159,13 +159,13 @@ def mapgen(S_2, deltaX=30, deltaV=3, deltadeltaV=1, mapname="3Dcube", filename =
 	fig.set_size_inches(15, 7)
 
 	plt.subplot(121)
-	plt.imshow(S_2[0], interpolation = 'none', extent = [-dX*pixelwidthPC,dX*pixelwidthPC,-dY*pixelwidthPC,dY*pixelwidthPC], vmin=0, vmax=S_2.max(), aspect='auto')
+	plt.imshow(S_2[0], interpolation = 'none', extent = [-dX*pixelwidthPC,dX*pixelwidthPC,-dY*pixelwidthPC,dY*pixelwidthPC], vmin=0, vmax=S_2.max(), aspect='auto', origin='lower')
 	plt.title('S_2 at 0 km/s')
 	#plt.xlabel('Distance from Initial Location in x-direction (pc)')
 	#plt.ylabel('Distance from Initial Location in y-direction (pc)')
 
 	plt.subplot(122)
-	plt.imshow(S_2[dV/ddV], interpolation = 'none', extent = [-dX*pixelwidthPC,dX*pixelwidthPC,-dY*pixelwidthPC,dY*pixelwidthPC], vmin=0, vmax=S_2.max(), aspect='auto')
+	plt.imshow(S_2[dV/ddV], interpolation = 'none', extent = [-dX*pixelwidthPC,dX*pixelwidthPC,-dY*pixelwidthPC,dY*pixelwidthPC], vmin=0, vmax=S_2.max(), aspect='auto', origin='lower')
 	if velocityres > 0:
 	    plt.title('S_2 at +'+str('{0:.2f}'.format(dV*velocityres))+' km/s')
 	else:
@@ -301,7 +301,7 @@ def everythinggen(vmin, vmax, ymin, ymax, xmin, xmax, S_2, deltaX, deltaV, delta
 
 	#ax1 = fig.add_subplot(131)
 	### Map
-	ax1.imshow(np.nanmax(data[40:80,ymin:ymax,xmin:xmax].value,axis=0), extent=[(xmin-xshape)*pixelwidthPC,(xmax-xshape)*pixelwidthPC, -(ymax-yshape)*pixelwidthPC,-(ymin-yshape)*pixelwidthPC])
+	ax1.imshow(np.nanmax(data[40:80,ymin:ymax,xmin:xmax].value,axis=0), extent=[(xmin-xshape)*pixelwidthPC,(xmax-xshape)*pixelwidthPC, -(ymax-yshape)*pixelwidthPC,-(ymin-yshape)*pixelwidthPC], origin='lower')
 	ax1.set_xlabel('Distance from Centre in x-direction (pc)')
 	ax1.set_ylabel('Distance from Centre in y-direction (pc)')
 	ax1.set_title('T_max Map')
@@ -309,9 +309,9 @@ def everythinggen(vmin, vmax, ymin, ymax, xmin, xmax, S_2, deltaX, deltaV, delta
 
 	#ax2 = fig.add_subplot(132)
 	### Surface
-	ax2.imshow(S_2[0], interpolation = 'none', extent = [-dX*pixelwidthPC,dX*pixelwidthPC,-dY*pixelwidthPC,dY*pixelwidthPC], vmin=0, vmax=S_2.max(), aspect='auto')
+	ax2.imshow(S_2[0], interpolation = 'none', extent = [-dX*pixelwidthPC,dX*pixelwidthPC,-dY*pixelwidthPC,dY*pixelwidthPC], vmin=0, vmax=S_2.max(), aspect='auto', origin='lower')
 	levels = np.array([0.2,0.4,0.6,0.8])*S_2[0].max()
-	ax2.contour(np.fliplr(S_2[0]), levels, extent=[-dX*pixelwidthPC,dX*pixelwidthPC,-dY*pixelwidthPC,dY*pixelwidthPC], vmin=0, vmax=S_2.max(), colors='k')
+	ax2.contour(S_2[0], levels, extent=[-dX*pixelwidthPC,dX*pixelwidthPC,-dY*pixelwidthPC,dY*pixelwidthPC], vmin=0, vmax=S_2.max(), colors='k')
 	ax2.set_title('S_2 at 0 km/s')
 	ax2.set_xlabel('Distance from Initial Location in x-direction (pc)')
 	ax2.set_ylabel('Distance from Initial Location in y-direction (pc)')

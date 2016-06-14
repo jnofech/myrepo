@@ -41,8 +41,8 @@ def cubegen(vmin,vmax,ymin,ymax,xmin,xmax, filename = "paws_norot", drawmap = Fa
 	subcube = cube[vmin:vmax,ymin:ymax,xmin:xmax]
 	if drawmap == True:
 		plt.figure(1)
-
-		plt.imshow(np.nanmax(data[40:80,ymin:ymax,xmin:xmax].value,axis=0), extent=[(xmin-xshape)*pixelwidthPC,(xmax-xshape)*pixelwidthPC, -(ymax-yshape)*pixelwidthPC,-(ymin-yshape)*pixelwidthPC], origin='lower')
+		plt.imshow(np.nanmax(data[vmin:vmax,ymin:ymax,xmin:xmax].value,axis=0), extent=[(xmin-xshape)*pixelwidthPC,(xmax-xshape)*pixelwidthPC, \
+			   (ymin-yshape)*pixelwidthPC,(ymax-yshape)*pixelwidthPC], origin='lower')
 		fig = matplotlib.pyplot.gcf()
 		#fig.set_size_inches(5, 5)	# Enlarges the image so as to prevent squishing.
 		plt.xlabel('Distance from Centre in x-direction (pc)')
@@ -301,7 +301,8 @@ def everythinggen(vmin, vmax, ymin, ymax, xmin, xmax, S_2, deltaX, deltaV, delta
 
 	#ax1 = fig.add_subplot(131)
 	### Map
-	ax1.imshow(np.nanmax(data[40:80,ymin:ymax,xmin:xmax].value,axis=0), extent=[(xmin-xshape)*pixelwidthPC,(xmax-xshape)*pixelwidthPC, -(ymax-yshape)*pixelwidthPC,-(ymin-yshape)*pixelwidthPC], origin='lower')
+	ax1.imshow(np.nanmax(data[vmin:vmax,ymin:ymax,xmin:xmax].value,axis=0), extent=[(xmin-xshape)*pixelwidthPC,(xmax-xshape)*pixelwidthPC, \
+		   (ymin-yshape)*pixelwidthPC,(ymax-yshape)*pixelwidthPC], origin='lower')
 	ax1.set_xlabel('Distance from Centre in x-direction (pc)')
 	ax1.set_ylabel('Distance from Centre in y-direction (pc)')
 	ax1.set_title('T_max Map')

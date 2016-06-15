@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from tempfile import TemporaryFile
 import scipy.interpolate as si
+from scipy.signal import argrelextrema as ae
 
 def generate(galaxyname='M51',vmin=40, vmax=80, ymin=200, ymax=400, xmin=360, xmax=560, deltaX=40, deltaV=3, deltadeltaX=1, deltadeltaV=1, nmax=201):
 	"""
@@ -297,6 +298,22 @@ def plot(theta,maxradius1,maxradius2,array,linearrayx,linearray1,linearray2, fil
 
 	theta2 = theta + np.pi/2.
 
+	nmax = linearrayx.shape[0]
+
+	dlinearray1 = np.gradient(linearray1, 2*maxradius1 / np.count_nonzero(~np.isnan(linearray1)) )		# Derivative of linearray1.
+	ddlinearray1 = np.gradient(dlinearray1, 2*maxradius1 / np.count_nonzero(~np.isnan(linearray1)) )	# Second derivative of linearray1.
+
+	linearray1_min = np.linspace(np.nan,np.nan,nmax)
+	linearray1_min[ ae(ddlinearray1,np.greater) ] = linearray1[ ae(ddlinearray1,np.greater) ]		# Maxima of second derivative of linearray1.
+
+	dlinearray2 = np.gradient(linearray2, 2*maxradius2 / np.count_nonzero(~np.isnan(linearray2)) )		# Same as above, but for linearray2.
+	ddlinearray2 = np.gradient(dlinearray2, 2*maxradius2 / np.count_nonzero(~np.isnan(linearray2)) )	#
+
+	linearray2_min = np.linspace(np.nan,np.nan,nmax)
+	linearray2_min[ ae(ddlinearray2,np.greater) ] = linearray2[ ae(ddlinearray2,np.greater) ]		#
+
+
+
 	# PLOTTING EVERYTHING
 	# -------------------
 	fig, axarr = plt.subplots(nrows=1,ncols=2)
@@ -323,8 +340,11 @@ def plot(theta,maxradius1,maxradius2,array,linearrayx,linearray1,linearray2, fil
 	ax1.set_xlim(-dX*pixelwidthPC-0.5,dX*pixelwidthPC-0.5)
 	ax1.set_ylim(-dY*pixelwidthPC+0.5,dY*pixelwidthPC+0.5)
 
+
 	ax2.plot(linearrayx*pixelwidthPC,linearray1,'k-',label='Principal Axis')
+	ax2.plot(linearrayx*pixelwidthPC,linearray1_min,'r.')
 	ax2.plot(linearrayx*pixelwidthPC,linearray2,'k:',label='Principal Axis + pi/2')
+	ax2.plot(linearrayx*pixelwidthPC,linearray2_min,'g.')
 	ax2.set_title('S_2 along "Line of Lowest S_2", versus Radius')
 	ax2.set_xlabel('Distance from Center along Line (pc)')
 	ax2.set_ylabel('S_2')
@@ -355,7 +375,8 @@ def presetM51(vmin=40,vmax=80, deltaX=40, deltaV=3, deltadeltaX=1, deltadeltaV=1
 	sets = np.ravel(ymin.shape)[0]		# This is the number of regions that we're dealing with.
 
 	for i in range(0,sets):
-		generate(galaxyname, vmin,vmax,ymin[i],ymax[i],xmin[i],xmax[i],deltaX,deltaV,deltadeltaX,deltadeltaV,401)
+		generate(galaxyname, vmin,vmax,ymin[i],ymax[i],xmin[i],xmax[i],deltaX,deltaV,deltadeltaX,deltadeltaV,201)
+
 
 def presetM33(vmin=40,vmax=80, deltaX=40, deltaV=6, deltadeltaX=1, deltadeltaV=1):
 	'''
@@ -377,5 +398,5 @@ def presetM33(vmin=40,vmax=80, deltaX=40, deltaV=6, deltadeltaX=1, deltadeltaV=1
 	sets = np.ravel(ymin.shape)[0]		# This is the number of regions that we're dealing with.
 
 	for i in range(0,sets):
-		generate(galaxyname, vmin,vmax,ymin[i],ymax[i],xmin[i],xmax[i],deltaX,deltaV,deltadeltaX,deltadeltaV,401)
+		generate(galaxyname, vmin,vmax,ymin[i],ymax[i],xmin[i],xmax[i],deltaX,deltaV,deltadeltaX,deltadeltaV,201)
 

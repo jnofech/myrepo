@@ -300,17 +300,17 @@ def plot(theta,maxradius1,maxradius2,array,linearrayx,linearray1,linearray2, fil
 
 	nmax = linearrayx.shape[0]
 
-	dlinearray1 = np.gradient(linearray1, 2*maxradius1 / np.count_nonzero(~np.isnan(linearray1)) )		# Derivative of linearray1.
-	ddlinearray1 = np.gradient(dlinearray1, 2*maxradius1 / np.count_nonzero(~np.isnan(linearray1)) )	# Second derivative of linearray1.
+	dlinearray1 = np.gradient(linearray1, 2*maxradius1 / np.count_nonzero(~np.isnan(linearray1)) ,edge_order=2)		# Derivative of linearray1.
+	ddlinearray1 = np.gradient(dlinearray1, 2*maxradius1 / np.count_nonzero(~np.isnan(linearray1)) ,edge_order=2)		# Second derivative of linearray1.
 
 	linearray1_min = np.linspace(np.nan,np.nan,nmax)
-	linearray1_min[ ae(ddlinearray1,np.greater) ] = linearray1[ ae(ddlinearray1,np.greater) ]		# Maxima of second derivative of linearray1.
+	linearray1_min[ ae(ddlinearray1,np.greater,order=5) ] = linearray1[ ae(ddlinearray1,np.greater,order=5) ]				# Maxima of second derivative of linearray1.
 
-	dlinearray2 = np.gradient(linearray2, 2*maxradius2 / np.count_nonzero(~np.isnan(linearray2)) )		# Same as above, but for linearray2.
-	ddlinearray2 = np.gradient(dlinearray2, 2*maxradius2 / np.count_nonzero(~np.isnan(linearray2)) )	#
+	dlinearray2 = np.gradient(linearray2, 2*maxradius2 / np.count_nonzero(~np.isnan(linearray2)) ,edge_order=2)		# Same as above, but for linearray2.
+	ddlinearray2 = np.gradient(dlinearray2, 2*maxradius2 / np.count_nonzero(~np.isnan(linearray2)) ,edge_order=2)		#
 
 	linearray2_min = np.linspace(np.nan,np.nan,nmax)
-	linearray2_min[ ae(ddlinearray2,np.greater) ] = linearray2[ ae(ddlinearray2,np.greater) ]		#
+	linearray2_min[ ae(ddlinearray2,np.greater,order=5) ] = linearray2[ ae(ddlinearray2,np.greater,order=5) ]				#
 
 
 

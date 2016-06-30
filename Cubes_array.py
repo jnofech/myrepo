@@ -139,7 +139,7 @@ def anglefinder(weight, ReturnSizes=False):
 		major = evals[-1]
 		minor = evals[0]
 		return (pa,major,minor)
-	return(-pa)
+	return(pa)
 
 
 

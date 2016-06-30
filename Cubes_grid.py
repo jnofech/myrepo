@@ -4,6 +4,7 @@
 print('\nWelcome to Cubes_grid! \n \nAvailable functions: \n  arrayM51: Activates Cubes_multi.S2_arrayM51 for many procedurally-\n                        generated region selections in M51. \n  drawM51: Activates Cubes_multi.S2_draw for the above subcubes.\n  arrayM33: Activates Cubes_multi.S2_arrayM33 for many procedurally-\n                        generated region selections in M33. \n  drawM51: Activates Cubes_multi.S2_draw for the above subcubes.\n \nThis program makes use of Cubes_multi.py and Cubes.py.\n \n')
 
 import Cubes_multi
+import Cubes_array
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
@@ -118,7 +119,7 @@ def drawM51(vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=10, deltadeltaV=1)
 			if (np.float(np.count_nonzero(np.isnan(testcube))) / np.float(np.count_nonzero(testcube))) < 0.05:
 				# Checks if there are a hugely-significant number of "NaN" values in the region.
 				Cubes_multi.S2_draw(vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,deltadeltaX,deltadeltaV,filename,galaxyname)
-
+				Cubes_array.generate(galaxyname,vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,deltadeltaX,deltadeltaV,201)
 
 
 def arrayM33(vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=10, deltadeltaV=1, drawmap=False):
@@ -225,3 +226,4 @@ def drawM33(vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=10, deltadeltaV=1)
 			if (np.float(np.count_nonzero(np.isnan(testcube))) / np.float(np.count_nonzero(testcube))) < 0.05:
 				# Checks if there are a hugely-significant number of "NaN" values in the region.
 				Cubes_multi.S2_draw(vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,deltadeltaX,deltadeltaV,filename,galaxyname)
+				Cubes_array.generate(galaxyname,vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,deltadeltaX,deltadeltaV,201)

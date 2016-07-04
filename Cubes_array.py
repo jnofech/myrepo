@@ -116,12 +116,14 @@ def anglefinder(weight, ReturnSizes=False):
 	icen = (imax-1)/2.   # Central i-value, or central x-value.
 	jcen = (jmax-1)/2.   # Central j-value, or central y-value.
 
+	rmax = 0.35*np.min([jmax,imax])
+
 	for j in range(0,jmax):
 		for i in range(0,imax):
-			a[j,i] = weight[j,i]*(i-icen)**2
-			b[j,i] = weight[j,i]*(j-jcen)*(i-icen)
-			d[j,i] = weight[j,i]*(j-jcen)**2
-
+			if np.sqrt((i-icen)**2 + (j-jcen)**2) < rmax:
+				a[j,i] = weight[j,i]*(i-icen)**2
+				b[j,i] = weight[j,i]*(j-jcen)*(i-icen)
+				d[j,i] = weight[j,i]*(j-jcen)**2
 	A = np.nansum(a)
 	B = np.nansum(b)
 	C = B
@@ -139,6 +141,7 @@ def anglefinder(weight, ReturnSizes=False):
 		major = evals[-1]
 		minor = evals[0]
 		return (pa,major,minor)
+
 	return(pa)
 
 
@@ -194,6 +197,9 @@ def slicer(theta, array, nmax=201):
 		                           #  ALSO note: the coordinates are reversed!
 
 	maxradius = np.sqrt( ((imax-1)/2)**2 + ((jmax-1)/2)**2 )    	# Largest "distance" from center of 'fxy'.
+	maxradius1 = np.nan
+	maxradius2 = np.nan
+
 	nmax = nmax                                                 	# Must be odd for 'linearray1' to be perfectly 
 		                                                    	#    zero in the middle. Other than that, even is fine.
 

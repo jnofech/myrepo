@@ -14,6 +14,8 @@ import astropy.units as u
 import math
 import scipy.stats as ss
 from tempfile import TemporaryFile
+from astropy.table import Table
+from decimal import Decimal
 
 def arrayM51(vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=10, deltadeltaV=1, drawmap = False):
 	"""Activates Cubes_multi.S2_array for many procedurally-selected regions in
@@ -111,16 +113,63 @@ def drawM51(vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=10, deltadeltaV=1)
 	height = 150						# Height of each selected region. Must be an even number.
 	width = np.copy(height)					# Width of each selected region. Must be an even number.
 
+	i = 0							# Counts the number of cubes that we're dealing with.
+
 	for ymax in range(height, data.shape[1], height/2):
 		for xmax in range(width,data.shape[2],width/2):
 			ymin = ymax-height
 			xmin = xmax-height
 			testcube = data[vmin:vmax,ymin:ymax,xmin:xmax]
 			if (np.float(np.count_nonzero(np.isnan(testcube))) / np.float(np.count_nonzero(testcube))) < 0.05:
-				# Checks if there are a hugely-significant number of "NaN" values in the region.
+				# ^ Checks if there are a hugely-significant number of "NaN" values in the region.
 				Cubes_multi.S2_draw(vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,deltadeltaX,deltadeltaV,filename,galaxyname)
-				Cubes_array.generate(galaxyname,vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,deltadeltaX,deltadeltaV,201)
+				i = i+1
+	imax = i						# This is the number of cubes involved.
+	i = 0							# Resets the counter.	
 
+	cubename = [None]*imax
+	xcoord1 = [None]*imax
+	xcoord2 = [None]*imax
+	xcoord3 = [None]*imax
+	ycoord1 = [None]*imax
+	ycoord2 = [None]*imax
+	ycoord3 = [None]*imax
+
+	for ymax in range(height, data.shape[1], height/2):
+		for xmax in range(width,data.shape[2],width/2):
+			ymin = ymax-height
+			xmin = xmax-height
+			testcube = data[vmin:vmax,ymin:ymax,xmin:xmax]
+			if (np.float(np.count_nonzero(np.isnan(testcube))) / np.float(np.count_nonzero(testcube))) < 0.05:	
+
+				theta, linearray1_min, radlist = Cubes_array.generate(galaxyname,vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,deltadeltaX,deltadeltaV,201)
+				# ^ 'theta' is the position angle, 'radlist' are the radius values along the principal axis, and 'linearray1_min' are the S_2 local minima
+				#	values on this line-- corresponding to 'radlist' for convenience.
+				# We want to find the three closest-to-zero-but-still-above-a-threshold-radius positions along this principal axis at which there are minima.
+			
+				xpositions, ypositions = extremacoords(theta,linearray1_min,radlist)		# Returns the x- and y-coordinates of three extrema near the center of the map.
+
+				xcoord1[i] = xpositions[0]
+				xcoord2[i] = xpositions[1]
+				xcoord3[i] = xpositions[2]
+
+				ycoord1[i] = ypositions[0]
+				ycoord2[i] = ypositions[1]
+				ycoord3[i] = ypositions[2]
+
+				cubename[i] = galaxyname+"_"+str(vmin)+"to"+str(vmax)+"_"+str(ymin)+"to"+str(ymax)+"_"+str(xmin)+"to"+str(xmax)
+
+				i = i+1
+
+	t = Table([cubename,xcoord1,ycoord1,xcoord2,ycoord2,xcoord3,ycoord3], names=('Cube Name','x1','y1','x2','y2','x3','y3'), meta={'name': 'TABLE'})
+	t['x1'].unit='pc'
+	t['x2'].unit='pc'
+	t['x3'].unit='pc'
+	t['y1'].unit='pc'
+	t['y2'].unit='pc'
+	t['y3'].unit='pc'		
+				
+	return t
 
 def arrayM33(vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=10, deltadeltaV=1, drawmap=False):
 	"""Activates Cubes_multi.S2_array for many procedurally-selected regions in
@@ -218,12 +267,107 @@ def drawM33(vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=10, deltadeltaV=1)
 	height = 150						# Height of each selected region. Must be an even number.
 	width = np.copy(height)					# Width of each selected region. Must be an even number.
 
+	i = 0							# Counts the number of cubes that we're dealing with.
+
 	for ymax in range(height, data.shape[1], height/2):
 		for xmax in range(width,data.shape[2],width/2):
 			ymin = ymax-height
 			xmin = xmax-height
 			testcube = data[vmin:vmax,ymin:ymax,xmin:xmax]
 			if (np.float(np.count_nonzero(np.isnan(testcube))) / np.float(np.count_nonzero(testcube))) < 0.05:
-				# Checks if there are a hugely-significant number of "NaN" values in the region.
-				Cubes_multi.S2_draw(vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,deltadeltaX,deltadeltaV,filename,galaxyname)
-				Cubes_array.generate(galaxyname,vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,deltadeltaX,deltadeltaV,201)
+				# ^ Checks if there are a hugely-significant number of "NaN" values in the region.
+#				Cubes_multi.S2_draw(vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,deltadeltaX,deltadeltaV,filename,galaxyname)
+				i = i+1
+	imax = i						# This is the number of cubes involved.
+	i = 0							# Resets the counter.	
+
+	cubename = [None]*imax
+	xcoord1 = [None]*imax
+	xcoord2 = [None]*imax
+	xcoord3 = [None]*imax
+	ycoord1 = [None]*imax
+	ycoord2 = [None]*imax
+	ycoord3 = [None]*imax
+
+	for ymax in range(height, data.shape[1], height/2):
+		for xmax in range(width,data.shape[2],width/2):
+			ymin = ymax-height
+			xmin = xmax-height
+			testcube = data[vmin:vmax,ymin:ymax,xmin:xmax]
+			if (np.float(np.count_nonzero(np.isnan(testcube))) / np.float(np.count_nonzero(testcube))) < 0.05:	
+
+				theta, linearray1_min, radlist = Cubes_array.generate(galaxyname,vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,deltadeltaX,deltadeltaV,201)
+				# ^ 'theta' is the position angle, 'radlist' are the radius values along the principal axis, and 'linearray1_min' are the S_2 local minima
+				#	values on this line-- corresponding to 'radlist' for convenience.
+				# We want to find the three closest-to-zero-but-still-above-a-threshold-radius positions along this principal axis at which there are minima.
+			
+				xpositions, ypositions = extremacoords(theta,linearray1_min,radlist)		# Returns the x- and y-coordinates of three extrema near the center of the map.
+
+				xcoord1[i] = xpositions[0]
+				xcoord2[i] = xpositions[1]
+				xcoord3[i] = xpositions[2]
+
+				ycoord1[i] = ypositions[0]
+				ycoord2[i] = ypositions[1]
+				ycoord3[i] = ypositions[2]
+
+				cubename[i] = galaxyname+"_"+str(vmin)+"to"+str(vmax)+"_"+str(ymin)+"to"+str(ymax)+"_"+str(xmin)+"to"+str(xmax)
+
+				i = i+1
+
+	t = Table([cubename,xcoord1,ycoord1,xcoord2,ycoord2,xcoord3,ycoord3], names=('Cube Name','x1','y1','x2','y2','x3','y3'), meta={'name': 'TABLE'})
+	t['x1'].unit='pc'
+	t['x2'].unit='pc'
+	t['x3'].unit='pc'
+	t['y1'].unit='pc'
+	t['y2'].unit='pc'
+	t['y3'].unit='pc'		
+				
+	return t
+
+
+def extremacoords(theta,linearray1_min,radlist):
+	radii = radlist[~np.isnan(linearray1_min)]
+
+	minrad = 50					# Minimum radius (pc) for extrema to be considered for the table.
+
+	rpositions = np.zeros(3)			# We'll only consider the first three minima. If we change it
+							#       here, we need to change it in the "draw" functions too.
+	xpositions = [None]*3
+	ypositions = [None]*3
+	
+	if radii[radii>minrad].size > 2:
+		print radii[radii>minrad].shape
+		rpositions[0] = radii[radii>minrad][0]		# The first radius above 'minrad' at which there is a minimum.
+		rpositions[1] = radii[radii>minrad][1]		# The second radius above 'minrad' at which there is a minimum.
+		rpositions[2] = radii[radii>minrad][2]		# The third radius above 'minrad' at which there is a minimum.
+		xpos = rpositions*np.cos(theta)			# Converts the radius values into x- and y-coordinates.
+		ypos = rpositions*np.sin(theta)
+
+		xpositions[0] = round(Decimal(xpos[0]),2)	# Converts "xpositions" to Decimal format, then rounds it.
+		xpositions[1] = round(Decimal(xpos[1]),2)	# Converts "xpositions" to Decimal format, then rounds it.
+		xpositions[2] = round(Decimal(xpos[2]),2)	# Converts "xpositions" to Decimal format, then rounds it.
+
+		ypositions[0] = round(Decimal(ypos[0]),2)	# Converts "xpositions" to Decimal format, then rounds it.
+		ypositions[1] = round(Decimal(ypos[1]),2)	# Converts "xpositions" to Decimal format, then rounds it.
+		ypositions[2] = round(Decimal(ypos[2]),2)	# Converts "xpositions" to Decimal format, then rounds it.
+
+		return xpositions,ypositions
+
+	else:
+		if radii[radii>minrad].size == 2:
+			print radii[radii>minrad]
+			rpositions[0] = radii[radii>minrad][0]		# The first radius above 'minrad' at which there is a minimum.
+			rpositions[1] = radii[radii>minrad][1]		# The second radius above 'minrad' at which there is a minimum.
+			xpos = rpositions*np.cos(theta)			# Converts the radius values into x- and y-coordinates.
+			ypos = rpositions*np.sin(theta)
+
+			xpositions[0] = round(Decimal(xpos[0]),2)	# Converts "xpositions" to Decimal format, then rounds it.
+			xpositions[1] = round(Decimal(xpos[1]),2)	# Converts "xpositions" to Decimal format, then rounds it.
+
+			ypositions[0] = round(Decimal(ypos[0]),2)	# Converts "xpositions" to Decimal format, then rounds it.
+			ypositions[1] = round(Decimal(ypos[1]),2)	# Converts "xpositions" to Decimal format, then rounds it.
+
+			return xpositions,ypositions
+		else:
+			print "ERROR: Need more minima with radii above 50pc"

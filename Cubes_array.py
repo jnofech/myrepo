@@ -34,11 +34,11 @@ def generate(galaxyname='M51',vmin=40, vmax=80, ymin=200, ymax=400, xmin=360, xm
 	theta : float
 		Angle from x-axis at which a line cutting through 
 		origin has minimal S_2.
-	linearray1 : array (1D, float)	
-		A list of S_2 values along this line, with the 
-		origin in the middle of the list.
-	linearrayx : array (1D, float)
-		A list of "radius" values along this line, 
+	linearray1_min : array (1D, float)	
+		A list of minimal S_2 values along the principal
+		axis, with the origin in the middle of the list.
+	radlist : array (1D, float)
+		A list of "radius" values along this line (in pc), 
 		corresponding to the data appearing in 'linearray1'.
 		(It goes from -maxradius to +maxradius, where 
 	  	'maxradius' is the maximum radius of the S_2 
@@ -65,9 +65,9 @@ def generate(galaxyname='M51',vmin=40, vmax=80, ymin=200, ymax=400, xmin=360, xm
 
 	theta = anglefinder(array[0].max()-array[0],False)
 	linearrayx, linearray1, linearray2, maxradius1, maxradius2 = slicer(theta, array[0], nmax)
-	plot(theta,maxradius1,maxradius2,array,linearrayx,linearray1,linearray2, filename, imagename, deltaX, deltaV)
+	linearray1_min, radlist = plot(theta,maxradius1,maxradius2,array,linearrayx,linearray1,linearray2, filename, imagename, deltaX, deltaV)
 
-#	return(theta,linearray1,linearrayx)
+	return(theta,linearray1_min,radlist)
 
 def anglefinder(weight, ReturnSizes=False):
 
@@ -282,6 +282,19 @@ def plot(theta,maxradius1,maxradius2,array,linearrayx,linearray1,linearray2, fil
 		Name of the image that will be saved.
 	deltaX, deltaV : int
 		Parameters used in the relevant S_2 map.
+
+	Returns (DISABLED at the moment):
+	-----------
+	linearray1_min : array (1D, float)	
+		A list of local minima of S_2 along the principal axis, 
+		with the origin in the middle of the list.
+	radlist : array (1D, float)
+		A list of "radius" values along the principal axis, 
+		corresponding to the data appearing in 'linearray1_min'.
+		(It goes from -maxradius to +maxradius, where 
+	  	'maxradius' is the maximum radius of the S_2 
+		surface map.)
+		Note: This is in units of parsecs!
 	'''
 
 	cube = SpectralCube.read(filename+".fits")
@@ -310,13 +323,13 @@ def plot(theta,maxradius1,maxradius2,array,linearrayx,linearray1,linearray2, fil
 	ddlinearray1 = np.gradient(dlinearray1, 2*maxradius1 / np.count_nonzero(~np.isnan(linearray1)) ,edge_order=2)		# Second derivative of linearray1.
 
 	linearray1_min = np.linspace(np.nan,np.nan,nmax)
-	linearray1_min[ ae(ddlinearray1,np.greater,order=5) ] = linearray1[ ae(ddlinearray1,np.greater,order=5) ]				# Maxima of second derivative of linearray1.
+	linearray1_min[ ae(ddlinearray1,np.greater,order=5) ] = linearray1[ ae(ddlinearray1,np.greater,order=5) ]		# Maxima of second derivative of linearray1.
 
 	dlinearray2 = np.gradient(linearray2, 2*maxradius2 / np.count_nonzero(~np.isnan(linearray2)) ,edge_order=2)		# Same as above, but for linearray2.
 	ddlinearray2 = np.gradient(dlinearray2, 2*maxradius2 / np.count_nonzero(~np.isnan(linearray2)) ,edge_order=2)		#
 
 	linearray2_min = np.linspace(np.nan,np.nan,nmax)
-	linearray2_min[ ae(ddlinearray2,np.greater,order=5) ] = linearray2[ ae(ddlinearray2,np.greater,order=5) ]				#
+	linearray2_min[ ae(ddlinearray2,np.greater,order=5) ] = linearray2[ ae(ddlinearray2,np.greater,order=5) ]		#
 
 
 
@@ -360,6 +373,9 @@ def plot(theta,maxradius1,maxradius2,array,linearrayx,linearray1,linearray2, fil
 	plt.savefig("S2_minimal_"+imagename+".png")
 	plt.clf()
 	# -------------------
+
+	radlist = linearrayx*pixelwidthPC			# A 1D array of the radii along the principal axis.
+	return linearray1_min, radlist				#
 
 def presetM51(vmin=40,vmax=80, deltaX=40, deltaV=3, deltadeltaX=1, deltadeltaV=1):
 	'''

@@ -352,8 +352,6 @@ def extremacoords(theta,linearray1_min,radlist):
 		ypositions[1] = round(Decimal(ypos[1]),2)	# Converts "xpositions" to Decimal format, then rounds it.
 		ypositions[2] = round(Decimal(ypos[2]),2)	# Converts "xpositions" to Decimal format, then rounds it.
 
-		return xpositions,ypositions
-
 	else:
 		if radii[radii>minrad].size == 2:
 			print radii[radii>minrad]
@@ -368,6 +366,8 @@ def extremacoords(theta,linearray1_min,radlist):
 			ypositions[0] = round(Decimal(ypos[0]),2)	# Converts "xpositions" to Decimal format, then rounds it.
 			ypositions[1] = round(Decimal(ypos[1]),2)	# Converts "xpositions" to Decimal format, then rounds it.
 
-			return xpositions,ypositions
 		else:
 			print "ERROR: Need more minima with radii above 50pc"
+
+
+	return xpositions,ypositions

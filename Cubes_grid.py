@@ -276,7 +276,7 @@ def drawM33(vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=10, deltadeltaV=1)
 			testcube = data[vmin:vmax,ymin:ymax,xmin:xmax]
 			if (np.float(np.count_nonzero(np.isnan(testcube))) / np.float(np.count_nonzero(testcube))) < 0.05:
 				# ^ Checks if there are a hugely-significant number of "NaN" values in the region.
-#				Cubes_multi.S2_draw(vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,deltadeltaX,deltadeltaV,filename,galaxyname)
+				Cubes_multi.S2_draw(vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,deltadeltaX,deltadeltaV,filename,galaxyname)
 				i = i+1
 	imax = i						# This is the number of cubes involved.
 	i = 0							# Resets the counter.	

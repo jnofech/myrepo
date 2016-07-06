@@ -16,6 +16,7 @@ import scipy.stats as ss
 from tempfile import TemporaryFile
 from astropy.table import Table
 from decimal import Decimal
+import csv
 
 def arrayM51(vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=10, deltadeltaV=1, drawmap = False):
 	"""Activates Cubes_multi.S2_array for many procedurally-selected regions in
@@ -168,7 +169,13 @@ def drawM51(vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=10, deltadeltaV=1)
 	t['y1'].unit='pc'
 	t['y2'].unit='pc'
 	t['y3'].unit='pc'		
-				
+	
+
+	# Save 't' as a table in .csv format
+	with open('S2_minimal_M51.csv', 'w') as csvfile:
+	    writer = csv.writer(csvfile)
+	    [writer.writerow(r) for r in t]	
+		
 	return t
 
 def arrayM33(vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=10, deltadeltaV=1, drawmap=False):
@@ -322,7 +329,12 @@ def drawM33(vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=10, deltadeltaV=1)
 	t['y1'].unit='pc'
 	t['y2'].unit='pc'
 	t['y3'].unit='pc'		
-				
+			
+	# Save 't' as a table in .csv format
+	with open('S2_minimal_M33.csv', 'w') as csvfile:
+	    writer = csv.writer(csvfile)
+	    [writer.writerow(r) for r in t]	
+	
 	return t
 
 
@@ -337,7 +349,6 @@ def extremacoords(theta,linearray1_min,radlist):
 	ypositions = [None]*3
 	
 	if radii[radii>minrad].size > 2:
-		print radii[radii>minrad].shape
 		rpositions[0] = radii[radii>minrad][0]		# The first radius above 'minrad' at which there is a minimum.
 		rpositions[1] = radii[radii>minrad][1]		# The second radius above 'minrad' at which there is a minimum.
 		rpositions[2] = radii[radii>minrad][2]		# The third radius above 'minrad' at which there is a minimum.
@@ -354,7 +365,6 @@ def extremacoords(theta,linearray1_min,radlist):
 
 	else:
 		if radii[radii>minrad].size == 2:
-			print radii[radii>minrad]
 			rpositions[0] = radii[radii>minrad][0]		# The first radius above 'minrad' at which there is a minimum.
 			rpositions[1] = radii[radii>minrad][1]		# The second radius above 'minrad' at which there is a minimum.
 			xpos = rpositions*np.cos(theta)			# Converts the radius values into x- and y-coordinates.

@@ -368,29 +368,29 @@ def extremacoords(theta,linearray1_min,radlist):
 		rpositions[0] = radii[radii>minrad][0]		# The first radius above 'minrad' at which there is a minimum.
 		rpositions[1] = radii[radii>minrad][1]		# The second radius above 'minrad' at which there is a minimum.
 		rpositions[2] = radii[radii>minrad][2]		# The third radius above 'minrad' at which there is a minimum.
-		xpos = rpositions*np.cos(theta)			# Converts the radius values into x- and y-coordinates.
-		ypos = rpositions*np.sin(theta)
+		xpositions = rpositions*np.cos(theta)			# Converts the radius values into x- and y-coordinates.
+		ypositions = rpositions*np.sin(theta)
 
-		xpositions[0] = round(Decimal(xpos[0]),2)	# Converts "xpositions" to Decimal format, then rounds it.
-		xpositions[1] = round(Decimal(xpos[1]),2)	# Converts "xpositions" to Decimal format, then rounds it.
-		xpositions[2] = round(Decimal(xpos[2]),2)	# Converts "xpositions" to Decimal format, then rounds it.
+#		xpositions[0] = round(Decimal(xpositions[0]),2)	# Converts "xpositions" to Decimal format, then rounds it.
+#		xpositions[1] = round(Decimal(xpositions[1]),2)	# Converts "xpositions" to Decimal format, then rounds it.
+#		xpositions[2] = round(Decimal(xpositions[2]),2)	# Converts "xpositions" to Decimal format, then rounds it.
 
-		ypositions[0] = round(Decimal(ypos[0]),2)	# Converts "xpositions" to Decimal format, then rounds it.
-		ypositions[1] = round(Decimal(ypos[1]),2)	# Converts "xpositions" to Decimal format, then rounds it.
-		ypositions[2] = round(Decimal(ypos[2]),2)	# Converts "xpositions" to Decimal format, then rounds it.
+#		ypositions[0] = round(Decimal(ypositions[0]),2)	# Converts "xpositions" to Decimal format, then rounds it.
+#		ypositions[1] = round(Decimal(ypositions[1]),2)	# Converts "xpositions" to Decimal format, then rounds it.
+#		ypositions[2] = round(Decimal(ypositions[2]),2)	# Converts "xpositions" to Decimal format, then rounds it.
 
 	else:
 		if radii[radii>minrad].size == 2:
 			rpositions[0] = radii[radii>minrad][0]		# The first radius above 'minrad' at which there is a minimum.
 			rpositions[1] = radii[radii>minrad][1]		# The second radius above 'minrad' at which there is a minimum.
-			xpos = rpositions*np.cos(theta)			# Converts the radius values into x- and y-coordinates.
-			ypos = rpositions*np.sin(theta)
+			xpositions = rpositions*np.cos(theta)			# Converts the radius values into x- and y-coordinates.
+			ypositions = rpositions*np.sin(theta)
 
-			xpositions[0] = round(Decimal(xpos[0]),2)	# Converts "xpositions" to Decimal format, then rounds it.
-			xpositions[1] = round(Decimal(xpos[1]),2)	# Converts "xpositions" to Decimal format, then rounds it.
+#			xpositions[0] = round(Decimal(xpositions[0]),2)	# Converts "xpositions" to Decimal format, then rounds it.
+#			xpositions[1] = round(Decimal(xpositions[1]),2)	# Converts "xpositions" to Decimal format, then rounds it.
 
-			ypositions[0] = round(Decimal(ypos[0]),2)	# Converts "xpositions" to Decimal format, then rounds it.
-			ypositions[1] = round(Decimal(ypos[1]),2)	# Converts "xpositions" to Decimal format, then rounds it.
+#			ypositions[0] = round(Decimal(ypositions[0]),2)	# Converts "xpositions" to Decimal format, then rounds it.
+#			ypositions[1] = round(Decimal(ypositions[1]),2)	# Converts "xpositions" to Decimal format, then rounds it.
 
 		else:
 			print "ERROR: Need more minima with radii above 50pc"

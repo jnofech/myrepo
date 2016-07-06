@@ -1,7 +1,7 @@
 
 # 6.17.16 - Activates functions from Cubes_multi.py and Cubes.py for many procedurally-generated regions.
 
-print('\nWelcome to Cubes_grid! \n \nAvailable functions: \n  arrayM51: Activates Cubes_multi.S2_arrayM51 for many procedurally-\n                        generated region selections in M51. \n  drawM51: Activates Cubes_multi.S2_draw for the above subcubes.\n  arrayM33: Activates Cubes_multi.S2_arrayM33 for many procedurally-\n                        generated region selections in M33. \n  drawM51: Activates Cubes_multi.S2_draw for the above subcubes.\n \nThis program makes use of Cubes_multi.py and Cubes.py.\n \n')
+print('\nWelcome to Cubes_grid! \n \nAvailable functions: \n  arrayM51: Activates Cubes_multi.S2_arrayM51 for many procedurally-\n                        generated region selections in M51. \n  drawM51: Activates Cubes_multi.S2_draw for the above subcubes.\n  arrayM33: Activates Cubes_multi.S2_arrayM33 for many procedurally-\n                        generated region selections in M33. \n  drawM33: Activates Cubes_multi.S2_draw for the above subcubes.\n \nThis program makes use of Cubes_multi.py and Cubes.py.\n \n')
 
 import Cubes_multi
 import Cubes_array

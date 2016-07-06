@@ -93,13 +93,21 @@ def arrayM51(vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=10, deltadeltaV=1
 				Cubes_multi.S2_array(vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,deltadeltaX,deltadeltaV,filename,drawmap,galaxyname)
 
 def drawM51(vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=10, deltadeltaV=1):
-	"""Activates S2_draw for all of the previously-generated subcube selections,
-	   with the same args as arrayM51.
+	"""
+	Activates S2_draw and Cubes_array.generate for all of the previously-
+	generated subcube selections, with the same args as arrayM51.
 
-	   Argument format: "(vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=10,
-	   deltadeltaV=1).
+	The arguments MUST match the args/kwargs used in arrayM51!
 
-	   These MUST match the args/kwargs used in arrayM51!"""
+
+	Returns:
+	-----------
+	t : Table
+		Table displaying the cube name and the x- and y-coordinates
+		of the first three S2 minima (above a certain threshold
+		radius).
+		Also saves the table in .csv format, as 'S2_minimal_M51.csv'.
+	"""
 
 	galaxyname = 'M51'
 	filename = "paws_norot"
@@ -253,13 +261,21 @@ def arrayM33(vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=10, deltadeltaV=1
 				Cubes_multi.S2_array(vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,deltadeltaX,deltadeltaV,filename,drawmap,galaxyname)
 
 def drawM33(vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=10, deltadeltaV=1):
-	"""Activates S2_draw for all of the previously-generated subcube selections,
-	   with the same args as arrayM33.
+	"""
+	Activates S2_draw and Cubes_array.generate for all of the previously-
+	generated subcube selections, with the same args as arrayM33.
 
-	   Argument format: "(vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=10,
-	   deltadeltaV=1).
+	The arguments MUST match the args/kwargs used in arrayM33!
 
-	   These MUST match the args/kwargs used in arrayM33!"""
+
+	Returns:
+	-----------
+	t : Table
+		Table displaying the cube name and the x- and y-coordinates
+		of the first three S2 minima (above a certain threshold
+		radius).
+		Also saves the table in .csv format, as 'S2_minimal_M33.csv'.
+	"""
 
 	galaxyname = 'M33'
 	filename = 'm33.co21_iram_CLEANED'

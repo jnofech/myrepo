@@ -1,8 +1,7 @@
 
 # 6.01.16 - Calculates and plots S_2 using functions from "Cubes.py". Normalization available if you don't want to correct for noise.
 
-
-print('\nWelcome to Cubes_multi! \n \nAvailable functions: \n  S2_array: Saves a noise-corrected S_2 array. \n  S2_draw: Generates a 2D map and 1D plot of the noise-corrected S_2.  \n  S2_arrayM51: Activates S2_array for several preset subcubes all at\n                        once for M51.\n  S2_drawM51: Activates S2_draw for the above subcubes.\n  S2_arrayM33: Activates S2_array for several preset subcubes all at\n                        once for M33.\n  S2_drawM33: Activates S2_draw for the above subcubes.\n  compare_S2array: Saves noise-corrected S_2 arrays for M51 and M33 at dV=0. \n  compare_S2draw: Draws a 1D plot comparing the above S_2 arrays.\n \nThis program makes use of Cubes.py.\n \n')
+print('\nWelcome to Cubes_multi! \n \nAvailable functions: \n  array: Saves a noise-corrected S_2 array. \n  draw: Generates a 2D map and 1D plot of the noise-corrected S_2.  \n  arrayM51: Activates array for several preset subcubes all at\n                        once for M51.\n  drawM51: Activates draw for the above subcubes.\n  arrayM33: Activates array for several preset subcubes all at\n                        once for M33.\n  drawM33: Activates draw for the above subcubes.\n  compare_S2array: Saves noise-corrected S_2 arrays for M51 and M33 at dV=0. \n  compare_S2draw: Draws a 1D plot comparing the above S_2 arrays.\n \nThis program makes use of Cubes.py.\n \n')
 import Cubes
 import numpy as np
 import matplotlib
@@ -14,18 +13,20 @@ import math
 import scipy.stats as ss
 from tempfile import TemporaryFile
  
-def S2_array(vmin, vmax, ymin, ymax, xmin, xmax, deltaX = 100, deltaV = 3, deltadeltaX = 10, deltadeltaV = 1, filename="paws_norot", drawmap=False, galaxyname='M51'):
+def array(vmin, vmax, ymin, ymax, xmin, xmax, deltaX = 100, deltaV = 3, deltadeltaX = 10, deltadeltaV = 1, filename="paws_norot", drawmap=False, galaxyname='M51', normalization=False):
 	"""
 	   Generates a noise-corrected array of S_2, from subcube of the 
 	   specified dimensions; using the .fits file in "Cubes.py".
 
 	   Argument format: "(vmin,vmax, ymin,ymax, xmin,xmax, deltaX=100, deltaV=3,
 	      deltadeltaX=10, deltadeltaV=1, filename="paws_norot", drawmap=False,
-	      galaxyname='M51')."
+	      galaxyname='M51', normalization=False)."
 	   ^ These are the parameters of the desired subcube, along with maximum dX/dY,
 	     maximum dV, "step sizes" for calculating S_2, the selected .fits file
 	     name (minus the ".fits" extension), and an option to draw the subcube
 	     as it appears on the galaxy T_max map (within the range specified).
+	     Enabling normalization will create a normalized (and still noise-corrected)
+	     S_2 map within the [0,1] interval.
 
 	   Note that vmin and vmax will only affect the overall structure function (from
 	     signal+noise), but not the noise-only structure function.
@@ -37,7 +38,9 @@ def S2_array(vmin, vmax, ymin, ymax, xmin, xmax, deltaX = 100, deltaV = 3, delta
 
 	   Be aware that processing time will increase with large deltaX and deltaV 
 	   values, but can dramatically decrease with larger deltadeltaX at the cost of
-	   plot resolution (or with larget deltadeltaV at the cost of the number of 1D plots)."""
+	   plot resolution (or with larget deltadeltaV at the cost of the number of 1D 
+	   plots).
+	"""
 
 	imagename = galaxyname+"_"+str(vmin)+"to"+str(vmax)+"_"+str(ymin)+"to"+str(ymax)+"_"+str(xmin)+"to"+str(xmax)
 	if deltadeltaX == 1 and deltadeltaV == 1:
@@ -48,24 +51,33 @@ def S2_array(vmin, vmax, ymin, ymax, xmin, xmax, deltaX = 100, deltaV = 3, delta
 	subcube = Cubes.cubegen(vmin,vmax,ymin,ymax,xmin,xmax,filename,drawmap, imagename)	# Will draw a map of the subcube if drawmap=True.
 	noisecube = Cubes.cubegen(0,20,ymin,ymax,xmin,xmax,filename,"False", imagename)		# We don't want a map of the noise, since it's just... noise. Nothing to see there.
 
-	S2 = Cubes.structgen(subcube,deltaX,deltaV,deltadeltaX,deltadeltaV,False)
-	S2n = Cubes.structgen(noisecube,deltaX,deltaV,deltadeltaX,deltadeltaV,False)
+	S2, Power = Cubes.structgen(subcube,deltaX,deltaV,deltadeltaX,deltadeltaV)
+	S2n, Power_n = Cubes.structgen(noisecube,deltaX,deltaV,deltadeltaX,deltadeltaV)
 	
-	S_2 = S2 - S2n		# This is the structure function from Signal ONLY.
+	if normalization==True:
+		S_2 = (S2 - S2n) / (Power - Power_n)		# This is the structure function from Signal ONLY. Normalized.
 
-	# SAVE S_2 into an array, with the saved filename SPECIFICALLY including the parameters used.
-	f = file(tempname+".bin","wb")
-	np.save(f,S_2)
-	f.close()
+		# SAVE S_2 into an array, with the saved filename SPECIFICALLY including the parameters used.
+		f = file(tempname+"_norm.bin","wb")
+		np.save(f,S_2)
+		f.close()
+	else:
+		S_2 = (S2 - S2n)				# This is the structure function from Signal ONLY. Not normalized.
 
-def S2_draw(vmin, vmax, ymin, ymax, xmin, xmax, deltaX = 100, deltaV = 3, deltadeltaX = 10, deltadeltaV = 1, filename="paws_norot", galaxyname='M51'):
+		# SAVE S_2 into an array, with the saved filename SPECIFICALLY including the parameters used.
+		f = file(tempname+".bin","wb")
+		np.save(f,S_2)
+		f.close()
+
+def draw(vmin, vmax, ymin, ymax, xmin, xmax, deltaX = 100, deltaV = 3, deltadeltaX = 10, deltadeltaV = 1, filename="paws_norot", galaxyname='M51', normalization=False):
 	"""
 	   Generates plots of S_2 (including a 2D plot of S_2 vs position, and a 1D
 	   plot of S_2 vs radius) for each "dv" from subcube of the specified 
 	   dimensions; using the saved S_2 arrays from S2_plot.
 
 	   Argument format: "(vmin,vmax, ymin,ymax, xmin,xmax, deltaX=100, deltaV=3,
-	      deltadeltaX=10, deltadeltaV=1, filename="paws_norot", galaxyname='M51')."
+	      deltadeltaX=10, deltadeltaV=1, filename="paws_norot", galaxyname='M51',
+	      normalization=False)."
 	   ^ These MUST MATCH the args/kwargs used in S2_gen."""
 
 	imagename = galaxyname+"_"+str(vmin)+"to"+str(vmax)+"_"+str(ymin)+"to"+str(ymax)+"_"+str(xmin)+"to"+str(xmax)
@@ -73,6 +85,10 @@ def S2_draw(vmin, vmax, ymin, ymax, xmin, xmax, deltaX = 100, deltaV = 3, deltad
 		tempname = 'saved_S2array_'+imagename+'_dV_is_'+str(deltaV)+'_dX_is_'+str(deltaX)+'_MAXRES'
 	else:
 		tempname = 'saved_S2array_'+imagename+'_dV_is_'+str(deltaV)+'_dX_is_'+str(deltaX)
+
+	if normalization==True:
+		tempname = tempname+"_norm"
+		imagename = imagename+"_norm"
 
 	# File-loading.
 	f = file(tempname+".bin","rb")
@@ -84,13 +100,13 @@ def S2_draw(vmin, vmax, ymin, ymax, xmin, xmax, deltaX = 100, deltaV = 3, deltad
 	Cubes.everythinggen(vmin, vmax, ymin, ymax, xmin, xmax, S_2, deltaX, deltaV, deltadeltaX, deltadeltaV, imagename, filename)
 
 
-def S2_arrayM51(vmin=40,vmax=80, deltaX=40, deltaV=3, deltadeltaX=10, deltadeltaV=1, drawmap = False):
-	"""Activates S2_array for M51 with each of the .py file's subcube selections,
-	   all under spectral range (vmin,vmax) with maximum dX/dY, maximum dV,
-	   and "step sizes". Also draws maps of all regions involved.
+def arrayM51(vmin=40,vmax=80, deltaX=40, deltaV=3, deltadeltaX=10, deltadeltaV=1, drawmap=False, normalization=False):
+	"""Activates Cubes_multi.array for M51 with each of the .py file's subcube 
+	   selections, all under spectral range (vmin,vmax) with maximum dX/dY, maximum 
+	   dV, and "step sizes". Also draws maps of all regions involved.
 
 	   Argument format: "(vmin=40,vmax=80, deltaX=40, deltaV=3, deltadeltaX=10,
-	   deltadeltaV=1, drawmap=False).
+	   deltadeltaV=1, drawmap=False, normalization=False).
 
 	   WARNING: Selecting too large of a vmax-vmin will hugely increase
 	   processing time."""
@@ -142,18 +158,18 @@ def S2_arrayM51(vmin=40,vmax=80, deltaX=40, deltaV=3, deltadeltaX=10, deltadelta
 		plt.savefig('galaxy_'+galaxyname+'_'+str(vmin)+'to'+str(vmax)+'_regions.png')
 		plt.clf()
 
-	# Runs 'S2_array(...)' for each of the regions that we're using. For descriptions of these regions, see the "OLD" section below.
+	# Runs 'array(...)' for each of the regions that we're using. For descriptions of these regions, see the "OLD" section below.
 	for i in range(0,sets):
-		S2_array(vmin,vmax,ymin[i],ymax[i],xmin[i],xmax[i],deltaX,deltaV,deltadeltaX,deltadeltaV,filename,drawmap,galaxyname)
+		array(vmin,vmax,ymin[i],ymax[i],xmin[i],xmax[i],deltaX,deltaV,deltadeltaX,deltadeltaV,filename,drawmap,galaxyname,normalization)
 		
-def S2_drawM51(vmin=40,vmax=80, deltaX=40, deltaV=3, deltadeltaX=10, deltadeltaV=1):
-	"""Activates S2_draw with each of the .py file's subcube selections,
-	   with the same args as S2_arrayM51.
+def drawM51(vmin=40,vmax=80, deltaX=40, deltaV=3, deltadeltaX=10, deltadeltaV=1, normalization=False):
+	"""Activates Cubes_multi.draw with each of the .py file's subcube selections,
+	   with the same args as Cubes_multi.arrayM51.
 
 	   Argument format: "(vmin=40,vmax=80, deltaX=40, deltaV=3, deltadeltaX=10,
-	   deltadeltaV=1).
+	   deltadeltaV=1, normalization=False).
 
-	   These MUST match the args/kwargs used in S2_arrayM51!"""
+	   These MUST match the args/kwargs used in Cubes_multi.arrayM51!"""
 
 	galaxyname = 'M51'
 	filename = "paws_norot"
@@ -172,17 +188,17 @@ def S2_drawM51(vmin=40,vmax=80, deltaX=40, deltaV=3, deltadeltaX=10, deltadeltaV
 	sets = np.ravel(ymin.shape)[0]		# This is the number of regions that we're dealing with.
 
 	for i in range(0,sets):
-		S2_draw(vmin,vmax,ymin[i],ymax[i],xmin[i],xmax[i],deltaX,deltaV,deltadeltaX,deltadeltaV,filename,galaxyname)
+		draw(vmin,vmax,ymin[i],ymax[i],xmin[i],xmax[i],deltaX,deltaV,deltadeltaX,deltadeltaV,filename,galaxyname,normalization)
 
 
 
-def S2_arrayM33(vmin=40,vmax=80, deltaX=40, deltaV=6, deltadeltaX=10, deltadeltaV=1, drawmap=False):
-	"""Activates S2_array for M33 with each of the .py file's subcube selections,
-	   all under spectral range (vmin,vmax) with maximum dX/dY, maximum dV,
-	   and "step sizes". Also draws maps of all regions involved.
+def arrayM33(vmin=40,vmax=80, deltaX=40, deltaV=6, deltadeltaX=10, deltadeltaV=1, drawmap=False, normalization=False):
+	"""Activates Cubes_multi.array for M33 with each of the .py file's subcube 
+	   selections, all under spectral range (vmin,vmax) with maximum dX/dY, maximum 
+	   dV, and "step sizes". Also draws maps of all regions involved.
 
 	   Argument format: "(vmin=40,vmax=80, deltaX=40, deltaV=6, deltadeltaX=10,
-	   deltadeltaV=1, drawmap=False).
+	   deltadeltaV=1, drawmap=False, normalization=False).
 
 	   WARNING: Selecting too large of a vmax-vmin will hugely increase
 	   processing time."""
@@ -236,18 +252,18 @@ def S2_arrayM33(vmin=40,vmax=80, deltaX=40, deltaV=6, deltadeltaX=10, deltadelta
 		plt.savefig('galaxy_'+galaxyname+'_'+str(vmin)+'to'+str(vmax)+'_regions.png')
 		plt.clf()
 
-	# Runs 'S2_array(...)' for each of the regions that we're using. For descriptions of these regions, see the "OLD" section below.
+	# Runs 'array(...)' for each of the regions that we're using. For descriptions of these regions, see the "OLD" section below.
 	for i in range(0,sets):
-		S2_array(vmin,vmax,ymin[i],ymax[i],xmin[i],xmax[i],deltaX,deltaV,deltadeltaX,deltadeltaV,filename,drawmap,galaxyname)
+		array(vmin,vmax,ymin[i],ymax[i],xmin[i],xmax[i],deltaX,deltaV,deltadeltaX,deltadeltaV,filename,drawmap,galaxyname,normalization)
 
-def S2_drawM33(vmin=40,vmax=80, deltaX=40, deltaV=6, deltadeltaX=10, deltadeltaV=1):
-	"""Activates S2_draw with each of the .py file's subcube selections,
-	   with the same args as S2_arrayM33.
+def drawM33(vmin=40,vmax=80, deltaX=40, deltaV=6, deltadeltaX=10, deltadeltaV=1, normalization=False):
+	"""Activates Cubes_multi.draw with each of the .py file's subcube selections,
+	   with the same args as Cubes_multi.arrayM33.
 
 	   Argument format: "(vmin=40,vmax=80, deltaX=40, deltaV=6, deltadeltaX=10,
-	   deltadeltaV=1).
+	   deltadeltaV=1, normalization=False).
 
-	   These MUST match the args/kwargs used in S2_arrayM33!"""
+	   These MUST match the args/kwargs used in Cubes_multi.arrayM33!"""
 
 	galaxyname = 'M33'
 	filename = 'm33.co21_iram_CLEANED'
@@ -266,7 +282,7 @@ def S2_drawM33(vmin=40,vmax=80, deltaX=40, deltaV=6, deltadeltaX=10, deltadeltaV
 	sets = np.ravel(ymin.shape)[0]		# This is the number of regions that we're dealing with.
 
 	for i in range(0,sets):
-		S2_draw(vmin,vmax,ymin[i],ymax[i],xmin[i],xmax[i],deltaX,deltaV,deltadeltaX,deltadeltaV,filename,galaxyname)
+		draw(vmin,vmax,ymin[i],ymax[i],xmin[i],xmax[i],deltaX,deltaV,deltadeltaX,deltadeltaV,filename,galaxyname,normalization)
 
 
 

@@ -1,7 +1,7 @@
 
 # 6.17.16 - Activates functions from Cubes_multi.py and Cubes.py for many procedurally-generated regions.
 
-print('\nWelcome to Cubes_grid! \n \nAvailable functions: \n  arrayM51: Activates Cubes_multi.S2_arrayM51 for many procedurally-\n                        generated region selections in M51. \n  drawM51: Activates Cubes_multi.S2_draw for the above subcubes.\n  arrayM33: Activates Cubes_multi.S2_arrayM33 for many procedurally-\n                        generated region selections in M33. \n  drawM33: Activates Cubes_multi.S2_draw for the above subcubes.\n \nThis program makes use of Cubes_multi.py and Cubes.py.\n \n')
+print('\nWelcome to Cubes_grid! \n \nAvailable functions: \n  arrayM51: Activates Cubes_multi.arrayM51 for many procedurally-\n                        generated region selections in M51. \n  drawM51: Activates Cubes_multi.draw for the above subcubes.\n  arrayM33: Activates Cubes_multi.arrayM33 for many procedurally-\n                        generated region selections in M33. \n  drawM33: Activates Cubes_multi.draw for the above subcubes.\n \nThis program makes use of Cubes_multi.py and Cubes.py.\n \n')
 
 import Cubes_multi
 import Cubes_array
@@ -18,13 +18,13 @@ from astropy.table import Table
 from decimal import Decimal
 import csv
 
-def arrayM51(vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=10, deltadeltaV=1, drawmap = False):
-	"""Activates Cubes_multi.S2_array for many procedurally-selected regions in
+def arrayM51(vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV=1, drawmap = False, normalization=False):
+	"""Activates Cubes_multi.array for many procedurally-selected regions in
 	   M51, all under spectral range (vmin,vmax) with maximum dX/dY, maximum dV,
 	   and "step sizes". Also draws maps of all regions involved.
 
-	   Argument format: "(vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=10,
-	   deltadeltaV=1, drawmap=False).
+	   Argument format: "(vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1,
+	   deltadeltaV=1, drawmap=False, normalization=False).
 
 	   WARNING: Selecting too large of a vmax-vmin will hugely increase
 	   processing time."""
@@ -82,7 +82,7 @@ def arrayM51(vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=10, deltadeltaV=1
 		plt.savefig('galaxy_'+galaxyname+'_'+str(vmin)+'to'+str(vmax)+'_regions_procedural.png')
 		plt.clf()
 
-	# Runs 'Cubes_multi.S2_array(...)' for each of the regions that we're using. For descriptions of these regions, see the "OLD" section below.
+	# Runs 'Cubes_multi.array(...)' for each of the regions that we're using.
 	for ymax in range(height, data.shape[1], height/2):
 		for xmax in range(width,data.shape[2],width/2):
 			ymin = ymax-height
@@ -90,11 +90,11 @@ def arrayM51(vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=10, deltadeltaV=1
 			testcube = data[vmin:vmax,ymin:ymax,xmin:xmax]
 			if (np.float(np.count_nonzero(np.isnan(testcube))) / np.float(np.count_nonzero(testcube))) < 0.05:
 				# Checks if there are a hugely-significant number of "NaN" values in the region.
-				Cubes_multi.S2_array(vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,deltadeltaX,deltadeltaV,filename,drawmap,galaxyname)
+				Cubes_multi.array(vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,deltadeltaX,deltadeltaV,filename,drawmap,galaxyname,normalization)
 
-def drawM51(vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=10, deltadeltaV=1):
+def drawM51(vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV=1, normalization=False):
 	"""
-	Activates S2_draw and Cubes_array.generate for all of the previously-
+	Activates Cubes_multi.draw and Cubes_array.generate for all of the previously-
 	generated subcube selections, with the same args as arrayM51.
 
 	The arguments MUST match the args/kwargs used in arrayM51!
@@ -106,7 +106,12 @@ def drawM51(vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=10, deltadeltaV=1)
 		Table displaying the cube name and the x- and y-coordinates
 		of the first three S2 minima (above a certain threshold
 		radius).
-		Also saves the table in .csv format, as 'S2_minimal_M51.csv'.
+		Also saves the table in .csv and .bin formats, as 
+		'S2_minimal_(vmin)to(vmax)M51(_norm).csv' and
+		'S2_minimal_(vmin)to(vmax)M51(_norm).bin'.
+
+		The "_norm" bit is added onto the end if normalization is
+		activated.
 	"""
 
 	galaxyname = 'M51'
@@ -131,12 +136,16 @@ def drawM51(vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=10, deltadeltaV=1)
 			testcube = data[vmin:vmax,ymin:ymax,xmin:xmax]
 			if (np.float(np.count_nonzero(np.isnan(testcube))) / np.float(np.count_nonzero(testcube))) < 0.05:
 				# ^ Checks if there are a hugely-significant number of "NaN" values in the region.
-				Cubes_multi.S2_draw(vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,deltadeltaX,deltadeltaV,filename,galaxyname)
+				Cubes_multi.draw(vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,deltadeltaX,deltadeltaV,filename,galaxyname,normalization)
 				i = i+1
 	imax = i						# This is the number of cubes involved.
 	i = 0							# Resets the counter.	
 
 	cubename = [None]*imax
+	ymin_array = [None]*imax
+	ymax_array = [None]*imax
+	xmin_array = [None]*imax
+	xmax_array = [None]*imax
 	xcoord1 = [None]*imax
 	xcoord2 = [None]*imax
 	xcoord3 = [None]*imax
@@ -151,12 +160,17 @@ def drawM51(vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=10, deltadeltaV=1)
 			testcube = data[vmin:vmax,ymin:ymax,xmin:xmax]
 			if (np.float(np.count_nonzero(np.isnan(testcube))) / np.float(np.count_nonzero(testcube))) < 0.05:	
 
-				theta, linearray1_min, radlist = Cubes_array.generate(galaxyname,vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,deltadeltaX,deltadeltaV,201)
+				theta, linearray1_min, radlist = Cubes_array.generate(galaxyname,vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,deltadeltaX,deltadeltaV,201,normalization)
 				# ^ 'theta' is the position angle, 'radlist' are the radius values along the principal axis, and 'linearray1_min' are the S_2 local minima
 				#	values on this line-- corresponding to 'radlist' for convenience.
 				# We want to find the three closest-to-zero-but-still-above-a-threshold-radius positions along this principal axis at which there are minima.
 			
 				xpositions, ypositions = extremacoords(theta,linearray1_min,radlist)		# Returns the x- and y-coordinates of three extrema near the center of the map.
+
+				ymin_array[i] = ymin
+				ymax_array[i] = ymax
+				xmin_array[i] = xmin
+				xmax_array[i] = xmax
 
 				xcoord1[i] = xpositions[0]
 				xcoord2[i] = xpositions[1]
@@ -166,33 +180,48 @@ def drawM51(vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=10, deltadeltaV=1)
 				ycoord2[i] = ypositions[1]
 				ycoord3[i] = ypositions[2]
 
-				cubename[i] = galaxyname+"_"+str(vmin)+"to"+str(vmax)+"_"+str(ymin)+"to"+str(ymax)+"_"+str(xmin)+"to"+str(xmax)
+				cubename[i] = galaxyname#+"_"+str(vmin)+"to"+str(vmax)+"_"+str(ymin)+"to"+str(ymax)+"_"+str(xmin)+"to"+str(xmax)
 
 				i = i+1
 
-	t = Table([cubename,xcoord1,ycoord1,xcoord2,ycoord2,xcoord3,ycoord3], names=('Cube Name','x1','y1','x2','y2','x3','y3'), meta={'name': 'TABLE'})
-	t['x1'].unit='pc'
-	t['x2'].unit='pc'
-	t['x3'].unit='pc'
+	t = Table([cubename,ymin_array,ymax_array,xmin_array,xmax_array,ycoord1,xcoord1,ycoord2,xcoord2,ycoord3,xcoord3], names=('Cube Name','ymin','ymax','xmin','xmax','y1','x1','y2','x2','y3','x3'), meta={'name': 'TABLE'})
+	t['ymin'].unit='pixels'
+	t['ymax'].unit='pixels'
+	t['xmin'].unit='pixels'
+	t['xmax'].unit='pixels'
 	t['y1'].unit='pc'
 	t['y2'].unit='pc'
-	t['y3'].unit='pc'		
+	t['y3'].unit='pc'
+	t['x1'].unit='pc'
+	t['x2'].unit='pc'
+	t['x3'].unit='pc'		
 	
 
-	# Save 't' as a table in .csv format
-	with open('S2_minimal_M51.csv', 'w') as csvfile:
-	    writer = csv.writer(csvfile)
-	    [writer.writerow(r) for r in t]	
-		
+	# Save table 't' as a list in .csv format
+	# Save table 't' as an array in .bin format
+	if normalization==True:
+		with open('S2_minimal_M51_'+str(vmin)+'to'+str(vmax)+'_norm.csv', 'w') as csvfile:	# Saves the following into 'S2_minimal_M51_40to80_norm.csv'.
+		    writer = csv.writer(csvfile)
+		    [writer.writerow(r) for r in t]
+		f = file('S2_minimal_M51_'+str(vmin)+'to'+str(vmax)+'_norm.bin','wb')			# Saves the following into 'S2_minimal_M51_40to80_norm.bin'.
+		np.save(f,t)
+		f.close()
+	else:
+		with open('S2_minimal_M51_'+str(vmin)+'to'+str(vmax)+'.csv', 'w') as csvfile:		# Saves the following into 'S2_minimal_M51_40to80.csv'.
+		    writer = csv.writer(csvfile)
+		    [writer.writerow(r) for r in t]
+		f = file('S2_minimal_M51_'+str(vmin)+'to'+str(vmax)+'.bin','wb')			# Saves the following into 'S2_minimal_M51_40to80.bin'.
+		np.save(f,t)
+		f.close()		
 	return t
 
-def arrayM33(vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=10, deltadeltaV=1, drawmap=False):
-	"""Activates Cubes_multi.S2_array for many procedurally-selected regions in
+def arrayM33(vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=1, deltadeltaV=1, drawmap=False, normalization=False):
+	"""Activates Cubes_multi.array for many procedurally-selected regions in
 	   M33, all under spectral range (vmin,vmax) with maximum dX/dY, maximum dV,
 	   and "step sizes". Also draws maps of all regions involved.
 
-	   Argument format: "(vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=10,
-	   deltadeltaV=1, drawmap=False).
+	   Argument format: "(vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=1,
+	   deltadeltaV=1, drawmap=False, normalization=False).
 
 	   WARNING: Selecting too large of a vmax-vmin will hugely increase
 	   processing time."""
@@ -250,7 +279,7 @@ def arrayM33(vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=10, deltadeltaV=1
 		plt.savefig('galaxy_'+galaxyname+'_'+str(vmin)+'to'+str(vmax)+'_regions_procedural.png')
 		plt.clf()
 
-	# Runs 'Cubes_multi.S2_array(...)' for each of the regions that we're using. For descriptions of these regions, see the "OLD" section below.
+	# Runs 'Cubes_multi.array(...)' for each of the regions that we're using.
 	for ymax in range(height, data.shape[1], height/2):
 		for xmax in range(width,data.shape[2],width/2):
 			ymin = ymax-height
@@ -258,11 +287,11 @@ def arrayM33(vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=10, deltadeltaV=1
 			testcube = data[vmin:vmax,ymin:ymax,xmin:xmax]
 			if (np.float(np.count_nonzero(np.isnan(testcube))) / np.float(np.count_nonzero(testcube))) < 0.05:
 				# Checks if there are a hugely-significant number of "NaN" values in the region.
-				Cubes_multi.S2_array(vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,deltadeltaX,deltadeltaV,filename,drawmap,galaxyname)
+				Cubes_multi.array(vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,deltadeltaX,deltadeltaV,filename,drawmap,galaxyname,normalization)
 
-def drawM33(vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=10, deltadeltaV=1):
+def drawM33(vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=1, deltadeltaV=1,normalization=False):
 	"""
-	Activates S2_draw and Cubes_array.generate for all of the previously-
+	Activates Cubes_multi.draw and Cubes_array.generate for all of the previously-
 	generated subcube selections, with the same args as arrayM33.
 
 	The arguments MUST match the args/kwargs used in arrayM33!
@@ -274,7 +303,12 @@ def drawM33(vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=10, deltadeltaV=1)
 		Table displaying the cube name and the x- and y-coordinates
 		of the first three S2 minima (above a certain threshold
 		radius).
-		Also saves the table in .csv format, as 'S2_minimal_M33.csv'.
+		Also saves the table in .csv and .bin formats, as 
+		'S2_minimal_(vmin)to(vmax)M33(_norm).csv' and
+		'S2_minimal_(vmin)to(vmax)M33(_norm).bin'.
+
+		The "_norm" bit is added onto the end if normalization is
+		activated.
 	"""
 
 	galaxyname = 'M33'
@@ -299,12 +333,16 @@ def drawM33(vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=10, deltadeltaV=1)
 			testcube = data[vmin:vmax,ymin:ymax,xmin:xmax]
 			if (np.float(np.count_nonzero(np.isnan(testcube))) / np.float(np.count_nonzero(testcube))) < 0.05:
 				# ^ Checks if there are a hugely-significant number of "NaN" values in the region.
-				Cubes_multi.S2_draw(vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,deltadeltaX,deltadeltaV,filename,galaxyname)
+				Cubes_multi.draw(vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,deltadeltaX,deltadeltaV,filename,galaxyname,normalization)
 				i = i+1
 	imax = i						# This is the number of cubes involved.
 	i = 0							# Resets the counter.	
 
 	cubename = [None]*imax
+	ymin_array = [None]*imax
+	ymax_array = [None]*imax
+	xmin_array = [None]*imax
+	xmax_array = [None]*imax
 	xcoord1 = [None]*imax
 	xcoord2 = [None]*imax
 	xcoord3 = [None]*imax
@@ -319,12 +357,17 @@ def drawM33(vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=10, deltadeltaV=1)
 			testcube = data[vmin:vmax,ymin:ymax,xmin:xmax]
 			if (np.float(np.count_nonzero(np.isnan(testcube))) / np.float(np.count_nonzero(testcube))) < 0.05:	
 
-				theta, linearray1_min, radlist = Cubes_array.generate(galaxyname,vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,deltadeltaX,deltadeltaV,201)
+				theta, linearray1_min, radlist = Cubes_array.generate(galaxyname,vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,deltadeltaX,deltadeltaV,201,normalization)
 				# ^ 'theta' is the position angle, 'radlist' are the radius values along the principal axis, and 'linearray1_min' are the S_2 local minima
 				#	values on this line-- corresponding to 'radlist' for convenience.
 				# We want to find the three closest-to-zero-but-still-above-a-threshold-radius positions along this principal axis at which there are minima.
 			
 				xpositions, ypositions = extremacoords(theta,linearray1_min,radlist)		# Returns the x- and y-coordinates of three extrema near the center of the map.
+
+				ymin_array[i] = ymin
+				ymax_array[i] = ymax
+				xmin_array[i] = xmin
+				xmax_array[i] = xmax
 
 				xcoord1[i] = xpositions[0]
 				xcoord2[i] = xpositions[1]
@@ -334,23 +377,37 @@ def drawM33(vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=10, deltadeltaV=1)
 				ycoord2[i] = ypositions[1]
 				ycoord3[i] = ypositions[2]
 
-				cubename[i] = galaxyname+"_"+str(vmin)+"to"+str(vmax)+"_"+str(ymin)+"to"+str(ymax)+"_"+str(xmin)+"to"+str(xmax)
+				cubename[i] = galaxyname#+"_"+str(vmin)+"to"+str(vmax)+"_"+str(ymin)+"to"+str(ymax)+"_"+str(xmin)+"to"+str(xmax)
 
 				i = i+1
 
-	t = Table([cubename,xcoord1,ycoord1,xcoord2,ycoord2,xcoord3,ycoord3], names=('Cube Name','x1','y1','x2','y2','x3','y3'), meta={'name': 'TABLE'})
+	t = Table([cubename,ymin_array,ymax_array,xmin_array,xmax_array,ycoord1,xcoord1,ycoord2,xcoord2,ycoord3,xcoord3], names=('Cube Name','ymin','ymax','xmin','xmax','y1','x1','y2','x2','y3','x3'), meta={'name': 'TABLE'})
+	t['ymin'].unit='pixels'
+	t['ymax'].unit='pixels'
+	t['xmin'].unit='pixels'
+	t['xmax'].unit='pixels'
+	t['y1'].unit='pc'
+	t['y2'].unit='pc'
+	t['y3'].unit='pc'
 	t['x1'].unit='pc'
 	t['x2'].unit='pc'
 	t['x3'].unit='pc'
-	t['y1'].unit='pc'
-	t['y2'].unit='pc'
-	t['y3'].unit='pc'		
 			
 	# Save 't' as a table in .csv format
-	with open('S2_minimal_M33.csv', 'w') as csvfile:
-	    writer = csv.writer(csvfile)
-	    [writer.writerow(r) for r in t]	
-	
+	if normalization==True:
+		with open('S2_minimal_M33_'+str(vmin)+'to'+str(vmax)+'_norm.csv', 'w') as csvfile:	# Saves the following into 'S2_minimal_M33_40to80_norm.csv'.
+		    writer = csv.writer(csvfile)
+		    [writer.writerow(r) for r in t]
+		f = file('S2_minimal_M33_'+str(vmin)+'to'+str(vmax)+'_norm.bin','wb')			# Saves the following into 'S2_minimal_M33_40to80_norm.bin'.
+		np.save(f,t)
+		f.close()
+	else:
+		with open('S2_minimal_M33_'+str(vmin)+'to'+str(vmax)+'.csv', 'w') as csvfile:		# Saves the following into 'S2_minimal_M33_40to80.csv'.
+		    writer = csv.writer(csvfile)
+		    [writer.writerow(r) for r in t]
+		f = file('S2_minimal_M33_'+str(vmin)+'to'+str(vmax)+'.bin','wb')			# Saves the following into 'S2_minimal_M33_40to80.bin'.
+		np.save(f,t)
+		f.close()		
 	return t
 
 

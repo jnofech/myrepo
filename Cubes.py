@@ -1,7 +1,6 @@
 
 # 5.13.16 - Working with Subcubes from rotation-corrected .fits files, in spatial and spectral dimensions. Does NOT remove noise by default.
 
-
 from spectral_cube import SpectralCube
 import matplotlib
 import matplotlib.pyplot as plt
@@ -53,21 +52,17 @@ def cubegen(vmin,vmax,ymin,ymax,xmin,xmax, filename = "paws_norot", drawmap = Fa
 
 	return subcube
 
-def structgen(subcube0, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV = 1, normalization=False):
+def structgen(subcube0, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV = 1):
 
 	"""Returns a 3D structure function map from a given subcube.
 	
 	   Argument format: "(<subcube>, deltaX (default=30), deltaV (default=3)),
-	   deltadeltaX (default=1), deltadeltaV (default=1), normalization (default=False), 
-	   mapname (default="3Dcube"))".
+	   deltadeltaX (default=1), deltadeltaV (default=1) mapname (default="3Dcube"))".
 	   "deltaX" is the maximum value of dX and dY. "deltaV" is the maximum 
 	   value of dV. "deltadeltaX" is the step size along both dx and dy for the
 	   structure function calculation, and it should be a factor of deltaX. "deltadeltaV"
 	   is the step size along dv for structure function calculation, and it should be a 
 	   factor of deltaV.
-
-	   Enabling normalization will normalize the structure function within the [0,1]
-	   interval. Disabling normalization will prevent this.
 
 
 	   Be aware that processing time will increase with large deltaX and deltaV 
@@ -110,16 +105,14 @@ def structgen(subcube0, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV = 1, nor
 			    #	    Similar case for a pixel "dv" layers below.
 			    #
 		            # In "goodpix", pixels that have wrapped around are treated as False.
-		    if normalization==True:
-			    OrigMapPower = np.nanmean(M[goodpix]**2)
-			    RollMapPower = np.nanmean(RollMap[goodpix]**2)
 
-			    S_2[(dv/ddV,(dy+dY)/ddY,(dx+dX)/ddX)] = (np.nanmean(D[goodpix]**2)) / (OrigMapPower + RollMapPower)
-		    else:
-			    S_2[(dv/ddV,(dy+dY)/ddY,(dx+dX)/ddX)] = (np.nanmean(D[goodpix]**2))
+		    OrigMapPower = np.nanmean(M[goodpix]**2)
+		    RollMapPower = np.nanmean(RollMap[goodpix]**2)
 
+		    S_2[(dv/ddV,(dy+dY)/ddY,(dx+dX)/ddX)] = (np.nanmean(D[goodpix]**2))
+		    Power = (OrigMapPower + RollMapPower)
 
-	return S_2
+	return S_2, Power
 
 
 def mapgen(S_2, deltaX=30, deltaV=3, deltadeltaV=1, mapname="3Dcube", filename = "paws_norot"):
@@ -314,6 +307,9 @@ def everythinggen(vmin, vmax, ymin, ymax, xmin, xmax, S_2, deltaX, deltaV, delta
 	levels = np.array([0.2,0.4,0.6,0.8])*S_2[0].max()
 	if S_2[0].max() > 0:
 		ax2.contour(S_2[0], levels, extent=[-dX*pixelwidthPC,dX*pixelwidthPC,-dY*pixelwidthPC,dY*pixelwidthPC], vmin=0, vmax=S_2.max(), colors='k')
+	else:
+		if S_2[0].max() == 0:
+			print S_2[0].min()
 	ax2.set_title('S_2 at 0 km/s')
 	ax2.set_xlabel('Distance from Initial Location in x-direction (pc)')
 	ax2.set_ylabel('Distance from Initial Location in y-direction (pc)')

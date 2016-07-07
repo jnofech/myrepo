@@ -12,7 +12,7 @@ from tempfile import TemporaryFile
 import scipy.interpolate as si
 from scipy.signal import argrelextrema as ae
 
-def generate(galaxyname='M51',vmin=40, vmax=80, ymin=200, ymax=400, xmin=360, xmax=560, deltaX=40, deltaV=3, deltadeltaX=1, deltadeltaV=1, nmax=201):
+def generate(galaxyname='M51',vmin=40, vmax=80, ymin=200, ymax=400, xmin=360, xmax=560, deltaX=40, deltaV=3, deltadeltaX=1, deltadeltaV=1, nmax=201, normalization=False):
 	"""
 	Takes a S_2 surface map whose name matches the given parameters, finds the angle
 		at which a line cutting through the origin has minimal S_2, and then
@@ -28,6 +28,9 @@ def generate(galaxyname='M51',vmin=40, vmax=80, ymin=200, ymax=400, xmin=360, xm
 	nmax : int
 		Number of values in final 1D array (preferably odd). 
 		Higher is better.
+	normalization : bool
+		Enables or disables using the normalized S2 map
+		instead of the usual one.
 	
 	Returns (DISABLED at the moment):
 	-----------
@@ -50,6 +53,10 @@ def generate(galaxyname='M51',vmin=40, vmax=80, ymin=200, ymax=400, xmin=360, xm
 	else:
 		tempname = 'saved_S2array_'+imagename+'_dV_is_'+str(deltaV)+'_dX_is_'+str(deltaX)
 
+	if normalization==True:
+		tempname = tempname+"_norm"
+		imagename = imagename+"_norm"
+
 	f = file(tempname+".bin","rb")
 	array = np.load(f)
 	f.close()
@@ -63,7 +70,7 @@ def generate(galaxyname='M51',vmin=40, vmax=80, ymin=200, ymax=400, xmin=360, xm
 			print 'ERROR: Galaxy must be M51 or M33.'
 			return
 
-	theta = anglefinder(array[0].max()-array[0],False)
+	theta = anglefinder( (array[0].max()-array[0])**2 ,False)			# Added the (  )**2 at Dr. Rosolowsky's suggestion.
 	linearrayx, linearray1, linearray2, maxradius1, maxradius2 = slicer(theta, array[0], nmax)
 	linearray1_min, radlist = plot(theta,maxradius1,maxradius2,array,linearrayx,linearray1,linearray2, filename, imagename, deltaX, deltaV)
 
@@ -377,7 +384,7 @@ def plot(theta,maxradius1,maxradius2,array,linearrayx,linearray1,linearray2, fil
 	radlist = linearrayx*pixelwidthPC			# A 1D array of the radii along the principal axis.
 	return linearray1_min, radlist				#
 
-def presetM51(vmin=40,vmax=80, deltaX=40, deltaV=3, deltadeltaX=1, deltadeltaV=1):
+def presetM51(vmin=40,vmax=80, deltaX=40, deltaV=3, deltadeltaX=1, deltadeltaV=1, normalization=False):
 	'''
 	Activates Cubes_array.generate using each of
 		the preset regions of M51.
@@ -386,6 +393,9 @@ def presetM51(vmin=40,vmax=80, deltaX=40, deltaV=3, deltadeltaX=1, deltadeltaV=1
 	-----------
 	vmin,...,deltadeltaV : int
 		Parameters used in the relevant S_2 map.
+	normalization : bool
+		Enables or disables using the normalized S2 map
+		instead of the usual one.
 	'''
 	
 	galaxyname = 'M51'
@@ -397,10 +407,10 @@ def presetM51(vmin=40,vmax=80, deltaX=40, deltaV=3, deltadeltaX=1, deltadeltaV=1
 	sets = np.ravel(ymin.shape)[0]		# This is the number of regions that we're dealing with.
 
 	for i in range(0,sets):
-		generate(galaxyname, vmin,vmax,ymin[i],ymax[i],xmin[i],xmax[i],deltaX,deltaV,deltadeltaX,deltadeltaV,201)
+		generate(galaxyname, vmin,vmax,ymin[i],ymax[i],xmin[i],xmax[i],deltaX,deltaV,deltadeltaX,deltadeltaV,201,normalization)
 
 
-def presetM33(vmin=40,vmax=80, deltaX=40, deltaV=6, deltadeltaX=1, deltadeltaV=1):
+def presetM33(vmin=40,vmax=80, deltaX=40, deltaV=6, deltadeltaX=1, deltadeltaV=1, normalization=False):
 	'''
 	Activates Cubes_array.generate using each of
 		the preset regions of M33.
@@ -409,6 +419,9 @@ def presetM33(vmin=40,vmax=80, deltaX=40, deltaV=6, deltadeltaX=1, deltadeltaV=1
 	-----------
 	vmin,...,deltadeltaV : int
 		Parameters used in the relevant S_2 map.
+	normalization : bool
+		Enables or disables using the normalized S2 map
+		instead of the usual one.
 	'''
 	
 	galaxyname = 'M33'
@@ -420,5 +433,5 @@ def presetM33(vmin=40,vmax=80, deltaX=40, deltaV=6, deltadeltaX=1, deltadeltaV=1
 	sets = np.ravel(ymin.shape)[0]		# This is the number of regions that we're dealing with.
 
 	for i in range(0,sets):
-		generate(galaxyname, vmin,vmax,ymin[i],ymax[i],xmin[i],xmax[i],deltaX,deltaV,deltadeltaX,deltadeltaV,201)
+		generate(galaxyname, vmin,vmax,ymin[i],ymax[i],xmin[i],xmax[i],deltaX,deltaV,deltadeltaX,deltadeltaV,201,normalization)
 

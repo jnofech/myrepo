@@ -1,9 +1,7 @@
 
 # 7.07.16 - Makes a plot of S_2 minima distance from the region's centre versus the region's distance from the galactic centre. For each of the procedurally-generated grid regions.
 
-print("\nWelcome to Cubes_grid_minima! \n \nAvailable functions: \n  plotM51: Plots the minima distance against the region's distance from the M51\n		centre, OR plots the positions of the minima on M51's Tmax map \n		with an indicator of minima distance; depending on the selected \n		mode.\n  plotM33: Plots the minima distance against the region's distance from the M33\n		centre, OR plots the positions of the minima on M33's Tmax map\n		with an indicator of minima distance; depending on the selected \n		mode.\n \nThis program reads the extrema positions from .bin files, which are required for\n	the functions to work. \n")
-
-print("\nWelcome to Cubes_grid_minima! \n \nAvailable functions: \n  plotM51: Plots extrema coordinates/distance against the location/radial \n		distance, OR plots the normalized S2 map width against\n		the radial distance from the galactic center. See\n		?Cubes_grid_minima.plotM51 for more information.\n  plotM51: Plots extrema coordinates/distance against the location/radial \n		distance, OR plots the normalized S2 map width against\n		the radial distance from the galactic center. See\n		?Cubes_grid_minima.plotM51 for more information.\n \nThis program reads the extrema positions from .bin files, which are required for\n	the functions to work. \n")
+print("\nWelcome to Cubes_grid_minima! \n \nAvailable functions: \n  plotM51: Plots extrema coordinates/distance against the location/radial \n		distance, OR plots the normalized S2 map width against\n		the radial distance from the galactic center. See\n		?Cubes_grid_minima.plotM51 for more information.\n  plotM33: Plots extrema coordinates/distance against the location/radial \n		distance, OR plots the normalized S2 map width against\n		the radial distance from the galactic center. See\n		?Cubes_grid_minima.plotM33 for more information.\n \nThis program reads the extrema positions from .bin files, which are required for\n	the functions to work. \n")
 
 import numpy as np
 import matplotlib
@@ -30,7 +28,7 @@ def plotM51(vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadeltaV=1,mode=
         positions of the various regions on the map and indicating their
         respective S2 minima distances with differently-sized markers.
         
-    mode=2 (UNAVAILABLE): "S_2 threshold mode"
+    mode=2 : "S_2 threshold mode"
         Takes the table of S_2 threshold-crossing distances (along the map's
         principal axis) of the NORMALIZED S_2 map. This threshold is set by
         `Cubes_grid.py` before the table is formed.
@@ -105,6 +103,7 @@ def plotM51(vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadeltaV=1,mode=
             plt.savefig('S2_miniplot_M51_'+str(vmin)+'to'+str(vmax)+'_norm.png')
         else:
             plt.savefig('S2_miniplot_M51_'+str(vmin)+'to'+str(vmax)+'.png')
+	plt.clf()
 
     
     elif mode==1:
@@ -139,6 +138,7 @@ def plotM51(vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadeltaV=1,mode=
             plt.savefig('S2_thresplot_M51_'+str(vmin)+'to'+str(vmax)+'_norm.png')
         else:
             print "ERROR: Something went wrong-- normalization should be True."
+	plt.clf()
 
     else:
         print "ERROR: Select mode=0 (Extrema Distance Mode),\
@@ -162,7 +162,7 @@ def plotM33(vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadeltaV=1,mode=
         positions of the various regions on the map and indicating their
         respective S2 minima distances with differently-sized markers.
         
-    mode=2 (UNAVAILABLE): "S_2 threshold mode"
+    mode=2 : "S_2 threshold mode"
         Takes the table of S_2 threshold-crossing distances (along the map's
         principal axis) of the NORMALIZED S_2 map. This threshold is set by
         `Cubes_grid.py` before the table is formed.
@@ -237,8 +237,7 @@ def plotM33(vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadeltaV=1,mode=
             plt.savefig('S2_miniplot_M33_'+str(vmin)+'to'+str(vmax)+'_norm.png')
         else:
             plt.savefig('S2_miniplot_M33_'+str(vmin)+'to'+str(vmax)+'.png')
-
-        return table2
+	plt.clf()
 
     
     elif mode==1:
@@ -273,8 +272,8 @@ def plotM33(vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadeltaV=1,mode=
             plt.savefig('S2_thresplot_M33_'+str(vmin)+'to'+str(vmax)+'_norm.png')
         else:
             print "ERROR: Something went wrong-- normalization should be True."
+	plt.clf()
 
-        return table2      
     else:
         print "ERROR: Select mode=0 (Extrema Distance Mode),\
         \n              mode=1 (Extrema Coordinates Mode),\

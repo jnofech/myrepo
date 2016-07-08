@@ -203,7 +203,7 @@ def drawM51(vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV=1, 
 				#	are minima.
 			
 				xpositions, ypositions = extremacoords(theta,linearray1_min,radlist)		# Returns the x- and y-coordinates of three extrema near the center of the map.
-				xthres[i], ythres[i] = thresholdcoords(theta,thres_radii)			# Returns the x- and y-coordinates of the radius at which S2 crosses S2threshold.
+				xthres[i], ythres[i] = thresholdcoords(theta,thres_radii, normalization)	# Returns the x- and y-coordinates of the radius at which S2 crosses S2threshold.
 				ymin_array[i] = ymin
 				ymax_array[i] = ymax
 				xmin_array[i] = xmin
@@ -267,9 +267,9 @@ def drawM51(vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV=1, 
 	if normalization==True:
 		with open('S2_thres_M51_'+str(vmin)+'to'+str(vmax)+'_norm.csv', 'w') as csvfile:	# Saves the following into 'S2_thres_M51_40to80_norm.csv'.
 		    writer = csv.writer(csvfile)
-		    [writer.writerow(r) for r in t]
+		    [writer.writerow(r) for r in t2]
 		f = file('S2_thres_M51_'+str(vmin)+'to'+str(vmax)+'_norm.bin','wb')			# Saves the following into 'S2_thres_M51_40to80_norm.bin'.
-		np.save(f,t)
+		np.save(f,t2)
 		f.close()
 	else:
 		print "NOTE: Normalization must be enabled for the S2 threshold-\n \
@@ -353,13 +353,36 @@ def arrayM33(vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=1, deltadeltaV=1,
 				# Checks if there are a hugely-significant number of "NaN" values in the region.
 				Cubes_multi.array(vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,deltadeltaX,deltadeltaV,filename,drawmap,galaxyname,normalization)
 
-def drawM33(vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=1, deltadeltaV=1,normalization=False):
+def drawM33(vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=1, deltadeltaV=1,normalization=False, S2threshold=0.7):
 	"""
 	Activates Cubes_multi.draw and Cubes_array.generate for all of the previously-
 	generated subcube selections, with the same args as arrayM33.
 
 	The arguments MUST match the args/kwargs used in arrayM33!
 
+	Parameters:
+	-----------
+	normalization : bool
+		Enables or disables using the normalized S2 map
+		instead of the usual one.
+		If set to False, the program will not return a table
+		of the S2 threshold-crossing coordinates due to the way
+		`S2threshold` is handled. See below for more information.
+	S2threshold : float
+		This is the threshold value of S2 along the principal axis
+		for which coordinates will be returned.
+		That is, if we look at Cubes_array's plot of S2 along the
+		principal axis, then at the point where S2 == S2threshold,
+		the coordinates of that point are found and used in this
+		function.
+		Note that this is intended to be a percent-of-S2_max
+		threshold-- but since the table of S2 threshold-crossing
+		coordinates will only be used in the analysis of a
+		NORMALIZED S2 map (i.e. range is roughly [0,1]), it will
+		be treated simply as a number that the normalized S2 has
+		to cross.
+	Everything else : (various types)
+		Same variables (and selected values) as in arrayM33.
 
 	Returns:
 	-----------
@@ -368,11 +391,21 @@ def drawM33(vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=1, deltadeltaV=1,n
 		of the first three S2 minima (above a certain threshold
 		radius).
 		Also saves the table in .csv and .bin formats, as 
-		'S2_minimal_(vmin)to(vmax)M33(_norm).csv' and
-		'S2_minimal_(vmin)to(vmax)M33(_norm).bin'.
+		'S2_minimal_M33_(vmin)to(vmax)(_norm).csv' and
+		'S2_minimal_M33_(vmin)to(vmax)(_norm).bin'.
 
 		The "_norm" bit is added onto the end if normalization is
 		activated.
+	t2 : Table
+		Table displaying the cube name and the x- and y-coordinates
+		of the position on the NORMALIZED S2 map at which S2 crosses
+		S2threshold.
+		Also saves the table in .csv and .bin formats, as 
+		'S2_thres_M33_(vmin)to(vmax)_norm.csv' and
+		'S2_thres_M33_(vmin)to(vmax)_norm.bin'.
+
+		The "_norm" bit is added onto the end for clarity, but this
+		table will only be generated if normalization==True.
 	"""
 
 	galaxyname = 'M33'
@@ -402,6 +435,7 @@ def drawM33(vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=1, deltadeltaV=1,n
 	imax = i						# This is the number of cubes involved.
 	i = 0							# Resets the counter.	
 
+
 	cubename = [None]*imax
 	ymin_array = [None]*imax
 	ymax_array = [None]*imax
@@ -413,6 +447,8 @@ def drawM33(vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=1, deltadeltaV=1,n
 	ycoord1 = [None]*imax
 	ycoord2 = [None]*imax
 	ycoord3 = [None]*imax
+	xthres = [None]*imax
+	ythres = [None]*imax
 
 	for ymax in range(height, data.shape[1], height/2):
 		for xmax in range(width,data.shape[2],width/2):
@@ -421,13 +457,15 @@ def drawM33(vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=1, deltadeltaV=1,n
 			testcube = data[vmin:vmax,ymin:ymax,xmin:xmax]
 			if (np.float(np.count_nonzero(np.isnan(testcube))) / np.float(np.count_nonzero(testcube))) < 0.05:	
 
-				theta, linearray1_min, radlist = Cubes_array.generate(galaxyname,vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,deltadeltaX,deltadeltaV,201,normalization)
-				# ^ 'theta' is the position angle, 'radlist' are the radius values along the principal axis, and 'linearray1_min' are the S_2 local minima
-				#	values on this line-- corresponding to 'radlist' for convenience.
-				# We want to find the three closest-to-zero-but-still-above-a-threshold-radius positions along this principal axis at which there are minima.
+				theta, linearray1_min, thres_radii, radlist = Cubes_array.generate(galaxyname,vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,\
+													deltadeltaX,deltadeltaV,201,S2threshold, normalization)
+				# ^ 'theta' is the position angle, 'radlist' are the radius values along the principal axis, 'linearray1_min' are the S_2 local minima
+				#	values on this line, and 'thres_radii' are the S_2 threshold-crossing values on this line-- corresponding to 'radlist' for convenience.
+				# For linearray1_min, we want to find the three closest-to-zero-but-still-above-a-threshold-radius positions along this principal axis at which there 
+				#	are minima.
 			
 				xpositions, ypositions = extremacoords(theta,linearray1_min,radlist)		# Returns the x- and y-coordinates of three extrema near the center of the map.
-
+				xthres[i], ythres[i] = thresholdcoords(theta,thres_radii, normalization)	# Returns the x- and y-coordinates of the radius at which S2 crosses S2threshold.
 				ymin_array[i] = ymin
 				ymax_array[i] = ymax
 				xmin_array[i] = xmin
@@ -445,7 +483,9 @@ def drawM33(vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=1, deltadeltaV=1,n
 
 				i = i+1
 
-	t = Table([cubename,ymin_array,ymax_array,xmin_array,xmax_array,ycoord1,xcoord1,ycoord2,xcoord2,ycoord3,xcoord3], names=('Cube Name','ymin','ymax','xmin','xmax','y1','x1','y2','x2','y3','x3'), meta={'name': 'TABLE'})
+	# "t" - Table containing the regions used and the corresponding extrema coordinates.
+	t = Table([cubename,ymin_array,ymax_array,xmin_array,xmax_array,ycoord1,xcoord1,ycoord2,xcoord2,ycoord3,xcoord3],names=('Cube Name','ymin','ymax','xmin','xmax',\
+																'y1','x1','y2','x2','y3','x3'), meta={'name': 'TABLE'})
 	t['ymin'].unit='pixels'
 	t['ymax'].unit='pixels'
 	t['xmin'].unit='pixels'
@@ -456,8 +496,19 @@ def drawM33(vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=1, deltadeltaV=1,n
 	t['x1'].unit='pc'
 	t['x2'].unit='pc'
 	t['x3'].unit='pc'
-			
-	# Save 't' as a table in .csv format
+
+	# "t2" - Table containing the regions used and the corresponding coordinates of S_2 threshold locations.
+	t2 = Table([cubename,ymin_array,ymax_array,xmin_array,xmax_array,ythres,xthres],names=('Cube Name','ymin','ymax','xmin','xmax','ythres','xthres'), meta={'name': 'TABLE'})
+
+	t2['ymin'].unit='pixels'
+	t2['ymax'].unit='pixels'
+	t2['xmin'].unit='pixels'
+	t2['xmax'].unit='pixels'
+	t2['ythres'].unit='pc'
+	t2['xthres'].unit='pc'
+
+	# Save table 't' as a list in .csv format
+	# Save table 't' as an array in .bin format
 	if normalization==True:
 		with open('S2_minimal_M33_'+str(vmin)+'to'+str(vmax)+'_norm.csv', 'w') as csvfile:	# Saves the following into 'S2_minimal_M33_40to80_norm.csv'.
 		    writer = csv.writer(csvfile)
@@ -471,9 +522,24 @@ def drawM33(vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=1, deltadeltaV=1,n
 		    [writer.writerow(r) for r in t]
 		f = file('S2_minimal_M33_'+str(vmin)+'to'+str(vmax)+'.bin','wb')			# Saves the following into 'S2_minimal_M33_40to80.bin'.
 		np.save(f,t)
-		f.close()		
-	return t
+		f.close()
 
+	# Save table 't2' as a list in .csv format
+	# Save table 't2' as an array in .bin format
+	if normalization==True:
+		with open('S2_thres_M33_'+str(vmin)+'to'+str(vmax)+'_norm.csv', 'w') as csvfile:	# Saves the following into 'S2_thres_M33_40to80_norm.csv'.
+		    writer = csv.writer(csvfile)
+		    [writer.writerow(r) for r in t]
+		f = file('S2_thres_M33_'+str(vmin)+'to'+str(vmax)+'_norm.bin','wb')			# Saves the following into 'S2_thres_M33_40to80_norm.bin'.
+		np.save(f,t2)
+		f.close()
+	else:
+		print "NOTE: Normalization must be enabled for the S2 threshold-\n \
+			crossing table to be saved."							# DOESN'T save 't2' into 'S2_thres_M33_40to80.csv'.
+													# DOESN'T save 't2' into 'S2_thres_M33_40to80.bin'.
+
+
+	return t2
 
 def extremacoords(theta,linearray1_min,radlist):
 	radii = radlist[~np.isnan(linearray1_min)]
@@ -518,12 +584,15 @@ def extremacoords(theta,linearray1_min,radlist):
 
 	return xpositions,ypositions
 
-def thresholdcoords(theta,thres_radii)
-	if thres_radii[thres_radii>0].size>0:
-		xthres = thres_radii[thres_radii>0][0]*np.cos(theta)
-		ythres = thres_radii[thres_radii>0][0]*np.sin(theta)
+def thresholdcoords(theta,thres_radii,normalization):
+	if normalization==True:
+		if thres_radii[thres_radii>0].size > 0:
+			xthres = thres_radii[thres_radii>0][0]*np.cos(theta)		# The x-coord of the first radius at which S2 is above S2threshold.
+			ythres = thres_radii[thres_radii>0][0]*np.sin(theta)		# The y-coord of this first radius.
+		else:
+			xthres, ythres = np.nan, np.nan
 	else:
-		xthres, ythres = np.nan
+		xthres, ythres = np.nan, np.nan
 
 	return xthres, ythres
 

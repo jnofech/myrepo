@@ -12,7 +12,7 @@ from tempfile import TemporaryFile
 import scipy.interpolate as si
 from scipy.signal import argrelextrema as ae
 
-def generate(galaxyname='M51',vmin=40, vmax=80, ymin=200, ymax=400, xmin=360, xmax=560, deltaX=40, deltaV=3, deltadeltaX=1, deltadeltaV=1, nmax=201, normalization=False):
+def generate(galaxyname='M51',vmin=40, vmax=80, ymin=200, ymax=400, xmin=360, xmax=560, deltaX=40, deltaV=3, deltadeltaX=1, deltadeltaV=1, nmax=201, S2threshold=0.7, normalization=False):
 	"""
 	Takes a S_2 surface map whose name matches the given parameters, finds the angle
 		at which a line cutting through the origin has minimal S_2, and then
@@ -28,6 +28,9 @@ def generate(galaxyname='M51',vmin=40, vmax=80, ymin=200, ymax=400, xmin=360, xm
 	nmax : int
 		Number of values in final 1D array (preferably odd). 
 		Higher is better.
+	S2threshold : float
+		This is the threshold value of S2 along the principal axis
+		for which coordinates will be returned.
 	normalization : bool
 		Enables or disables using the normalized S2 map
 		instead of the usual one.
@@ -40,6 +43,10 @@ def generate(galaxyname='M51',vmin=40, vmax=80, ymin=200, ymax=400, xmin=360, xm
 	linearray1_min : array (1D, float)	
 		A list of minimal S_2 values along the principal
 		axis, with the origin in the middle of the list.
+	thres_radii : array (1D, float)
+		A list of radii along the principal axis for which
+		S2 is greater than S2threshold, with the origin in
+		the middle of the list.
 	radlist : array (1D, float)
 		A list of "radius" values along this line (in pc), 
 		corresponding to the data appearing in 'linearray1'.
@@ -63,18 +70,20 @@ def generate(galaxyname='M51',vmin=40, vmax=80, ymin=200, ymax=400, xmin=360, xm
 
 	if galaxyname=='M51':
 		filename = "paws_norot"
+	elif galaxyname=='M33':
+		filename = "m33.co21_iram_CLEANED"
 	else:
-		if galaxyname=='M33':
-			filename = "m33.co21_iram_CLEANED"
-		else:
-			print 'ERROR: Galaxy must be M51 or M33.'
-			return
+		print 'ERROR: Galaxy must be M51 or M33.'
+		return
 
 	theta = anglefinder( (array[0].max()-array[0])**2 ,False)			# Added the (  )**2 at Dr. Rosolowsky's suggestion.
 	linearrayx, linearray1, linearray2, maxradius1, maxradius2 = slicer(theta, array[0], nmax)
-	linearray1_min, radlist = plot(theta,maxradius1,maxradius2,array,linearrayx,linearray1,linearray2, filename, imagename, deltaX, deltaV)
+	linearray1_min, thres_radii, radlist = plot(theta,maxradius1,maxradius2,array,linearrayx,linearray1,linearray2, filename, imagename, deltaX, deltaV, S2threshold)
 
-	return(theta,linearray1_min,radlist)
+	if normalization==False:							# Ensures that the code doesn't return a functional value for the S2>S2threshold list 
+		thres_radii = np.nan						#	if the S2 map is not normalized.
+
+	return(theta,linearray1_min,thres_radii,radlist)
 
 def anglefinder(weight, ReturnSizes=False):
 
@@ -84,7 +93,7 @@ def anglefinder(weight, ReturnSizes=False):
 	moment-of-inertia approach.
 	
 	Parameters:
-	----------
+	-----------
 	weight : float
 		2D matrix showing weight for each point.  
 		Should be non-negative.
@@ -93,9 +102,9 @@ def anglefinder(weight, ReturnSizes=False):
 		position angle.
 
 	Returns:
+	-----------
 	pa : float
 		Position angle of the provided matrix.
-	-------
 	'''
 
 	#
@@ -241,7 +250,7 @@ def slicer(theta, array, nmax=201):
 	return linearrayx,linearray1,linearray2,maxradius1,maxradius2
 
 
-def plot(theta,maxradius1,maxradius2,array,linearrayx,linearray1,linearray2, filename="paws_norot", imagename="defaultname", deltaX=40, deltaV=3):
+def plot(theta,maxradius1,maxradius2,array,linearrayx,linearray1,linearray2, filename="paws_norot", imagename="defaultname", deltaX=40, deltaV=3, S2threshold=0.7):
 	'''
 	Given a map, its position angle, the values along
 		the low-S_2 "slice", and other information,
@@ -289,12 +298,19 @@ def plot(theta,maxradius1,maxradius2,array,linearrayx,linearray1,linearray2, fil
 		Name of the image that will be saved.
 	deltaX, deltaV : int
 		Parameters used in the relevant S_2 map.
+	S2threshold : float
+		This is the threshold value of S2 along the principal axis
+		for which coordinates will be returned.
 
-	Returns (DISABLED at the moment):
+	Returns:
 	-----------
 	linearray1_min : array (1D, float)	
 		A list of local minima of S_2 along the principal axis, 
 		with the origin in the middle of the list.
+	thres_radii : array (1D, float)
+		A list of radii along the principal axis for which
+		S2 is greater than S2threshold, with the origin in
+		the middle of the list.
 	radlist : array (1D, float)
 		A list of "radius" values along the principal axis, 
 		corresponding to the data appearing in 'linearray1_min'.
@@ -339,7 +355,6 @@ def plot(theta,maxradius1,maxradius2,array,linearrayx,linearray1,linearray2, fil
 	linearray2_min[ ae(ddlinearray2,np.greater,order=5) ] = linearray2[ ae(ddlinearray2,np.greater,order=5) ]		#
 
 
-
 	# PLOTTING EVERYTHING
 	# -------------------
 	fig, axarr = plt.subplots(nrows=1,ncols=2)
@@ -382,7 +397,9 @@ def plot(theta,maxradius1,maxradius2,array,linearrayx,linearray1,linearray2, fil
 	# -------------------
 
 	radlist = linearrayx*pixelwidthPC			# A 1D array of the radii along the principal axis.
-	return linearray1_min, radlist				#
+	thres_radii = radlist[linearray1>=S2threshold]	# List of all radii in radlist for which S2 is above S2threshold.
+
+	return linearray1_min, thres_radii, radlist		#
 
 def presetM51(vmin=40,vmax=80, deltaX=40, deltaV=3, deltadeltaX=1, deltadeltaV=1, normalization=False):
 	'''

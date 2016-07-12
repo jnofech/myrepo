@@ -22,7 +22,7 @@ def plotM51(vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadeltaV=1,mode=
         the center of the S_2 map, in parsecs) as a function of the distance 
         of each region to the centre of the galaxy (in pixels).
         
-    mode=1 (UNAVAILABLE): "extrema coordinates mode"
+    mode=1 : "extrema coordinates mode"
         Takes the table of S_2 minima (and their coordinates) of the NORMALIZED
         S_2 surface map; and displays a 2D Tmax map of the galaxy, marking the 
         positions of the various regions on the map and indicating their
@@ -67,7 +67,7 @@ def plotM51(vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadeltaV=1,mode=
         table2 = np.load(f)
         f.close()
     else:
-        table1 = np.nan
+        table = np.nan
         table2 = np.nan
     
     if mode==0:
@@ -102,14 +102,68 @@ def plotM51(vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadeltaV=1,mode=
         if normalization==True:
             plt.savefig('S2_miniplot_M51_'+str(vmin)+'to'+str(vmax)+'_norm.png')
         else:
-            plt.savefig('S2_miniplot_M51_'+str(vmin)+'to'+str(vmax)+'.png')
-	plt.clf()
+            print "ERROR: Something went wrong-- normalization should be True."
+
+        plt.clf()
 
     
     elif mode==1:
         print "Extrema Coordinates Mode activated"
-        print "ERROR - Extrema Coordinates Mode unavailable."
         
+        minima1 = np.zeros(table.size)      # Minima distance, in parsecs.
+        minima2 = np.zeros(table.size)
+        minima3 = np.zeros(table.size)
+        ymin = np.zeros(table.size)
+        ymax = np.zeros(table.size)
+        xmin = np.zeros(table.size)
+        xmax = np.zeros(table.size)
+
+        for i in range(0,table.size):
+            ymin[i],ymax[i] = table[i][1], table[i][2]
+            xmin[i],xmax[i] = table[i][3], table[i][4]
+
+            y1,x1 = table[i][5], table[i][6]
+            y2,x2 = table[i][7], table[i][8]
+            y3,x3 = table[i][9], table[i][10]     
+
+            minima1[i] = np.sqrt( y1**2 + x1**2 )
+            minima2[i] = np.sqrt( y2**2 + x2**2 )
+            minima3[i] = np.sqrt( y3**2 + x3**2 )
+            
+        maxdist = max(minima1.max(),minima2.max(),minima3.max())    # Largest measured extrema distance.
+        sizemax=1000                                                # Size of the largest dot.
+        
+        xcoord = (xmax+xmin)/2.0
+        ycoord = (ymax+ymin)/2.0
+        # NOTE: In the following, the extrema distances are proportional to the RADII of their
+        #   corresponding scatterplot dots.
+        size3 = sizemax*(minima3/maxdist)**2
+        size2 = sizemax*(minima2/maxdist)**2
+        size1 = sizemax*(minima1/maxdist)**2
+        
+        fig, axarr = plt.subplots(nrows=1,ncols=1)
+        ax1 = axarr
+        fig = plt.gcf()
+        fig.set_size_inches(15,7.5)	# Enlarges the image so as to prevent squishing.
+        
+        ax1.imshow(np.nanmax(data[vmin:vmax].value,axis=0), vmin=0, origin='lower')
+        
+        ax1.scatter(xcoord,ycoord,c='w',s=size3,label='3rd minima distance')
+        ax1.scatter(xcoord,ycoord,c='blue',s=size2,label='2nd minima distance')
+        ax1.scatter(xcoord,ycoord,c='r',s=size1,label='1st minima distance')
+        ax1.scatter(xcoord,ycoord,color='k',s=0.1)
+        
+        ax1.set_title('Extrema Distances over Various Regions in M51')
+        ax1.set_ylabel('y-position (pixels)')
+        ax1.set_xlabel('x-position (pixels)')
+        ax1.legend()
+
+        if normalization==True:
+            plt.savefig('S2_minicoords_M51_'+str(vmin)+'to'+str(vmax)+'_norm.png')
+        else:
+            print "ERROR: Something went wrong-- normalization should be True."
+        plt.clf()
+    
         
     elif mode==2:
         print "S_2 Threshold Mode activated"
@@ -138,7 +192,8 @@ def plotM51(vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadeltaV=1,mode=
             plt.savefig('S2_thresplot_M51_'+str(vmin)+'to'+str(vmax)+'_norm.png')
         else:
             print "ERROR: Something went wrong-- normalization should be True."
-	plt.clf()
+            
+        plt.clf()
 
     else:
         print "ERROR: Select mode=0 (Extrema Distance Mode),\
@@ -156,7 +211,7 @@ def plotM33(vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadeltaV=1,mode=
         the center of the S_2 map, in parsecs) as a function of the distance 
         of each region to the centre of the galaxy (in pixels).
         
-    mode=1 (UNAVAILABLE): "extrema coordinates mode"
+    mode=1 : "extrema coordinates mode"
         Takes the table of S_2 minima (and their coordinates) of the NORMALIZED
         S_2 surface map; and displays a 2D Tmax map of the galaxy, marking the 
         positions of the various regions on the map and indicating their
@@ -201,7 +256,7 @@ def plotM33(vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadeltaV=1,mode=
         table2 = np.load(f)
         f.close()
     else:
-        table1 = np.nan
+        table = np.nan
         table2 = np.nan
     
     if mode==0:
@@ -236,14 +291,68 @@ def plotM33(vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadeltaV=1,mode=
         if normalization==True:
             plt.savefig('S2_miniplot_M33_'+str(vmin)+'to'+str(vmax)+'_norm.png')
         else:
-            plt.savefig('S2_miniplot_M33_'+str(vmin)+'to'+str(vmax)+'.png')
-	plt.clf()
+	    print "ERROR: Something went wrong-- normalization should be True."
+
+        plt.clf()
 
     
     elif mode==1:
         print "Extrema Coordinates Mode activated"
-        print "ERROR - Extrema Coordinates Mode unavailable."
         
+        minima1 = np.zeros(table.size)      # Minima distance, in parsecs.
+        minima2 = np.zeros(table.size)
+        minima3 = np.zeros(table.size)
+        ymin = np.zeros(table.size)
+        ymax = np.zeros(table.size)
+        xmin = np.zeros(table.size)
+        xmax = np.zeros(table.size)
+
+        for i in range(0,table.size):
+            ymin[i],ymax[i] = table[i][1], table[i][2]
+            xmin[i],xmax[i] = table[i][3], table[i][4]
+
+            y1,x1 = table[i][5], table[i][6]
+            y2,x2 = table[i][7], table[i][8]
+            y3,x3 = table[i][9], table[i][10]     
+
+            minima1[i] = np.sqrt( y1**2 + x1**2 )
+            minima2[i] = np.sqrt( y2**2 + x2**2 )
+            minima3[i] = np.sqrt( y3**2 + x3**2 )
+            
+        maxdist = max(minima1.max(),minima2.max(),minima3.max())    # Largest measured extrema distance.
+        sizemax=1000                                                # Size of the largest dot.
+        
+        xcoord = (xmax+xmin)/2.0
+        ycoord = (ymax+ymin)/2.0
+        # NOTE: In the following, the extrema distances are proportional to the RADII of their
+        #   corresponding scatterplot dots.
+        size3 = sizemax*(minima3/maxdist)**2
+        size2 = sizemax*(minima2/maxdist)**2
+        size1 = sizemax*(minima1/maxdist)**2
+        
+        fig, axarr = plt.subplots(nrows=1,ncols=1)
+        ax1 = axarr
+        fig = plt.gcf()
+        fig.set_size_inches(7.5,15)	# Enlarges the image so as to prevent squishing.
+        
+        ax1.imshow(np.nanmax(data[vmin:vmax].value,axis=0), vmin=0, origin='lower')
+        
+        ax1.scatter(xcoord,ycoord,c='w',s=size3,label='3rd minima distance')
+        ax1.scatter(xcoord,ycoord,c='blue',s=size2,label='2nd minima distance')
+        ax1.scatter(xcoord,ycoord,c='r',s=size1,label='1st minima distance')
+        ax1.scatter(xcoord,ycoord,color='k',s=0.1)
+        
+        ax1.set_title('Extrema Distances over Various Regions in M33')
+        ax1.set_ylabel('y-position (pixels)')
+        ax1.set_xlabel('x-position (pixels)')
+        ax1.legend()
+
+        if normalization==True:
+            plt.savefig('S2_minicoords_M33_'+str(vmin)+'to'+str(vmax)+'_norm.png')
+        else:
+            print "ERROR: Something went wrong-- normalization should be True."
+        plt.clf()
+    
         
     elif mode==2:
         print "S_2 Threshold Mode activated"
@@ -272,7 +381,8 @@ def plotM33(vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadeltaV=1,mode=
             plt.savefig('S2_thresplot_M33_'+str(vmin)+'to'+str(vmax)+'_norm.png')
         else:
             print "ERROR: Something went wrong-- normalization should be True."
-	plt.clf()
+            
+        plt.clf()
 
     else:
         print "ERROR: Select mode=0 (Extrema Distance Mode),\

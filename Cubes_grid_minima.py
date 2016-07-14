@@ -1,7 +1,7 @@
 
 # 7.07.16 - Makes a plot of S_2 minima distance from the region's centre versus the region's distance from the galactic centre. For each of the procedurally-generated grid regions.
 
-print("\nWelcome to Cubes_grid_minima! \n \nAvailable functions: \n  plotM51: Plots extrema coordinates/distance against the location/radial \n		distance, OR plots the normalized S2 map width against\n		the radial distance from the galactic center. See\n		?Cubes_grid_minima.plotM51 for more information.\n  plotM33: Plots extrema coordinates/distance against the location/radial \n		distance, OR plots the normalized S2 map width against\n		the radial distance from the galactic center. See\n		?Cubes_grid_minima.plotM33 for more information.\n \nThis program reads the extrema positions from .bin files, which are required for\n	the functions to work. \n")
+print("\nWelcome to Cubes_grid_minima! \n \nAvailable functions: \n  plotM51: Plots extrema coordinates/distance against the location/radial \n		distance, OR plots the normalized S2/xi map width against\n		the radial distance from the galactic center. See\n		?Cubes_grid_minima.plotM51 for more information.\n  plotM33: Plots extrema coordinates/distance against the location/radial \n		distance, OR plots the normalized S2/xi map width against\n		the radial distance from the galactic center. See\n		?Cubes_grid_minima.plotM33 for more information.\n \nThis program reads the extrema positions from .bin files, which are required for\n	the functions to work. \n")
 
 import numpy as np
 import matplotlib
@@ -13,37 +13,38 @@ from astropy.table import Table
 import csv
 
 
-def plotM51(vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadeltaV=1,mode=0):
+def plotM51(mode='S2',vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadeltaV=1,drawmode=0):
     """
-    mode=0 (DEFAULT) : "extrema distance mode"
-        Takes the table of S_2 minima (and their coordinates) of the NORMALIZED
-        S_2 surface map whose name matches the given parameters, and then 
+    drawmode=0 (DEFAULT) : "extrema distance mode"
+        Takes the table of S_2/xi minima (and their coordinates) of the NORMALIZED
+        S_2/xi surface map whose name matches the given parameters, and then 
         plots the minima distances (i.e. the distance between the minima and
-        the center of the S_2 map, in parsecs) as a function of the distance 
+        the center of the S_2/xi map, in parsecs) as a function of the distance 
         of each region to the centre of the galaxy (in pixels).
         
-    mode=1 : "extrema coordinates mode"
-        Takes the table of S_2 minima (and their coordinates) of the NORMALIZED
-        S_2 surface map; and displays a 2D Tmax map of the galaxy, marking the 
+    drawmode=1 : "extrema coordinates mode"
+        Takes the table of S_2/xi minima (and their coordinates) of the NORMALIZED
+        S_2/xi surface map; and displays a 2D Tmax map of the galaxy, marking the 
         positions of the various regions on the map and indicating their
-        respective S2 minima distances with differently-sized markers.
+        respective S2/xi minima distances with differently-sized markers.
         
-    mode=2 : "S_2 threshold mode"
-        Takes the table of S_2 threshold-crossing distances (along the map's
-        principal axis) of the NORMALIZED S_2 map. This threshold is set by
+    drawmode=2 : "S_2/xi threshold mode"
+        Takes the table of S_2/xi threshold-crossing distances (along the map's
+        principal axis) of the xi/NORMALIZED S_2 map. This threshold is set by
         `Cubes_grid.py` before the table is formed.
         Then, it plots the threshold distances (i.e. the distance between the
-        S_2 threshold and the center of the S_2 map, in parsecs) as a function
-        of the distance of each region to the centre of the galaxy (in pixels).
+        S_2/xi threshold and the center of the S_2/xi map, in parsecs) as a
+        function of the distance of each region to the centre of the galaxy (in 
+        pixels).
 
     Parameters:
     -----------
     vmin,...,deltadeltaV : int
-        Parameters used in relevant S_2 map.
-    mode : int (0, 1, or 2)
+        Parameters used in relevant S_2/xi map.
+    drawmode : int (0, 1, or 2)
         Changes the mode of the function.
     """
-    
+
     filename = 'paws_norot'
     #filename = 'm33.co21_iram_CLEANED'
 
@@ -58,19 +59,32 @@ def plotM51(vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadeltaV=1,mode=
                                     #   in the middle of the 3D array.
 
     normalization=True             # Normalization is forcibly ENABLED.
-    if normalization==True:
-        f = file('S2_minimal_M51_'+str(vmin)+'to'+str(vmax)+'_norm.bin','rb')
-        table = np.load(f)
-        f.close()
-        
-        f = file('S2_thres_M51_'+str(vmin)+'to'+str(vmax)+'_norm.bin','rb')
-        table2 = np.load(f)
-        f.close()
+    if (mode=='s2') or (mode=='S2') or (mode=='s_2') or (mode=='S_2'):
+        if normalization==True:
+            f = file('S2_minimal_M51_'+str(vmin)+'to'+str(vmax)+'_norm.bin','rb')
+            table = np.load(f)
+            f.close()
+
+            f = file('S2_thres_M51_'+str(vmin)+'to'+str(vmax)+'_norm.bin','rb')
+            table2 = np.load(f)
+            f.close()
+        else:
+            table = np.nan
+            table2 = np.nan
+    elif (mode=='xi') or (mode=='Xi'):
+            f = file('xi_minimal_M51_'+str(vmin)+'to'+str(vmax)+'_norm.bin','rb')
+            table = np.load(f)
+            f.close()
+
+            f = file('xi_thres_M51_'+str(vmin)+'to'+str(vmax)+'_norm.bin','rb')
+            table2 = np.load(f)
+            f.close()
     else:
-        table = np.nan
-        table2 = np.nan
+        print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."
+        return
+
     
-    if mode==0:
+    if drawmode==0:
         print "Extrema Distance Mode activated"
         minima1 = np.zeros(table.size)      # Minima distance, in parsecs.
         minima2 = np.zeros(table.size)
@@ -92,22 +106,36 @@ def plotM51(vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadeltaV=1,mode=
             minima3[i] = np.sqrt( y3**2 + x3**2 )
 
         plt.plot(rdist,minima1,'r.',rdist,minima2,'b.',rdist,minima3,'g.')
-        plt.title("Extrema Distance vs. Region Distance from Galactic Centre")
-        plt.ylabel("Minima Distance (pc)")
-        plt.xlabel("Distance from M51's Centre (Pixels)")
+        if (mode=='s2') or (mode=='S2') or (mode=='s_2') or (mode=='S_2'):
+            plt.title("S2 Extrema Distance vs. Region Distance from Galactic Centre")
+            plt.ylabel("Minima Distance (pc)")
+            plt.xlabel("Distance from M51's Centre (Pixels)")
+        elif (mode=='xi') or (mode=='Xi'):
+            plt.title("xi Extrema Distance vs. Region Distance from Galactic Centre")
+            plt.ylabel("Minima Distance (pc)")
+            plt.xlabel("Distance from M51's Centre (Pixels)")
+        else:
+            print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."
+
 
         
         fig = plt.gcf()
         fig.set_size_inches(15,7.5)	# Enlarges the image so as to prevent squishing.
-        if normalization==True:
-            plt.savefig('S2_miniplot_M51_'+str(vmin)+'to'+str(vmax)+'_norm.png')
+        if (mode=='s2') or (mode=='S2') or (mode=='s_2') or (mode=='S_2'):
+            if normalization==True:
+                plt.savefig('S2_miniplot_M51_'+str(vmin)+'to'+str(vmax)+'_norm.png')
+            else:
+                plt.savefig('S2_miniplot_M51_'+str(vmin)+'to'+str(vmax)+'.png')
+        elif (mode=='xi') or (mode=='Xi'):
+                plt.savefig('xi_miniplot_M51_'+str(vmin)+'to'+str(vmax)+'.png')
         else:
-            print "ERROR: Something went wrong-- normalization should be True."
+            print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."
+
 
         plt.clf()
 
     
-    elif mode==1:
+    elif drawmode==1:
         print "Extrema Coordinates Mode activated"
         
         minima1 = np.zeros(table.size)      # Minima distance, in parsecs.
@@ -157,16 +185,27 @@ def plotM51(vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadeltaV=1,mode=
         ax1.set_ylabel('y-position (pixels)')
         ax1.set_xlabel('x-position (pixels)')
         ax1.legend()
-
-        if normalization==True:
-            plt.savefig('S2_minicoords_M51_'+str(vmin)+'to'+str(vmax)+'_norm.png')
+        if (mode=='s2') or (mode=='S2') or (mode=='s_2') or (mode=='S_2'):
+            if normalization==True:
+                plt.savefig('S2_minimap_M51_'+str(vmin)+'to'+str(vmax)+'_norm.png')
+            else:
+                print "ERROR: Something went wrong-- normalization should be True."
+        elif (mode=='xi') or (mode=='Xi'):
+                plt.savefig('xi_minimap_M51_'+str(vmin)+'to'+str(vmax)+'.png')
         else:
-            print "ERROR: Something went wrong-- normalization should be True."
+            print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."
+
         plt.clf()
     
         
-    elif mode==2:
-        print "S_2 Threshold Mode activated"
+    elif drawmode==2:
+        if (mode=='s2') or (mode=='S2') or (mode=='s_2') or (mode=='S_2'):
+            print "S_2 Threshold Mode activated"
+        elif (mode=='xi') or (mode=='Xi'):
+            print "xi Threshold Mode activated"
+        else:
+            print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."
+
         thres_radii = np.zeros(table2.size)    # S2 Threshold-crossing distance, in parsecs.
         
         rdist = np.zeros(table2.size)        # Distance from the centre of galaxy to each region, in pixels.
@@ -182,57 +221,72 @@ def plotM51(vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadeltaV=1,mode=
             width[i] = np.sqrt( ythres**2 + xthres**2 )     # "Width" of structure function, i.e. radius at
                                                             #    which S2 exceeds S2threshold.
         plt.plot(rdist,width,'r.')
-        plt.title("S2 Map Width vs. Region Distance from Galactic Centre")
-        plt.ylabel("S2 Map Width (pc)")
-        plt.xlabel("Distance from M51's Centre (Pixels)")
+        if (mode=='s2') or (mode=='S2') or (mode=='s_2') or (mode=='S_2'):
+            plt.title("S2 Map Width vs. Region Distance from Galactic Centre")
+            plt.ylabel("S2 Map Width (pc)")
+            plt.xlabel("Distance from M51's Centre (Pixels)")
+        elif (mode=='xi') or (mode=='Xi'):
+            plt.title("xi Map Width vs. Region Distance from Galactic Centre")
+            plt.ylabel("xi Map Width (pc)")
+            plt.xlabel("Distance from M51's Centre (Pixels)")
+        else:
+            print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."
+
 
         fig = plt.gcf()
         fig.set_size_inches(15,7.5)	# Enlarges the image so as to prevent squishing.
-        if normalization==True:
-            plt.savefig('S2_thresplot_M51_'+str(vmin)+'to'+str(vmax)+'_norm.png')
+        if (mode=='s2') or (mode=='S2') or (mode=='s_2') or (mode=='S_2'):
+            if normalization==True:
+                plt.savefig('S2_thresplot_M51_'+str(vmin)+'to'+str(vmax)+'_norm.png')
+            else:
+                print "ERROR: Something went wrong-- normalization should be True."
+        elif (mode=='xi') or (mode=='Xi'):
+            plt.savefig('xi_thresplot_M51_'+str(vmin)+'to'+str(vmax)+'.png')
         else:
-            print "ERROR: Something went wrong-- normalization should be True."
+            print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."
+
             
         plt.clf()
 
     else:
-        print "ERROR: Select mode=0 (Extrema Distance Mode),\
-        \n              mode=1 (Extrema Coordinates Mode),\
-        \n              or mode=2 (S_2 Threshold Mode)."
+        print "ERROR: Select drawmode=0 (Extrema Distance Mode),\
+        \n              drawmode=1 (Extrema Coordinates Mode),\
+        \n              or drawmode=2 (S_2 Threshold Mode)."
 
 
 
-def plotM33(vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadeltaV=1,mode=0):
+def plotM33(mode='S2',vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadeltaV=1,drawmode=0):
     """
-    mode=0 (DEFAULT) : "extrema distance mode"
-        Takes the table of S_2 minima (and their coordinates) of the NORMALIZED
-        S_2 surface map whose name matches the given parameters, and then 
+    drawmode=0 (DEFAULT) : "extrema distance mode"
+        Takes the table of S_2/xi minima (and their coordinates) of the NORMALIZED
+        S_2/xi surface map whose name matches the given parameters, and then 
         plots the minima distances (i.e. the distance between the minima and
-        the center of the S_2 map, in parsecs) as a function of the distance 
+        the center of the S_2/xi map, in parsecs) as a function of the distance 
         of each region to the centre of the galaxy (in pixels).
         
-    mode=1 : "extrema coordinates mode"
-        Takes the table of S_2 minima (and their coordinates) of the NORMALIZED
-        S_2 surface map; and displays a 2D Tmax map of the galaxy, marking the 
+    drawmode=1 : "extrema coordinates mode"
+        Takes the table of S_2/xi minima (and their coordinates) of the NORMALIZED
+        S_2/xi surface map; and displays a 2D Tmax map of the galaxy, marking the 
         positions of the various regions on the map and indicating their
-        respective S2 minima distances with differently-sized markers.
+        respective S2/xi minima distances with differently-sized markers.
         
-    mode=2 : "S_2 threshold mode"
-        Takes the table of S_2 threshold-crossing distances (along the map's
-        principal axis) of the NORMALIZED S_2 map. This threshold is set by
+    drawmode=2 : "S_2/xi threshold mode"
+        Takes the table of S_2/xi threshold-crossing distances (along the map's
+        principal axis) of the xi/NORMALIZED S_2 map. This threshold is set by
         `Cubes_grid.py` before the table is formed.
         Then, it plots the threshold distances (i.e. the distance between the
-        S_2 threshold and the center of the S_2 map, in parsecs) as a function
-        of the distance of each region to the centre of the galaxy (in pixels).
+        S_2/xi threshold and the center of the S_2/xi map, in parsecs) as a
+        function of the distance of each region to the centre of the galaxy (in 
+        pixels).
 
     Parameters:
     -----------
     vmin,...,deltadeltaV : int
-        Parameters used in relevant S_2 map.
-    mode : int (0, 1, or 2)
+        Parameters used in relevant S_2/xi map.
+    drawmode : int (0, 1, or 2)
         Changes the mode of the function.
     """
-    
+
     #filename = 'paws_norot'
     filename = 'm33.co21_iram_CLEANED'
 
@@ -247,19 +301,32 @@ def plotM33(vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadeltaV=1,mode=
                                     #   in the middle of the 3D array.
 
     normalization=True             # Normalization is forcibly ENABLED.
-    if normalization==True:
-        f = file('S2_minimal_M33_'+str(vmin)+'to'+str(vmax)+'_norm.bin','rb')
-        table = np.load(f)
-        f.close()
-        
-        f = file('S2_thres_M33_'+str(vmin)+'to'+str(vmax)+'_norm.bin','rb')
-        table2 = np.load(f)
-        f.close()
+    if (mode=='s2') or (mode=='S2') or (mode=='s_2') or (mode=='S_2'):
+        if normalization==True:
+            f = file('S2_minimal_M33_'+str(vmin)+'to'+str(vmax)+'_norm.bin','rb')
+            table = np.load(f)
+            f.close()
+
+            f = file('S2_thres_M33_'+str(vmin)+'to'+str(vmax)+'_norm.bin','rb')
+            table2 = np.load(f)
+            f.close()
+        else:
+            table = np.nan
+            table2 = np.nan
+    elif (mode=='xi') or (mode=='Xi'):
+            f = file('xi_minimal_M33_'+str(vmin)+'to'+str(vmax)+'_norm.bin','rb')
+            table = np.load(f)
+            f.close()
+
+            f = file('xi_thres_M33_'+str(vmin)+'to'+str(vmax)+'_norm.bin','rb')
+            table2 = np.load(f)
+            f.close()
     else:
-        table = np.nan
-        table2 = np.nan
+        print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."
+        return
+
     
-    if mode==0:
+    if drawmode==0:
         print "Extrema Distance Mode activated"
         minima1 = np.zeros(table.size)      # Minima distance, in parsecs.
         minima2 = np.zeros(table.size)
@@ -281,22 +348,36 @@ def plotM33(vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadeltaV=1,mode=
             minima3[i] = np.sqrt( y3**2 + x3**2 )
 
         plt.plot(rdist,minima1,'r.',rdist,minima2,'b.',rdist,minima3,'g.')
-        plt.title("Extrema Distance vs. Region Distance from Galactic Centre")
-        plt.ylabel("Minima Distance (pc)")
-        plt.xlabel("Distance from M33's Centre (Pixels)")
+        if (mode=='s2') or (mode=='S2') or (mode=='s_2') or (mode=='S_2'):
+            plt.title("S2 Extrema Distance vs. Region Distance from Galactic Centre")
+            plt.ylabel("Minima Distance (pc)")
+            plt.xlabel("Distance from M33's Centre (Pixels)")
+        elif (mode=='xi') or (mode=='Xi'):
+            plt.title("xi Extrema Distance vs. Region Distance from Galactic Centre")
+            plt.ylabel("Minima Distance (pc)")
+            plt.xlabel("Distance from M33's Centre (Pixels)")
+        else:
+            print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."
+
 
         
         fig = plt.gcf()
         fig.set_size_inches(15,7.5)	# Enlarges the image so as to prevent squishing.
-        if normalization==True:
-            plt.savefig('S2_miniplot_M33_'+str(vmin)+'to'+str(vmax)+'_norm.png')
+        if (mode=='s2') or (mode=='S2') or (mode=='s_2') or (mode=='S_2'):
+            if normalization==True:
+                plt.savefig('S2_miniplot_M33_'+str(vmin)+'to'+str(vmax)+'_norm.png')
+            else:
+                plt.savefig('S2_miniplot_M33_'+str(vmin)+'to'+str(vmax)+'.png')
+        elif (mode=='xi') or (mode=='Xi'):
+                plt.savefig('xi_miniplot_M33_'+str(vmin)+'to'+str(vmax)+'.png')
         else:
-	    print "ERROR: Something went wrong-- normalization should be True."
+            print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."
+
 
         plt.clf()
 
     
-    elif mode==1:
+    elif drawmode==1:
         print "Extrema Coordinates Mode activated"
         
         minima1 = np.zeros(table.size)      # Minima distance, in parsecs.
@@ -333,7 +414,7 @@ def plotM33(vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadeltaV=1,mode=
         fig, axarr = plt.subplots(nrows=1,ncols=1)
         ax1 = axarr
         fig = plt.gcf()
-        fig.set_size_inches(7.5,15)	# Enlarges the image so as to prevent squishing.
+        fig.set_size_inches(15,7.5)	# Enlarges the image so as to prevent squishing.
         
         ax1.imshow(np.nanmax(data[vmin:vmax].value,axis=0), vmin=0, origin='lower')
         
@@ -346,16 +427,27 @@ def plotM33(vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadeltaV=1,mode=
         ax1.set_ylabel('y-position (pixels)')
         ax1.set_xlabel('x-position (pixels)')
         ax1.legend()
-
-        if normalization==True:
-            plt.savefig('S2_minicoords_M33_'+str(vmin)+'to'+str(vmax)+'_norm.png')
+        if (mode=='s2') or (mode=='S2') or (mode=='s_2') or (mode=='S_2'):
+            if normalization==True:
+                plt.savefig('S2_minimap_M33_'+str(vmin)+'to'+str(vmax)+'_norm.png')
+            else:
+                print "ERROR: Something went wrong-- normalization should be True."
+        elif (mode=='xi') or (mode=='Xi'):
+                plt.savefig('xi_minimap_M33_'+str(vmin)+'to'+str(vmax)+'.png')
         else:
-            print "ERROR: Something went wrong-- normalization should be True."
+            print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."
+
         plt.clf()
     
         
-    elif mode==2:
-        print "S_2 Threshold Mode activated"
+    elif drawmode==2:
+        if (mode=='s2') or (mode=='S2') or (mode=='s_2') or (mode=='S_2'):
+            print "S_2 Threshold Mode activated"
+        elif (mode=='xi') or (mode=='Xi'):
+            print "xi Threshold Mode activated"
+        else:
+            print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."
+
         thres_radii = np.zeros(table2.size)    # S2 Threshold-crossing distance, in parsecs.
         
         rdist = np.zeros(table2.size)        # Distance from the centre of galaxy to each region, in pixels.
@@ -371,20 +463,35 @@ def plotM33(vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadeltaV=1,mode=
             width[i] = np.sqrt( ythres**2 + xthres**2 )     # "Width" of structure function, i.e. radius at
                                                             #    which S2 exceeds S2threshold.
         plt.plot(rdist,width,'r.')
-        plt.title("S2 Map Width vs. Region Distance from Galactic Centre")
-        plt.ylabel("S2 Map Width (pc)")
-        plt.xlabel("Distance from M33's Centre (Pixels)")
+        if (mode=='s2') or (mode=='S2') or (mode=='s_2') or (mode=='S_2'):
+            plt.title("S2 Map Width vs. Region Distance from Galactic Centre")
+            plt.ylabel("S2 Map Width (pc)")
+            plt.xlabel("Distance from M33's Centre (Pixels)")
+        elif (mode=='xi') or (mode=='Xi'):
+            plt.title("xi Map Width vs. Region Distance from Galactic Centre")
+            plt.ylabel("xi Map Width (pc)")
+            plt.xlabel("Distance from M33's Centre (Pixels)")
+        else:
+            print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."
+
 
         fig = plt.gcf()
         fig.set_size_inches(15,7.5)	# Enlarges the image so as to prevent squishing.
-        if normalization==True:
-            plt.savefig('S2_thresplot_M33_'+str(vmin)+'to'+str(vmax)+'_norm.png')
+        if (mode=='s2') or (mode=='S2') or (mode=='s_2') or (mode=='S_2'):
+            if normalization==True:
+                plt.savefig('S2_thresplot_M33_'+str(vmin)+'to'+str(vmax)+'_norm.png')
+            else:
+                print "ERROR: Something went wrong-- normalization should be True."
+        elif (mode=='xi') or (mode=='Xi'):
+            plt.savefig('xi_thresplot_M33_'+str(vmin)+'to'+str(vmax)+'.png')
         else:
-            print "ERROR: Something went wrong-- normalization should be True."
+            print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."
+
             
         plt.clf()
 
     else:
-        print "ERROR: Select mode=0 (Extrema Distance Mode),\
-        \n              mode=1 (Extrema Coordinates Mode),\
-        \n              or mode=2 (S_2 Threshold Mode)."
+        print "ERROR: Select drawmode=0 (Extrema Distance Mode),\
+        \n              drawmode=1 (Extrema Coordinates Mode),\
+        \n              or drawmode=2 (S_2 Threshold Mode)."
+

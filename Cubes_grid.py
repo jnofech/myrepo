@@ -1,10 +1,12 @@
 
-# 6.17.16 - Activates functions from Cubes_multi.py and Cubes.py for many procedurally-generated regions.
+# 6.17.16 - Activates functions from Cubes(_corr)_array.py and Cubes(_corr)_multi.py for many procedurally-generated regions.
 
-print('\nWelcome to Cubes_grid! \n \nAvailable functions: \n  arrayM51: Activates Cubes_multi.arrayM51 for many procedurally-\n                        generated region selections in M51. \n  drawM51: Activates Cubes_multi.draw for the above subcubes.\n  arrayM33: Activates Cubes_multi.arrayM33 for many procedurally-\n                        generated region selections in M33. \n  drawM33: Activates Cubes_multi.draw for the above subcubes.\n \nThis program makes use of Cubes_multi.py and Cubes.py.\n \n')
+print('\nWelcome to Cubes_grid! \n \nAvailable functions: \n  arrayM51: Activates Cubes(_corr)_multi.array for many procedurally-\n                        generated region selections in M51. \n  drawM51: Activates Cubes(_corr)_multi.draw for the above subcubes.\n  arrayM33: Activates Cubes(_corr)_multi.array for many procedurally-\n                        generated region selections in M33. \n  drawM33: Activates Cubes(_corr)_multi.draw for the above subcubes.\n \nThis program makes use of Cubes(_corr)_array.py and Cubes(_corr)_multi.py.\n	Be sure to select mode="S2" or mode="xi" for each function. \n')
 
 import Cubes_multi
+import Cubes_corr_multi
 import Cubes_array
+import Cubes_corr_array
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
@@ -18,16 +20,32 @@ from astropy.table import Table
 from decimal import Decimal
 import csv
 
-def arrayM51(vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV=1, drawmap = False, normalization=False):
-	"""Activates Cubes_multi.array for many procedurally-selected regions in
-	   M51, all under spectral range (vmin,vmax) with maximum dX/dY, maximum dV,
-	   and "step sizes". Also draws maps of all regions involved.
+def arrayM51(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV=1, drawmap = False, normalization=False):
+	"""
+	Activates Cubes(_corr)_multi.array for many procedurally-selected regions in
+		M51, all under spectral range (vmin,vmax) with maximum dX/dY, maximum dV,
+		and "step sizes". Also draws maps of all regions involved.
 
-	   Argument format: "(vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1,
-	   deltadeltaV=1, drawmap=False, normalization=False).
-
-	   WARNING: Selecting too large of a vmax-vmin will hugely increase
-	   processing time."""
+	Parameters:
+	-----------
+	mode : string
+		Selects Structure Function mode ('S2'/'S_2'), which uses code
+		from Cubes_multi.
+		OR
+		Selects Correlation Function mode ('xi'), which uses code from
+		Cubes_corr_multi.
+	vmin,...,deltadeltaV : int
+		Parameters used in relevant S2/xi map.
+		WARNING: Selecting too large of a vmax-vmin will hugely increase
+		processing time.
+	drawmap : bool
+		Determines whether to draw and save maps of the galaxy and the
+		procedurally-selected regions.
+	normalization : bool
+		Enables or disables using the normalized S2 map
+		instead of the usual one.
+		Automatically DISABLED for 'xi'. (?)
+	"""
 
 	galaxyname = 'M51'
 	filename = "paws_norot"
@@ -42,6 +60,7 @@ def arrayM51(vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV=1,
 
 	height = 150						# Height of each selected region. Must be an even number.
 	width = np.copy(height)					# Width of each selected region. Must be an even number.
+
 
 	if drawmap == True:
 		# Generates and saves a map of entire galaxy, with axes in units of parsecs.
@@ -90,9 +109,14 @@ def arrayM51(vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV=1,
 			testcube = data[vmin:vmax,ymin:ymax,xmin:xmax]
 			if (np.float(np.count_nonzero(np.isnan(testcube))) / np.float(np.count_nonzero(testcube))) < 0.05:
 				# Checks if there are a hugely-significant number of "NaN" values in the region.
-				Cubes_multi.array(vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,deltadeltaX,deltadeltaV,filename,drawmap,galaxyname,normalization)
+				if (mode=='s2') or (mode=='S2') or (mode=='s_2') or (mode=='S_2'):
+					Cubes_multi.array(vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,deltadeltaX,deltadeltaV,filename,drawmap,galaxyname,normalization)
+				elif (mode=='xi') or (mode=='Xi'):
+					Cubes_corr_multi.array(vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,deltadeltaX,deltadeltaV,filename,drawmap,galaxyname)
+				else:
+					print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."
 
-def drawM51(vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV=1, normalization=False, S2threshold=0.7):
+def drawM51(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV=1, normalization=False, S2threshold=0.7):
 	"""
 	Activates Cubes_multi.draw and Cubes_array.generate for all of the previously-
 	generated subcube selections, with the same args as arrayM51.
@@ -101,12 +125,19 @@ def drawM51(vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV=1, 
 
 	Parameters:
 	-----------
+	mode : string
+		Selects Structure Function mode ('S2'/'S_2'), which uses code
+		from Cubes_array and Cubes_multi.
+		OR
+		Selects Correlation Function mode ('xi'), which uses code from
+		Cubes_corr_array and Cubes_corr_multi.
 	normalization : bool
 		Enables or disables using the normalized S2 map
 		instead of the usual one.
 		If set to False, the program will not return a table
 		of the S2 threshold-crossing coordinates due to the way
 		`S2threshold` is handled. See below for more information.
+		Automatically DISABLED for 'xi'. (?)
 	S2threshold : float
 		This is the threshold value of S2 along the principal axis
 		for which coordinates will be returned.
@@ -120,14 +151,18 @@ def drawM51(vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV=1, 
 		NORMALIZED S2 map (i.e. range is roughly [0,1]), it will
 		be treated simply as a number that the normalized S2 has
 		to cross.
+		OR:
+		If 'xi' mode is enabled, this is the threshold percentage
+		(e.g. 0.7 -> 70%) of xi along the principal axis for
+		which coordinates will be returned.
 	Everything else : (various types)
 		Same variables (and selected values) as in arrayM51.
 
 	Returns:
 	-----------
 	t : Table
-		Table displaying the cube name and the x- and y-coordinates
-		of the first three S2 minima (above a certain threshold
+		Table displaying the galaxy name and the x- and y-coordinates
+		of the first three S2/xi minima (above a certain threshold
 		radius).
 		Also saves the table in .csv and .bin formats, as 
 		'S2_minimal_M51_(vmin)to(vmax)(_norm).csv' and
@@ -136,15 +171,16 @@ def drawM51(vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV=1, 
 		The "_norm" bit is added onto the end if normalization is
 		activated.
 	t2 : Table
-		Table displaying the cube name and the x- and y-coordinates
-		of the position on the NORMALIZED S2 map at which S2 crosses
-		S2threshold.
+		Table displaying the galaxy name and the x- and y-coordinates
+		of the position on the NORMALIZED S2/xi map at which S2/xi
+		crosses	S2threshold.
 		Also saves the table in .csv and .bin formats, as 
-		'S2_thres_M51_(vmin)to(vmax)_norm.csv' and
-		'S2_thres_M51_(vmin)to(vmax)_norm.bin'.
+		'S2/xi_thres_M51_(vmin)to(vmax)_norm.csv' and
+		'S2/xi_thres_M51_(vmin)to(vmax)_norm.bin'.
 
-		The "_norm" bit is added onto the end for clarity, but this
-		table will only be generated if normalization==True.
+		The "_norm" bit is added onto the end for clarity, but in 'S2'
+		mode, this table will only be generated if normalization==
+		True.
 	"""
 
 	galaxyname = 'M51'
@@ -169,7 +205,14 @@ def drawM51(vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV=1, 
 			testcube = data[vmin:vmax,ymin:ymax,xmin:xmax]
 			if (np.float(np.count_nonzero(np.isnan(testcube))) / np.float(np.count_nonzero(testcube))) < 0.05:
 				# ^ Checks if there are a hugely-significant number of "NaN" values in the region.
-				Cubes_multi.draw(vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,deltadeltaX,deltadeltaV,filename,galaxyname,normalization)
+				if (mode=='s2') or (mode=='S2') or (mode=='s_2') or (mode=='S_2'):
+					Cubes_multi.draw(vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,deltadeltaX,deltadeltaV,filename,galaxyname,normalization)
+				elif (mode=='xi') or (mode=='Xi'):
+					Cubes_corr_multi.draw(vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,deltadeltaX,deltadeltaV,filename,galaxyname)
+				else:
+					print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."
+					return np.nan, np.nan
+
 				i = i+1
 	imax = i						# This is the number of cubes involved.
 	i = 0							# Resets the counter.	
@@ -194,9 +237,15 @@ def drawM51(vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV=1, 
 			xmin = xmax-height
 			testcube = data[vmin:vmax,ymin:ymax,xmin:xmax]
 			if (np.float(np.count_nonzero(np.isnan(testcube))) / np.float(np.count_nonzero(testcube))) < 0.05:	
+				if (mode=='s2') or (mode=='S2') or (mode=='s_2') or (mode=='S_2'):
+					theta, linearray1_min, thres_radii, radlist = Cubes_array.generate(galaxyname,vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,\
+														deltadeltaX,deltadeltaV,201,S2threshold, normalization)
+				elif (mode=='xi') or (mode=='Xi'):
+					theta, linearray1_min, thres_radii, radlist = Cubes_corr_array.generate(galaxyname,vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,\
+														deltadeltaX,deltadeltaV,201,S2threshold)
+				else:
+					print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."
 
-				theta, linearray1_min, thres_radii, radlist = Cubes_array.generate(galaxyname,vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,\
-													deltadeltaX,deltadeltaV,201,S2threshold, normalization)
 				# ^ 'theta' is the position angle, 'radlist' are the radius values along the principal axis, 'linearray1_min' are the S_2 local minima
 				#	values on this line, and 'thres_radii' are the S_2 threshold-crossing values on this line-- corresponding to 'radlist' for convenience.
 				# For linearray1_min, we want to find the three closest-to-zero-but-still-above-a-threshold-radius positions along this principal axis at which there 
@@ -247,49 +296,88 @@ def drawM51(vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV=1, 
 
 	# Save table 't' as a list in .csv format
 	# Save table 't' as an array in .bin format
-	if normalization==True:
-		with open('S2_minimal_M51_'+str(vmin)+'to'+str(vmax)+'_norm.csv', 'w') as csvfile:	# Saves the following into 'S2_minimal_M51_40to80_norm.csv'.
+	if (mode=='s2') or (mode=='S2') or (mode=='s_2') or (mode=='S_2'):
+		if normalization==True:
+			with open('S2_minimal_M51_'+str(vmin)+'to'+str(vmax)+'_norm.csv', 'w') as csvfile:	# Saves the following into 'S2_minimal_M51_40to80_norm.csv'.
+			    writer = csv.writer(csvfile)
+			    [writer.writerow(r) for r in t]
+			f = file('S2_minimal_M51_'+str(vmin)+'to'+str(vmax)+'_norm.bin','wb')			# Saves the following into 'S2_minimal_M51_40to80_norm.bin'.
+			np.save(f,t)
+			f.close()
+		else:
+			with open('S2_minimal_M51_'+str(vmin)+'to'+str(vmax)+'.csv', 'w') as csvfile:		# Saves the following into 'S2_minimal_M51_40to80.csv'.
+			    writer = csv.writer(csvfile)
+			    [writer.writerow(r) for r in t]
+			f = file('S2_minimal_M51_'+str(vmin)+'to'+str(vmax)+'.bin','wb')			# Saves the following into 'S2_minimal_M51_40to80.bin'.
+			np.save(f,t)
+			f.close()
+	elif (mode=='xi') or (mode=='Xi'):
+		with open('xi_minimal_M51_'+str(vmin)+'to'+str(vmax)+'.csv', 'w') as csvfile:		# Saves the following into 'xi_minimal_M51_40to80.csv'.
 		    writer = csv.writer(csvfile)
 		    [writer.writerow(r) for r in t]
-		f = file('S2_minimal_M51_'+str(vmin)+'to'+str(vmax)+'_norm.bin','wb')			# Saves the following into 'S2_minimal_M51_40to80_norm.bin'.
+		f = file('xi_minimal_M51_'+str(vmin)+'to'+str(vmax)+'.bin','wb')			# Saves the following into 'xi_minimal_M51_40to80.bin'.
 		np.save(f,t)
 		f.close()
 	else:
-		with open('S2_minimal_M51_'+str(vmin)+'to'+str(vmax)+'.csv', 'w') as csvfile:		# Saves the following into 'S2_minimal_M51_40to80.csv'.
-		    writer = csv.writer(csvfile)
-		    [writer.writerow(r) for r in t]
-		f = file('S2_minimal_M51_'+str(vmin)+'to'+str(vmax)+'.bin','wb')			# Saves the following into 'S2_minimal_M51_40to80.bin'.
-		np.save(f,t)
-		f.close()
+		print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."
+
 
 	# Save table 't2' as a list in .csv format
 	# Save table 't2' as an array in .bin format
-	if normalization==True:
-		with open('S2_thres_M51_'+str(vmin)+'to'+str(vmax)+'_norm.csv', 'w') as csvfile:	# Saves the following into 'S2_thres_M51_40to80_norm.csv'.
+	if (mode=='s2') or (mode=='S2') or (mode=='s_2') or (mode=='S_2'):
+		if normalization==True:
+			with open('S2_thres_M51_'+str(vmin)+'to'+str(vmax)+'_norm.csv', 'w') as csvfile:	# Saves the following into 'S2_thres_M51_40to80_norm.csv'.
+			    writer = csv.writer(csvfile)
+			    [writer.writerow(r) for r in t2]
+			f = file('S2_thres_M51_'+str(vmin)+'to'+str(vmax)+'_norm.bin','wb')			# Saves the following into 'S2_thres_M51_40to80_norm.bin'.
+			np.save(f,t2)
+			f.close()
+		else:
+			print "NOTE: Normalization must be enabled for the S2 threshold-\n \
+				crossing table to be saved."							# DOESN'T save 't2' into 'S2_thres_M51_40to80.csv'.
+														# DOESN'T save 't2' into 'S2_thres_M51_40to80.bin'.
+	elif (mode=='xi') or (mode=='Xi'):
+		with open('S2_thres_M51_'+str(vmin)+'to'+str(vmax)+'.csv', 'w') as csvfile:	# Saves the following into 'xi_thres_M51_40to80_norm.csv'.
 		    writer = csv.writer(csvfile)
 		    [writer.writerow(r) for r in t2]
-		f = file('S2_thres_M51_'+str(vmin)+'to'+str(vmax)+'_norm.bin','wb')			# Saves the following into 'S2_thres_M51_40to80_norm.bin'.
+		f = file('S2_thres_M51_'+str(vmin)+'to'+str(vmax)+'.bin','wb')			# Saves the following into 'xi_thres_M51_40to80_norm.bin'.
 		np.save(f,t2)
 		f.close()
 	else:
-		print "NOTE: Normalization must be enabled for the S2 threshold-\n \
-			crossing table to be saved."							# DOESN'T save 't2' into 'S2_thres_M51_40to80.csv'.
-													# DOESN'T save 't2' into 'S2_thres_M51_40to80.bin'.
+		print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."
+
 
 
 	return t2
 
-def arrayM33(vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=1, deltadeltaV=1, drawmap=False, normalization=False):
-	"""Activates Cubes_multi.array for many procedurally-selected regions in
-	   M33, all under spectral range (vmin,vmax) with maximum dX/dY, maximum dV,
-	   and "step sizes". Also draws maps of all regions involved.
 
-	   Argument format: "(vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=1,
-	   deltadeltaV=1, drawmap=False, normalization=False).
 
-	   WARNING: Selecting too large of a vmax-vmin will hugely increase
-	   processing time."""
+def arrayM33(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV=1, drawmap = False, normalization=False):
+	"""
+	Activates Cubes(_corr)_multi.array for many procedurally-selected regions in
+		M33, all under spectral range (vmin,vmax) with maximum dX/dY, maximum dV,
+		and "step sizes". Also draws maps of all regions involved.
 
+	Parameters:
+	-----------
+	mode : string
+		Selects Structure Function mode ('S2'/'S_2'), which uses code
+		from Cubes_multi.
+		OR
+		Selects Correlation Function mode ('xi'), which uses code from
+		Cubes_corr_multi.
+	vmin,...,deltadeltaV : int
+		Parameters used in relevant S2/xi map.
+		WARNING: Selecting too large of a vmax-vmin will hugely increase
+		processing time.
+	drawmap : bool
+		Determines whether to draw and save maps of the galaxy and the
+		procedurally-selected regions.
+	normalization : bool
+		Enables or disables using the normalized S2 map
+		instead of the usual one.
+		Automatically DISABLED for 'xi'. (?)
+	"""
 	galaxyname = 'M33'
 	filename = 'm33.co21_iram_CLEANED'
 
@@ -302,17 +390,17 @@ def arrayM33(vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=1, deltadeltaV=1,
 
 	height = 150						# Height of each selected region. Must be an even number.
 	width = np.copy(height)					# Width of each selected region. Must be an even number.
-	
+
 
 	if drawmap == True:
 		# Generates and saves a map of entire galaxy, with axes in units of parsecs.
 		plt.figure(0)
 		yshape = data.shape[1]/2.0
 		xshape = data.shape[2]/2.0
-		plt.imshow(np.nanmax(data[vmin:vmax].value,axis=0), vmin=0,vmax=1, extent=[-xshape*pixelwidthPC,xshape*pixelwidthPC,-yshape*pixelwidthPC,yshape*pixelwidthPC], origin='lower')
+		plt.imshow(np.nanmax(data[vmin:vmax].value,axis=0), vmin=0, extent=[-xshape*pixelwidthPC,xshape*pixelwidthPC,-yshape*pixelwidthPC,yshape*pixelwidthPC], origin='lower')
 		plt.colorbar()
 		fig = plt.gcf()
-		fig.set_size_inches(7,10)	# Enlarges the image so as to prevent squishing.
+		fig.set_size_inches(15,7)	# Enlarges the image so as to prevent squishing.
 		plt.xlabel('Distance from Centre in x-direction (pc)')
 		plt.ylabel('Distance from Centre in y-direction (pc)')
 		plt.savefig('galaxy_'+galaxyname+'_'+str(vmin)+'to'+str(vmax)+'_entire.png')
@@ -323,7 +411,7 @@ def arrayM33(vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=1, deltadeltaV=1,
 		ax1 = galaxymap.add_subplot(111)
 		yshape = data.shape[1]/2.0
 		xshape = data.shape[2]/2.0
-		plt.imshow(np.nanmax(data[vmin:vmax].value,axis=0), vmin=0,vmax=1, origin='lower')
+		plt.imshow(np.nanmax(data[vmin:vmax].value,axis=0), vmin=0, origin='lower')
 
 		for ymax in range(height, data.shape[1], height/2):
 			for xmax in range(width,data.shape[2],width/2):
@@ -336,7 +424,7 @@ def arrayM33(vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=1, deltadeltaV=1,
 
 
 		fig = plt.gcf()
-		fig.set_size_inches(7,10)	# Enlarges the image so as to prevent squishing.
+		fig.set_size_inches(15,7)	# Enlarges the image so as to prevent squishing.
 		plt.xlabel('Resolution Units (x-direction)')
 		plt.ylabel('Resolution Units (y-direction)')
 		plt.colorbar()
@@ -351,9 +439,14 @@ def arrayM33(vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=1, deltadeltaV=1,
 			testcube = data[vmin:vmax,ymin:ymax,xmin:xmax]
 			if (np.float(np.count_nonzero(np.isnan(testcube))) / np.float(np.count_nonzero(testcube))) < 0.05:
 				# Checks if there are a hugely-significant number of "NaN" values in the region.
-				Cubes_multi.array(vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,deltadeltaX,deltadeltaV,filename,drawmap,galaxyname,normalization)
+				if (mode=='s2') or (mode=='S2') or (mode=='s_2') or (mode=='S_2'):
+					Cubes_multi.array(vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,deltadeltaX,deltadeltaV,filename,drawmap,galaxyname,normalization)
+				elif (mode=='xi') or (mode=='Xi'):
+					Cubes_corr_multi.array(vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,deltadeltaX,deltadeltaV,filename,drawmap,galaxyname)
+				else:
+					print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."
 
-def drawM33(vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=1, deltadeltaV=1,normalization=False, S2threshold=0.7):
+def drawM33(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV=1, normalization=False, S2threshold=0.7):
 	"""
 	Activates Cubes_multi.draw and Cubes_array.generate for all of the previously-
 	generated subcube selections, with the same args as arrayM33.
@@ -362,12 +455,19 @@ def drawM33(vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=1, deltadeltaV=1,n
 
 	Parameters:
 	-----------
+	mode : string
+		Selects Structure Function mode ('S2'/'S_2'), which uses code
+		from Cubes_array and Cubes_multi.
+		OR
+		Selects Correlation Function mode ('xi'), which uses code from
+		Cubes_corr_array and Cubes_corr_multi.
 	normalization : bool
 		Enables or disables using the normalized S2 map
 		instead of the usual one.
 		If set to False, the program will not return a table
 		of the S2 threshold-crossing coordinates due to the way
 		`S2threshold` is handled. See below for more information.
+		Automatically DISABLED for 'xi'. (?)
 	S2threshold : float
 		This is the threshold value of S2 along the principal axis
 		for which coordinates will be returned.
@@ -381,14 +481,18 @@ def drawM33(vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=1, deltadeltaV=1,n
 		NORMALIZED S2 map (i.e. range is roughly [0,1]), it will
 		be treated simply as a number that the normalized S2 has
 		to cross.
+		OR:
+		If 'xi' mode is enabled, this is the threshold percentage
+		(e.g. 0.7 -> 70%) of xi along the principal axis for
+		which coordinates will be returned.
 	Everything else : (various types)
 		Same variables (and selected values) as in arrayM33.
 
 	Returns:
 	-----------
 	t : Table
-		Table displaying the cube name and the x- and y-coordinates
-		of the first three S2 minima (above a certain threshold
+		Table displaying the galaxy name and the x- and y-coordinates
+		of the first three S2/xi minima (above a certain threshold
 		radius).
 		Also saves the table in .csv and .bin formats, as 
 		'S2_minimal_M33_(vmin)to(vmax)(_norm).csv' and
@@ -397,15 +501,16 @@ def drawM33(vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=1, deltadeltaV=1,n
 		The "_norm" bit is added onto the end if normalization is
 		activated.
 	t2 : Table
-		Table displaying the cube name and the x- and y-coordinates
-		of the position on the NORMALIZED S2 map at which S2 crosses
-		S2threshold.
+		Table displaying the galaxy name and the x- and y-coordinates
+		of the position on the NORMALIZED S2/xi map at which S2/xi
+		crosses	S2threshold.
 		Also saves the table in .csv and .bin formats, as 
-		'S2_thres_M33_(vmin)to(vmax)_norm.csv' and
-		'S2_thres_M33_(vmin)to(vmax)_norm.bin'.
+		'S2/xi_thres_M33_(vmin)to(vmax)_norm.csv' and
+		'S2/xi_thres_M33_(vmin)to(vmax)_norm.bin'.
 
-		The "_norm" bit is added onto the end for clarity, but this
-		table will only be generated if normalization==True.
+		The "_norm" bit is added onto the end for clarity, but in 'S2'
+		mode, this table will only be generated if normalization==
+		True.
 	"""
 
 	galaxyname = 'M33'
@@ -421,6 +526,7 @@ def drawM33(vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=1, deltadeltaV=1,n
 	height = 150						# Height of each selected region. Must be an even number.
 	width = np.copy(height)					# Width of each selected region. Must be an even number.
 
+
 	i = 0							# Counts the number of cubes that we're dealing with.
 
 	for ymax in range(height, data.shape[1], height/2):
@@ -430,11 +536,17 @@ def drawM33(vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=1, deltadeltaV=1,n
 			testcube = data[vmin:vmax,ymin:ymax,xmin:xmax]
 			if (np.float(np.count_nonzero(np.isnan(testcube))) / np.float(np.count_nonzero(testcube))) < 0.05:
 				# ^ Checks if there are a hugely-significant number of "NaN" values in the region.
-				Cubes_multi.draw(vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,deltadeltaX,deltadeltaV,filename,galaxyname,normalization)
+				if (mode=='s2') or (mode=='S2') or (mode=='s_2') or (mode=='S_2'):
+					Cubes_multi.draw(vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,deltadeltaX,deltadeltaV,filename,galaxyname,normalization)
+				elif (mode=='xi') or (mode=='Xi'):
+					Cubes_corr_multi.draw(vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,deltadeltaX,deltadeltaV,filename,galaxyname)
+				else:
+					print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."
+					return np.nan, np.nan
+
 				i = i+1
 	imax = i						# This is the number of cubes involved.
 	i = 0							# Resets the counter.	
-
 
 	cubename = [None]*imax
 	ymin_array = [None]*imax
@@ -456,9 +568,15 @@ def drawM33(vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=1, deltadeltaV=1,n
 			xmin = xmax-height
 			testcube = data[vmin:vmax,ymin:ymax,xmin:xmax]
 			if (np.float(np.count_nonzero(np.isnan(testcube))) / np.float(np.count_nonzero(testcube))) < 0.05:	
+				if (mode=='s2') or (mode=='S2') or (mode=='s_2') or (mode=='S_2'):
+					theta, linearray1_min, thres_radii, radlist = Cubes_array.generate(galaxyname,vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,\
+														deltadeltaX,deltadeltaV,201,S2threshold, normalization)
+				elif (mode=='xi') or (mode=='Xi'):
+					theta, linearray1_min, thres_radii, radlist = Cubes_corr_array.generate(galaxyname,vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,\
+														deltadeltaX,deltadeltaV,201,S2threshold)
+				else:
+					print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."
 
-				theta, linearray1_min, thres_radii, radlist = Cubes_array.generate(galaxyname,vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,\
-													deltadeltaX,deltadeltaV,201,S2threshold, normalization)
 				# ^ 'theta' is the position angle, 'radlist' are the radius values along the principal axis, 'linearray1_min' are the S_2 local minima
 				#	values on this line, and 'thres_radii' are the S_2 threshold-crossing values on this line-- corresponding to 'radlist' for convenience.
 				# For linearray1_min, we want to find the three closest-to-zero-but-still-above-a-threshold-radius positions along this principal axis at which there 
@@ -509,37 +627,61 @@ def drawM33(vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=1, deltadeltaV=1,n
 
 	# Save table 't' as a list in .csv format
 	# Save table 't' as an array in .bin format
-	if normalization==True:
-		with open('S2_minimal_M33_'+str(vmin)+'to'+str(vmax)+'_norm.csv', 'w') as csvfile:	# Saves the following into 'S2_minimal_M33_40to80_norm.csv'.
+	if (mode=='s2') or (mode=='S2') or (mode=='s_2') or (mode=='S_2'):
+		if normalization==True:
+			with open('S2_minimal_M33_'+str(vmin)+'to'+str(vmax)+'_norm.csv', 'w') as csvfile:	# Saves the following into 'S2_minimal_M33_40to80_norm.csv'.
+			    writer = csv.writer(csvfile)
+			    [writer.writerow(r) for r in t]
+			f = file('S2_minimal_M33_'+str(vmin)+'to'+str(vmax)+'_norm.bin','wb')			# Saves the following into 'S2_minimal_M33_40to80_norm.bin'.
+			np.save(f,t)
+			f.close()
+		else:
+			with open('S2_minimal_M33_'+str(vmin)+'to'+str(vmax)+'.csv', 'w') as csvfile:		# Saves the following into 'S2_minimal_M33_40to80.csv'.
+			    writer = csv.writer(csvfile)
+			    [writer.writerow(r) for r in t]
+			f = file('S2_minimal_M33_'+str(vmin)+'to'+str(vmax)+'.bin','wb')			# Saves the following into 'S2_minimal_M33_40to80.bin'.
+			np.save(f,t)
+			f.close()
+	elif (mode=='xi') or (mode=='Xi'):
+		with open('xi_minimal_M33_'+str(vmin)+'to'+str(vmax)+'.csv', 'w') as csvfile:		# Saves the following into 'xi_minimal_M33_40to80.csv'.
 		    writer = csv.writer(csvfile)
 		    [writer.writerow(r) for r in t]
-		f = file('S2_minimal_M33_'+str(vmin)+'to'+str(vmax)+'_norm.bin','wb')			# Saves the following into 'S2_minimal_M33_40to80_norm.bin'.
+		f = file('xi_minimal_M33_'+str(vmin)+'to'+str(vmax)+'.bin','wb')			# Saves the following into 'xi_minimal_M33_40to80.bin'.
 		np.save(f,t)
 		f.close()
 	else:
-		with open('S2_minimal_M33_'+str(vmin)+'to'+str(vmax)+'.csv', 'w') as csvfile:		# Saves the following into 'S2_minimal_M33_40to80.csv'.
-		    writer = csv.writer(csvfile)
-		    [writer.writerow(r) for r in t]
-		f = file('S2_minimal_M33_'+str(vmin)+'to'+str(vmax)+'.bin','wb')			# Saves the following into 'S2_minimal_M33_40to80.bin'.
-		np.save(f,t)
-		f.close()
+		print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."
+
 
 	# Save table 't2' as a list in .csv format
 	# Save table 't2' as an array in .bin format
-	if normalization==True:
-		with open('S2_thres_M33_'+str(vmin)+'to'+str(vmax)+'_norm.csv', 'w') as csvfile:	# Saves the following into 'S2_thres_M33_40to80_norm.csv'.
+	if (mode=='s2') or (mode=='S2') or (mode=='s_2') or (mode=='S_2'):
+		if normalization==True:
+			with open('S2_thres_M33_'+str(vmin)+'to'+str(vmax)+'_norm.csv', 'w') as csvfile:	# Saves the following into 'S2_thres_M33_40to80_norm.csv'.
+			    writer = csv.writer(csvfile)
+			    [writer.writerow(r) for r in t2]
+			f = file('S2_thres_M33_'+str(vmin)+'to'+str(vmax)+'_norm.bin','wb')			# Saves the following into 'S2_thres_M33_40to80_norm.bin'.
+			np.save(f,t2)
+			f.close()
+		else:
+			print "NOTE: Normalization must be enabled for the S2 threshold-\n \
+				crossing table to be saved."							# DOESN'T save 't2' into 'S2_thres_M33_40to80.csv'.
+														# DOESN'T save 't2' into 'S2_thres_M33_40to80.bin'.
+	elif (mode=='xi') or (mode=='Xi'):
+		with open('S2_thres_M33_'+str(vmin)+'to'+str(vmax)+'.csv', 'w') as csvfile:	# Saves the following into 'xi_thres_M33_40to80_norm.csv'.
 		    writer = csv.writer(csvfile)
-		    [writer.writerow(r) for r in t]
-		f = file('S2_thres_M33_'+str(vmin)+'to'+str(vmax)+'_norm.bin','wb')			# Saves the following into 'S2_thres_M33_40to80_norm.bin'.
+		    [writer.writerow(r) for r in t2]
+		f = file('S2_thres_M33_'+str(vmin)+'to'+str(vmax)+'.bin','wb')			# Saves the following into 'xi_thres_M33_40to80_norm.bin'.
 		np.save(f,t2)
 		f.close()
 	else:
-		print "NOTE: Normalization must be enabled for the S2 threshold-\n \
-			crossing table to be saved."							# DOESN'T save 't2' into 'S2_thres_M33_40to80.csv'.
-													# DOESN'T save 't2' into 'S2_thres_M33_40to80.bin'.
+		print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."
+
 
 
 	return t2
+
+
 
 def extremacoords(theta,linearray1_min,radlist):
 	radii = radlist[~np.isnan(linearray1_min)]

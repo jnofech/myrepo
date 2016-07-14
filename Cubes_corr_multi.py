@@ -1,8 +1,7 @@
 
 # 6.15.16 - Calculates and plots xi using functions from "Cubes_corr.py".
 
-
-print('\nWelcome to Cubes_corr_multi! \n \nAvailable functions: \n  xi_array: Saves a "xi" array. \n  xi_draw: Generates a 2D map and 1D plot of xi.  \n  xi_arrayM51: Activates xi_array for several preset subcubes all at\n                        once for M51.\n  xi_drawM51: Activates xi_draw for the above subcubes.\n  xi_arrayM33: Activates xi_array for several preset subcubes all at\n                        once for M33.\n  xi_drawM33: Activates xi_draw for the above subcubes.\n  compare_xiarray: Saves xi arrays for M51 and M33 at dV=0. \n  compare_xidraw: Draws a 1D plot comparing the above xi arrays.\n \nThis program makes use of Cubes_corr.py.\n \n')
+print('\nWelcome to Cubes_corr_multi! \n \nAvailable functions: \n  array: Saves a "xi" array. \n  draw: Generates a 2D map and 1D plot of xi.  \n  arrayM51: Activates "array" for several preset subcubes all at\n                        once for M51.\n  drawM51: Activates "draw" for the above subcubes.\n  arrayM33: Activates "array" for several preset subcubes all at\n                        once for M33.\n  drawM33: Activates "draw" for the above subcubes.\n  compare_xiarray: Saves xi arrays for M51 and M33 at dV=0. \n  compare_xidraw: Draws a 1D plot comparing the above xi arrays.\n \nThis program makes use of Cubes_corr.py.\n \n')
 import Cubes_corr
 import numpy as np
 import matplotlib
@@ -14,7 +13,7 @@ import math
 import scipy.stats as ss
 from tempfile import TemporaryFile
  
-def xi_array(vmin, vmax, ymin, ymax, xmin, xmax, deltaX = 100, deltaV = 3, deltadeltaX = 10, deltadeltaV = 1, filename="paws_norot", drawmap=False, galaxyname='M51'):
+def array(vmin, vmax, ymin, ymax, xmin, xmax, deltaX = 100, deltaV = 3, deltadeltaX = 10, deltadeltaV = 1, filename="paws_norot", drawmap=False, galaxyname='M51'):
 	"""
 	   Generates a normalized (?) array of xi, from subcube of the 
 	   specified dimensions; using the .fits file in "Cubes_corr.py".
@@ -44,6 +43,7 @@ def xi_array(vmin, vmax, ymin, ymax, xmin, xmax, deltaX = 100, deltaV = 3, delta
 
 	subcube = Cubes_corr.cubegen(vmin,vmax,ymin,ymax,xmin,xmax,filename,drawmap, imagename)	# Will draw a map of the subcube if drawmap=True.
 
+
 	xi = Cubes_corr.corrgen(subcube,deltaX,deltaV,deltadeltaX,deltadeltaV)
 
 	# SAVE xi into an array, with the saved filename SPECIFICALLY including the parameters used.
@@ -51,21 +51,26 @@ def xi_array(vmin, vmax, ymin, ymax, xmin, xmax, deltaX = 100, deltaV = 3, delta
 	np.save(f,xi)
 	f.close()
 
-def xi_draw(vmin, vmax, ymin, ymax, xmin, xmax, deltaX = 100, deltaV = 3, deltadeltaX = 10, deltadeltaV = 1, filename="paws_norot", galaxyname='M51'):
+def draw(vmin, vmax, ymin, ymax, xmin, xmax, deltaX = 100, deltaV = 3, deltadeltaX = 10, deltadeltaV = 1, filename="paws_norot", galaxyname='M51'):
 	"""
 	   Generates plots of xi (including a 2D plot of xi vs position, and a 1D
 	   plot of xi vs radius) for each "dv" from subcube of the specified 
-	   dimensions; using the saved xi arrays from xi_plot.
+	   dimensions; using the saved xi arrays from "array".
 
 	   Argument format: "(vmin,vmax, ymin,ymax, xmin,xmax, deltaX=100, deltaV=3,
 	      deltadeltaX=10, deltadeltaV=1, filename="paws_norot", galaxyname='M51')."
-	   ^ These MUST MATCH the args/kwargs used in xi_gen."""
+	   ^ These MUST MATCH the args/kwargs used in "array"."""
+
 
 	imagename = galaxyname+"_"+str(vmin)+"to"+str(vmax)+"_"+str(ymin)+"to"+str(ymax)+"_"+str(xmin)+"to"+str(xmax)
 	if deltadeltaX == 1 and deltadeltaV == 1:
 		tempname = 'saved_xiarray_'+imagename+'_dV_is_'+str(deltaV)+'_dX_is_'+str(deltaX)+'_MAXRES'
 	else:
 		tempname = 'saved_xiarray_'+imagename+'_dV_is_'+str(deltaV)+'_dX_is_'+str(deltaX)
+
+
+
+
 
 	# File-loading.
 	f = file(tempname+".bin","rb")
@@ -77,8 +82,8 @@ def xi_draw(vmin, vmax, ymin, ymax, xmin, xmax, deltaX = 100, deltaV = 3, deltad
 	Cubes_corr.everythinggen(vmin, vmax, ymin, ymax, xmin, xmax, xi, deltaX, deltaV, deltadeltaX, deltadeltaV, imagename, filename)
 
 
-def xi_arrayM51(vmin=40,vmax=80, deltaX=40, deltaV=3, deltadeltaX=10, deltadeltaV=1, drawmap = False):
-	"""Activates xi_array for M51 with each of the .py file's subcube selections,
+def arrayM51(vmin=40,vmax=80, deltaX=40, deltaV=3, deltadeltaX=10, deltadeltaV=1, drawmap = False):
+	"""Activates "array" for M51 with each of the .py file's subcube selections,
 	   all under spectral range (vmin,vmax) with maximum dX/dY, maximum dV,
 	   and "step sizes". Also draws maps of all regions involved.
 
@@ -135,18 +140,18 @@ def xi_arrayM51(vmin=40,vmax=80, deltaX=40, deltaV=3, deltadeltaX=10, deltadelta
 		plt.savefig('galaxy_'+galaxyname+'_'+str(vmin)+'to'+str(vmax)+'_regions.png')
 		plt.clf()
 
-	# Runs 'xi_array(...)' for each of the regions that we're using. For descriptions of these regions, see the "OLD" section below.
+	# Runs 'array(...)' for each of the regions that we're using. For descriptions of these regions, see the "OLD" section below.
 	for i in range(0,sets):
-		xi_array(vmin,vmax,ymin[i],ymax[i],xmin[i],xmax[i],deltaX,deltaV,deltadeltaX,deltadeltaV,filename,drawmap,galaxyname)
+		array(vmin,vmax,ymin[i],ymax[i],xmin[i],xmax[i],deltaX,deltaV,deltadeltaX,deltadeltaV,filename,drawmap,galaxyname)
 		
-def xi_drawM51(vmin=40,vmax=80, deltaX=40, deltaV=3, deltadeltaX=10, deltadeltaV=1):
-	"""Activates xi_draw with each of the .py file's subcube selections,
-	   with the same args as xi_arrayM51.
+def drawM51(vmin=40,vmax=80, deltaX=40, deltaV=3, deltadeltaX=10, deltadeltaV=1):
+	"""Activates "draw" with each of the .py file's subcube selections,
+	   with the same args as "arrayM51".
 
 	   Argument format: "(vmin=40,vmax=80, deltaX=40, deltaV=3, deltadeltaX=10,
 	   deltadeltaV=1).
 
-	   These MUST match the args/kwargs used in xi_arrayM51!"""
+	   These MUST match the args/kwargs used in "arrayM51"!"""
 
 	galaxyname = 'M51'
 	filename = "paws_norot"
@@ -165,12 +170,12 @@ def xi_drawM51(vmin=40,vmax=80, deltaX=40, deltaV=3, deltadeltaX=10, deltadeltaV
 	sets = np.ravel(ymin.shape)[0]		# This is the number of regions that we're dealing with.
 
 	for i in range(0,sets):
-		xi_draw(vmin,vmax,ymin[i],ymax[i],xmin[i],xmax[i],deltaX,deltaV,deltadeltaX,deltadeltaV,filename,galaxyname)
+		draw(vmin,vmax,ymin[i],ymax[i],xmin[i],xmax[i],deltaX,deltaV,deltadeltaX,deltadeltaV,filename,galaxyname)
 
 
 
-def xi_arrayM33(vmin=40,vmax=80, deltaX=40, deltaV=6, deltadeltaX=10, deltadeltaV=1, drawmap=False):
-	"""Activates xi_array for M33 with each of the .py file's subcube selections,
+def arrayM33(vmin=40,vmax=80, deltaX=40, deltaV=6, deltadeltaX=10, deltadeltaV=1, drawmap=False):
+	"""Activates "array" for M33 with each of the .py file's subcube selections,
 	   all under spectral range (vmin,vmax) with maximum dX/dY, maximum dV,
 	   and "step sizes". Also draws maps of all regions involved.
 
@@ -229,18 +234,18 @@ def xi_arrayM33(vmin=40,vmax=80, deltaX=40, deltaV=6, deltadeltaX=10, deltadelta
 		plt.savefig('galaxy_'+galaxyname+'_'+str(vmin)+'to'+str(vmax)+'_regions.png')
 		plt.clf()
 
-	# Runs 'xi_array(...)' for each of the regions that we're using. For descriptions of these regions, see the "OLD" section below.
+	# Runs 'array(...)' for each of the regions that we're using. For descriptions of these regions, see the "OLD" section below.
 	for i in range(0,sets):
-		xi_array(vmin,vmax,ymin[i],ymax[i],xmin[i],xmax[i],deltaX,deltaV,deltadeltaX,deltadeltaV,filename,drawmap,galaxyname)
+		array(vmin,vmax,ymin[i],ymax[i],xmin[i],xmax[i],deltaX,deltaV,deltadeltaX,deltadeltaV,filename,drawmap,galaxyname)
 
-def xi_drawM33(vmin=40,vmax=80, deltaX=40, deltaV=6, deltadeltaX=10, deltadeltaV=1):
-	"""Activates xi_draw with each of the .py file's subcube selections,
-	   with the same args as xi_arrayM33.
+def drawM33(vmin=40,vmax=80, deltaX=40, deltaV=6, deltadeltaX=10, deltadeltaV=1):
+	"""Activates "draw" with each of the .py file's subcube selections,
+	   with the same args as "arrayM33".
 
 	   Argument format: "(vmin=40,vmax=80, deltaX=40, deltaV=6, deltadeltaX=10,
 	   deltadeltaV=1).
 
-	   These MUST match the args/kwargs used in xi_arrayM33!"""
+	   These MUST match the args/kwargs used in "arrayM33"!"""
 
 	galaxyname = 'M33'
 	filename = 'm33.co21_iram_CLEANED'
@@ -259,12 +264,14 @@ def xi_drawM33(vmin=40,vmax=80, deltaX=40, deltaV=6, deltadeltaX=10, deltadeltaV
 	sets = np.ravel(ymin.shape)[0]		# This is the number of regions that we're dealing with.
 
 	for i in range(0,sets):
-		xi_draw(vmin,vmax,ymin[i],ymax[i],xmin[i],xmax[i],deltaX,deltaV,deltadeltaX,deltadeltaV,filename,galaxyname)
+		draw(vmin,vmax,ymin[i],ymax[i],xmin[i],xmax[i],deltaX,deltaV,deltadeltaX,deltadeltaV,filename,galaxyname)
 
 
 
 def compare_xiarray(vmin=40,vmax=80, deltaX=40, deltadeltaX=10):
-	"""For both M51 and M33, saves a numpy array containing xi as a
+	"""
+	(NO LONGER SUPPORTED)
+	For both M51 and M33, saves a numpy array containing xi as a
 	   function of dx, dy, and dv (where dv is only zero). These arrays
 	   can be called on in 'compare_xidraw'.
 	   Argument format: "(vmin=40,vmax=80, deltaX=40, deltadeltaX=5)."
@@ -296,7 +303,9 @@ def compare_xiarray(vmin=40,vmax=80, deltaX=40, deltadeltaX=10):
 
 	subcubeM51 = Cubes_corr.cubegen(vmin,vmax,yminM51,ymaxM51,xminM51,xmaxM51, filenameM51, drawmap)	# Subcube for M51.
 
+
 	subcubeM33 = Cubes_corr.cubegen(vmin,vmax,yminM33,ymaxM33,xminM33,xmaxM33, filenameM33, drawmap)	# Subcube for M33.
+
 
 	xi_M51 = Cubes_corr.corrgen(subcubeM51,deltaX,0,deltadeltaX,1)
 	xi_M33 = Cubes_corr.corrgen(subcubeM33,deltaX,0,deltadeltaX,1)
@@ -311,7 +320,9 @@ def compare_xiarray(vmin=40,vmax=80, deltaX=40, deltadeltaX=10):
 
 
 def compare_xidraw(vmin=40,vmax=80, deltaX=40, deltadeltaX=10):
-	""" Using the saved xi arrays from 'compare_xigen', creates a plot
+	""" 
+	(NO LONGER SUPPORTED)
+	Using the saved xi arrays from 'compare_xigen', creates a plot
 	of xi versus radius for M51 and M33.
 
 	Argument format: (vmin=40, vmax=80, deltaX=40, deltadeltaX=10).

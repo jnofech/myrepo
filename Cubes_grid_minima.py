@@ -72,11 +72,11 @@ def plotM51(mode='S2',vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadelt
             table = np.nan
             table2 = np.nan
     elif (mode=='xi') or (mode=='Xi'):
-            f = file('xi_minimal_M51_'+str(vmin)+'to'+str(vmax)+'_norm.bin','rb')
+            f = file('xi_minimal_M51_'+str(vmin)+'to'+str(vmax)+'.bin','rb')
             table = np.load(f)
             f.close()
 
-            f = file('xi_thres_M51_'+str(vmin)+'to'+str(vmax)+'_norm.bin','rb')
+            f = file('xi_thres_M51_'+str(vmin)+'to'+str(vmax)+'.bin','rb')
             table2 = np.load(f)
             f.close()
     else:
@@ -158,7 +158,7 @@ def plotM51(mode='S2',vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadelt
             minima2[i] = np.sqrt( y2**2 + x2**2 )
             minima3[i] = np.sqrt( y3**2 + x3**2 )
             
-        maxdist = max(minima1.max(),minima2.max(),minima3.max())    # Largest measured extrema distance.
+        maxdist = max(np.nanmax(minima1),np.nanmax(minima2),np.nanmax(minima3))    # Largest measured extrema distance.
         sizemax=1000                                                # Size of the largest dot.
         
         xcoord = (xmax+xmin)/2.0
@@ -314,11 +314,11 @@ def plotM33(mode='S2',vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadelt
             table = np.nan
             table2 = np.nan
     elif (mode=='xi') or (mode=='Xi'):
-            f = file('xi_minimal_M33_'+str(vmin)+'to'+str(vmax)+'_norm.bin','rb')
+            f = file('xi_minimal_M33_'+str(vmin)+'to'+str(vmax)+'.bin','rb')
             table = np.load(f)
             f.close()
 
-            f = file('xi_thres_M33_'+str(vmin)+'to'+str(vmax)+'_norm.bin','rb')
+            f = file('xi_thres_M33_'+str(vmin)+'to'+str(vmax)+'.bin','rb')
             table2 = np.load(f)
             f.close()
     else:
@@ -400,7 +400,7 @@ def plotM33(mode='S2',vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadelt
             minima2[i] = np.sqrt( y2**2 + x2**2 )
             minima3[i] = np.sqrt( y3**2 + x3**2 )
             
-        maxdist = max(minima1.max(),minima2.max(),minima3.max())    # Largest measured extrema distance.
+        maxdist = max(np.nanmax(minima1),np.nanmax(minima2),np.nanmax(minima3))    # Largest measured extrema distance.
         sizemax=1000                                                # Size of the largest dot.
         
         xcoord = (xmax+xmin)/2.0
@@ -494,4 +494,3 @@ def plotM33(mode='S2',vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadelt
         print "ERROR: Select drawmode=0 (Extrema Distance Mode),\
         \n              drawmode=1 (Extrema Coordinates Mode),\
         \n              or drawmode=2 (S_2 Threshold Mode)."
-

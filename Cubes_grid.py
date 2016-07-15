@@ -152,9 +152,10 @@ def drawM51(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, delta
 		be treated simply as a number that the normalized S2 has
 		to cross.
 		OR:
-		If 'xi' mode is enabled, this is the threshold percentage
-		(e.g. 0.7 -> 70%) of xi along the principal axis for
-		which coordinates will be returned.
+		If 'xi' mode is enabled, this is 100% - the threshold
+		percentage of xi along the principal axis for which width 
+		will be	measured (e.g. S2threshold=0.7 -> width will be
+		measured at 30% of maximum "xi").
 	Everything else : (various types)
 		Same variables (and selected values) as in arrayM51.
 
@@ -242,7 +243,7 @@ def drawM51(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, delta
 														deltadeltaX,deltadeltaV,201,S2threshold, normalization)
 				elif (mode=='xi') or (mode=='Xi'):
 					theta, linearray1_min, thres_radii, radlist = Cubes_corr_array.generate(galaxyname,vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,\
-														deltadeltaX,deltadeltaV,201,S2threshold)
+														deltadeltaX,deltadeltaV,201,1.0-S2threshold)
 				else:
 					print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."
 
@@ -252,7 +253,8 @@ def drawM51(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, delta
 				#	are minima.
 			
 				xpositions, ypositions = extremacoords(theta,linearray1_min,radlist)		# Returns the x- and y-coordinates of three extrema near the center of the map.
-				xthres[i], ythres[i] = thresholdcoords(theta,thres_radii, normalization)	# Returns the x- and y-coordinates of the radius at which S2 crosses S2threshold.
+				xthres[i], ythres[i] = thresholdcoords(mode,theta,thres_radii, True)	# Returns the x- and y-coordinates of the radius at which S2 crosses S2threshold.
+
 				ymin_array[i] = ymin
 				ymax_array[i] = ymax
 				xmin_array[i] = xmin
@@ -337,10 +339,10 @@ def drawM51(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, delta
 				crossing table to be saved."							# DOESN'T save 't2' into 'S2_thres_M51_40to80.csv'.
 														# DOESN'T save 't2' into 'S2_thres_M51_40to80.bin'.
 	elif (mode=='xi') or (mode=='Xi'):
-		with open('S2_thres_M51_'+str(vmin)+'to'+str(vmax)+'.csv', 'w') as csvfile:	# Saves the following into 'xi_thres_M51_40to80_norm.csv'.
+		with open('xi_thres_M51_'+str(vmin)+'to'+str(vmax)+'.csv', 'w') as csvfile:	# Saves the following into 'xi_thres_M51_40to80.csv'.
 		    writer = csv.writer(csvfile)
 		    [writer.writerow(r) for r in t2]
-		f = file('S2_thres_M51_'+str(vmin)+'to'+str(vmax)+'.bin','wb')			# Saves the following into 'xi_thres_M51_40to80_norm.bin'.
+		f = file('xi_thres_M51_'+str(vmin)+'to'+str(vmax)+'.bin','wb')			# Saves the following into 'xi_thres_M51_40to80.bin'.
 		np.save(f,t2)
 		f.close()
 	else:
@@ -348,7 +350,7 @@ def drawM51(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, delta
 
 
 
-	return t2
+	return t,t2
 
 
 
@@ -573,7 +575,7 @@ def drawM33(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, delta
 														deltadeltaX,deltadeltaV,201,S2threshold, normalization)
 				elif (mode=='xi') or (mode=='Xi'):
 					theta, linearray1_min, thres_radii, radlist = Cubes_corr_array.generate(galaxyname,vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,\
-														deltadeltaX,deltadeltaV,201,S2threshold)
+														deltadeltaX,deltadeltaV,201,1.0-S2threshold)
 				else:
 					print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."
 
@@ -583,7 +585,8 @@ def drawM33(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, delta
 				#	are minima.
 			
 				xpositions, ypositions = extremacoords(theta,linearray1_min,radlist)		# Returns the x- and y-coordinates of three extrema near the center of the map.
-				xthres[i], ythres[i] = thresholdcoords(theta,thres_radii, normalization)	# Returns the x- and y-coordinates of the radius at which S2 crosses S2threshold.
+				xthres[i], ythres[i] = thresholdcoords(mode,theta,thres_radii, True)	# Returns the x- and y-coordinates of the radius at which S2 crosses S2threshold.
+
 				ymin_array[i] = ymin
 				ymax_array[i] = ymax
 				xmin_array[i] = xmin
@@ -668,10 +671,10 @@ def drawM33(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, delta
 				crossing table to be saved."							# DOESN'T save 't2' into 'S2_thres_M33_40to80.csv'.
 														# DOESN'T save 't2' into 'S2_thres_M33_40to80.bin'.
 	elif (mode=='xi') or (mode=='Xi'):
-		with open('S2_thres_M33_'+str(vmin)+'to'+str(vmax)+'.csv', 'w') as csvfile:	# Saves the following into 'xi_thres_M33_40to80_norm.csv'.
+		with open('xi_thres_M33_'+str(vmin)+'to'+str(vmax)+'.csv', 'w') as csvfile:	# Saves the following into 'xi_thres_M33_40to80.csv'.
 		    writer = csv.writer(csvfile)
 		    [writer.writerow(r) for r in t2]
-		f = file('S2_thres_M33_'+str(vmin)+'to'+str(vmax)+'.bin','wb')			# Saves the following into 'xi_thres_M33_40to80_norm.bin'.
+		f = file('xi_thres_M33_'+str(vmin)+'to'+str(vmax)+'.bin','wb')			# Saves the following into 'xi_thres_M33_40to80.bin'.
 		np.save(f,t2)
 		f.close()
 	else:
@@ -679,7 +682,7 @@ def drawM33(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, delta
 
 
 
-	return t2
+	return t,t2
 
 
 
@@ -690,8 +693,10 @@ def extremacoords(theta,linearray1_min,radlist):
 
 	rpositions = np.zeros(3)			# We'll only consider the first three minima. If we change it
 							#       here, we need to change it in the "draw" functions too.
-	xpositions = [None]*3
-	ypositions = [None]*3
+	xpositions = np.empty(3)
+	xpositions[:] = np.nan
+	ypositions = np.empty(3)
+	ypositions[:] = np.nan
 	
 	if radii[radii>minrad].size > 2:
 		rpositions[0] = radii[radii>minrad][0]		# The first radius above 'minrad' at which there is a minimum.
@@ -726,17 +731,31 @@ def extremacoords(theta,linearray1_min,radlist):
 
 	return xpositions,ypositions
 
-def thresholdcoords(theta,thres_radii,normalization):
-	if normalization==True:
-		if thres_radii[thres_radii>0].size > 0:
-			xthres = thres_radii[thres_radii>0][0]*np.cos(theta)		# The x-coord of the first radius at which S2 is above S2threshold.
-			ythres = thres_radii[thres_radii>0][0]*np.sin(theta)		# The y-coord of this first radius.
+def thresholdcoords(mode,theta,thres_radii,normalization):
+	if (mode=='s2') or (mode=='S2') or (mode=='s_2') or (mode=='S_2'):
+		if normalization==True:
+			if thres_radii[thres_radii>0].size > 0:
+				xthres = thres_radii[thres_radii>0][0]*np.cos(theta)		# The x-coord of the first radius at which S2 is above S2threshold.
+				ythres = thres_radii[thres_radii>0][0]*np.sin(theta)		# The y-coord of this first radius.
+			else:
+				xthres, ythres = np.nan, np.nan
 		else:
 			xthres, ythres = np.nan, np.nan
-	else:
-		xthres, ythres = np.nan, np.nan
 
-	return xthres, ythres
+		return xthres, ythres
+	elif (mode=='xi') or (mode=='Xi'):
+		if thres_radii[thres_radii>0].size > 0:
+			xthres = thres_radii[thres_radii>0].max()*np.cos(theta)		# The x-coord of the highest radius at which xi/xi.max() is above 1.0-S2threshold.
+			ythres = thres_radii[thres_radii>0].max()*np.sin(theta)		# The y-coord of this highest radius.
+		else:
+			xthres, ythres = np.nan, np.nan
+		return xthres, ythres
+	else:
+		print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."
+		return np.nan, np.nan
+
+
+
 
 
 

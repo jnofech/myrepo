@@ -397,7 +397,7 @@ def plot(theta,maxradius1,maxradius2,array,linearrayx,linearray1,linearray2, fil
 	# -------------------
 
 	radlist = linearrayx*pixelwidthPC			# A 1D array of the radii along the principal axis.
-	thres_radii = radlist[(linearray1/linearray1.max())>=xithreshold]	# List of all radii in radlist for which xi/xi.max() is above xithreshold.
+	thres_radii = radlist[(linearray1/np.nanmax(linearray1))>=xithreshold]	# List of all radii in radlist for which xi/xi.max() is above xithreshold.
 
 	return linearray1_min, thres_radii, radlist		#
 

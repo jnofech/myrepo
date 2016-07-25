@@ -94,7 +94,10 @@ def arrayM51(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, delt
 
 
 		fig = plt.gcf()
-		fig.set_size_inches(15,7)	# Enlarges the image so as to prevent squishing.
+		if galaxyname=="M51":
+			fig.set_size_inches(15,7)	# Enlarges the image so as to prevent squishing.
+		else:
+			fig.set_size_inches(7,10)	# Enlarges the image for M33 (which is 'taller' than it is wide).
 		plt.xlabel('Resolution Units (x-direction)')
 		plt.ylabel('Resolution Units (y-direction)')
 		plt.colorbar()
@@ -354,7 +357,7 @@ def drawM51(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, delta
 
 
 
-def arrayM33(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV=1, drawmap = False, normalization=False):
+def arrayM33(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=1, deltadeltaV=1, drawmap = False, normalization=False):
 	"""
 	Activates Cubes(_corr)_multi.array for many procedurally-selected regions in
 		M33, all under spectral range (vmin,vmax) with maximum dX/dY, maximum dV,
@@ -448,10 +451,11 @@ def arrayM33(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, delt
 				else:
 					print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."
 
-def drawM33(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV=1, normalization=False, S2threshold=0.7):
+def drawM33(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=1, deltadeltaV=1, normalization=False, S2threshold=0.7):
 	"""
-	Activates Cubes_multi.draw and Cubes_array.generate for all of the previously-
-	generated subcube selections, with the same args as arrayM33.
+	Activates Cubes(_corr)_multi.draw and Cubes(_corr)_array.generate 
+	for all of the previously-generated subcube selections, with the 
+	same args as arrayM33.
 
 	The arguments MUST match the args/kwargs used in arrayM33!
 

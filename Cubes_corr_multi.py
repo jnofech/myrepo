@@ -41,10 +41,13 @@ def array(vmin, vmax, ymin, ymax, xmin, xmax, deltaX = 100, deltaV = 3, deltadel
 	else:
 		tempname = 'saved_xiarray_'+imagename+'_dV_is_'+str(deltaV)+'_dX_is_'+str(deltaX)
 
-	subcube = Cubes_corr.cubegen(vmin,vmax,ymin,ymax,xmin,xmax,filename,drawmap, imagename)	# Will draw a map of the subcube if drawmap=True.
+	subcube = Cubes_corr.cubegen(vmin,vmax,ymin,ymax,xmin,xmax,filename,drawmap, imagename)			# Will draw a map of the subcube if drawmap=True.
+	subcube_s = Cubes_corr.cubegen(vmin,vmax,ymin,ymax,xmin,xmax,filename+"_smooth",False, imagename)	# Smoothed subcube.
 
+	xi_o = Cubes_corr.corrgen(subcube,deltaX,deltaV,deltadeltaX,deltadeltaV)
+	xi_s = Cubes_corr.corrgen(subcube_s,deltaX,deltaV,deltadeltaX,deltadeltaV)
 
-	xi = Cubes_corr.corrgen(subcube,deltaX,deltaV,deltadeltaX,deltadeltaV)
+	xi = xi_o - xi_s
 
 	# SAVE xi into an array, with the saved filename SPECIFICALLY including the parameters used.
 	f = file(tempname+".bin","wb")

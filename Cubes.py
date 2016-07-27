@@ -79,6 +79,7 @@ def structgen(subcube0, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV = 1):
 	ddV = deltadeltaV		# Same as above, but for dV (in units of spectral resolutions). Not the same as ddX or ddY.
 	nmax = abs(2*dX/ddX)+1
 	S_2 = np.zeros([dV/ddV+1,nmax,nmax])
+	Power = np.zeros([dV/ddV+1,nmax,nmax])
 
 	p,n,m = data0.shape     # The subcube has n rows, m columns, and p "height units".
 
@@ -110,7 +111,7 @@ def structgen(subcube0, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV = 1):
 		    RollMapPower = np.nanmean(RollMap[goodpix]**2)
 
 		    S_2[(dv/ddV,(dy+dY)/ddY,(dx+dX)/ddX)] = (np.nanmean(D[goodpix]**2))
-		    Power = (OrigMapPower + RollMapPower)
+		    Power[(dv/ddV,(dy+dY)/ddY,(dx+dX)/ddX)] = (OrigMapPower + RollMapPower)
 
 	return S_2, Power
 
@@ -229,13 +230,15 @@ def plotgen(S_2, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV=3, mapname="3Dc
 	X = (np.arange(reselements)/mult) / ((reselements-1)/mult) * (dX**2 + dY**2)**0.5 * pixelwidthPC
 	for i in range (0, dV/ddV+1):
 	    if velocityres > 0:
-		plt.plot(X, struct_funct[i],label='S_2 at +'+str('{0:.2f}'.format(i*ddV*velocityres))+' km/s')
+		plt.plot(X[X<dX*pixelwidthPC], struct_funct[i][X<dX*pixelwidthPC],label='S_2 at +'+str('{0:.2f}'.format(i*ddV*velocityres))+' km/s')
 	    else:
-		plt.plot(X, struct_funct[i],label='S_2 at '+str('{0:.2f}'.format(i*ddV*velocityres))+' km/s')
+		plt.plot(X[X<dX*pixelwidthPC], struct_funct[i][X<dX*pixelwidthPC],label='S_2 at '+str('{0:.2f}'.format(i*ddV*velocityres))+' km/s')
 	plt.title('Avg. Struct. Funct. vs. Radial "Distance" from Center of S_2 Plots')
 	plt.xlabel('Distance from Initial Location (pc)')
 	plt.ylabel('Average S_2')
 #	plt.ylim([0.9,1.1])
+	plt.yscale('log')
+	plt.xscale('log')
 	plt.legend(loc='lower right')
 	plt.savefig('plot_'+mapname+'.png')
 	plt.clf()

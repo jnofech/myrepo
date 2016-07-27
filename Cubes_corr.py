@@ -1,6 +1,5 @@
 
-# 5.15.16 - Same as "Cubes", but deals with the CORRELATION function instead of the Structure function.
-
+# 6.15.16 - Same as "Cubes", but deals with the CORRELATION function instead of the Structure function.
 
 from spectral_cube import SpectralCube
 import matplotlib
@@ -32,7 +31,7 @@ def cubegen(vmin,vmax,ymin,ymax,xmin,xmax, filename = "paws_norot", drawmap = Fa
 	xshape = data.shape[2]/2.0
 
 	pixelwidthDEG = cube.header['CDELT2']			# The width of each pixel, in degrees.
-	if filename =='m33.co21_iram_CLEANED':			# Checks if the galaxy's Header file contains its distance.
+	if (filename =='m33.co21_iram_CLEANED') or (filename =='m33.co21_iram_CLEANED_smooth'):			# Checks if the galaxy's Header file contains its distance.
 		distancePC = 840000.0				# The distance to the galaxy that M33's .fits file deals with, in parsecs. ONLY works on the CLEANED file!
 	else:
 		distancePC = cube.header['DIST']		# The distance to the galaxy that M51's .fits file deals with, in parsecs.  (???) Is this number accurate, though?
@@ -59,7 +58,6 @@ def corrgen(subcube0, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV = 1):
 	
 	   Argument format: "(<subcube>, deltaX (default=30), deltaV (default=3)),
 	   deltadeltaX (default=1), deltadeltaV (default=1), mapname (default="3Dcube"))".
-
 	   "deltaX" is the maximum value of dX and dY. "deltaV" is the maximum 
 	   value of dV. "deltadeltaX" is the step size along both dx and dy for the
 	   correlation function calculation, and it should be a factor of deltaX. "deltadeltaV"
@@ -107,8 +105,12 @@ def corrgen(subcube0, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV = 1):
 			    #	    Similar case for a pixel "dv" layers below.
 			    #
 		            # In "goodpix", pixels that have wrapped around are treated as False.
-		    xi[(dv/ddV,(dy+dY)/ddY,(dx+dX)/ddX)] = (np.nanmean(D[goodpix]**2) - np.nanmean(M**2) - np.nanmean(RollMap**2)) / (-2*np.nanmean(M)**2)
 
+#		    OrigMapPower = np.nanmean(M[goodpix]**2)
+#		    RollMapPower = np.nanmean(RollMap[goodpix]**2)
+
+		    xi[(dv/ddV,(dy+dY)/ddY,(dx+dX)/ddX)] = (np.nanmean(D[goodpix]**2) - np.nanmean(M**2) - np.nanmean(RollMap**2)) / (-2*np.nanmean(M)**2)
+#		    Power = (OrigMapPower + RollMapPower)
 
 	return xi
 
@@ -234,6 +236,8 @@ def plotgen(xi, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV=3, mapname="3Dcu
 	plt.xlabel('Distance from Initial Location (pc)')
 	plt.ylabel('Average xi')
 #	plt.ylim([0.9,1.1])
+        plt.yscale('log')
+        plt.xscale('log')
 	plt.legend(loc='lower right')
 	plt.savefig('plot_xi_'+mapname+'.png')
 	plt.clf()
@@ -303,7 +307,11 @@ def everythinggen(vmin, vmax, ymin, ymax, xmin, xmax, xi, deltaX, deltaV, deltad
 	### Surface
 	ax2.imshow(xi[0], interpolation = 'none', extent = [-dX*pixelwidthPC,dX*pixelwidthPC,-dY*pixelwidthPC,dY*pixelwidthPC], vmin=0, vmax=xi.max(), aspect='auto', origin='lower')
 	levels = np.array([0.2,0.4,0.6,0.8])*xi[0].max()
-	ax2.contour(xi[0], levels, extent=[-dX*pixelwidthPC,dX*pixelwidthPC,-dY*pixelwidthPC,dY*pixelwidthPC], vmin=0, vmax=xi.max(), colors='k')
+	if xi[0].max() > 0:
+		ax2.contour(xi[0], levels, extent=[-dX*pixelwidthPC,dX*pixelwidthPC,-dY*pixelwidthPC,dY*pixelwidthPC], vmin=0, vmax=xi.max(), colors='k')
+	else:
+		if xi[0].max() == 0:
+			print xi[0].min()
 	ax2.set_title('xi at 0 km/s')
 	ax2.set_xlabel('Distance from Initial Location in x-direction (pc)')
 	ax2.set_ylabel('Distance from Initial Location in y-direction (pc)')

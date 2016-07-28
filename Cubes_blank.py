@@ -8,7 +8,7 @@ import math
 import os.path
 
 print("\nWelcome to Cubes_blank! \
-        \n \nAvailable functions:   \n  clean: Returns a 2D array of the RMS values of noise in\n            the galaxy's data cube, and saves a spectral\n            cube of the noise data only.")
+        \n \nAvailable functions:   \n  clean: Returns a 2D array of the RMS values of noise in\n            the galaxy's data cube, and saves a spectral\n            cube of the signal data only.")
 
 def clean(galaxyname='M51',nmax=10):
 
@@ -28,7 +28,8 @@ def clean(galaxyname='M51',nmax=10):
     --------
     RMS : numpy array
         This is a 2D array across the selected galaxy,
-        
+	which shows the RMS values of the galaxy's
+	noise data.        
     """
     if (galaxyname=='m51') or (galaxyname=='M51'):
         filename = 'paws_norot'
@@ -63,21 +64,22 @@ def clean(galaxyname='M51',nmax=10):
                     if data[k,j,i] > 3*RMS[j,i]:
                         data0[k,j,i] = np.nan
     
-    # Final cube-blanking.
+
+    # Final cube-blanking. This time, we remove noise and then save the noise-free cube.
     
     for k in range(0,p):
         for j in range(0,n):
             for i in range(0,m):
 
-                if data[k,j,i] > 2*RMS[j,i]:
+                if data[k,j,i] < 2*RMS[j,i]:
                     data[k,j,i] = np.nan
     
-    # Saves the final blanked cube. This cube should ideally contain only NOISE data. 
-    if os.path.isfile(filename+'_noise.fits') == False:
+    # Saves the final blanked cube. This cube should ideally contain only SIGNAL data. 
+    if os.path.isfile(filename+'_blank.fits') == False:
         hdu = fits.PrimaryHDU(cube_s,header=cube.header)
         hdulist = fits.HDUList([hdu])
-        hdulist.writeto(filename+'_noise.fits')
+        hdulist.writeto(filename+'_blank.fits')
     else:
-        print "\n ERROR: "+filename+"_noise.fits' already exists. Please delete the file and try again."
+        print "\n ERROR: "+filename+"_blank.fits' already exists. Please delete the file and try again."
         
     return RMS

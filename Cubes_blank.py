@@ -1,6 +1,7 @@
 # 7.28.16 - Detects and blanks noise in a data cube.
 
 from spectral_cube import SpectralCube
+import astropy.io.fits as fits
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
@@ -76,7 +77,7 @@ def clean(galaxyname='M51',nmax=10):
     
     # Saves the final blanked cube. This cube should ideally contain only SIGNAL data. 
     if os.path.isfile(filename+'_blank.fits') == False:
-        hdu = fits.PrimaryHDU(cube_s,header=cube.header)
+        hdu = fits.PrimaryHDU(data,header=cube.header)
         hdulist = fits.HDUList([hdu])
         hdulist.writeto(filename+'_blank.fits')
     else:

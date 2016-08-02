@@ -11,7 +11,7 @@ import os.path
 print("\nWelcome to Cubes_blank! \
         \n \nAvailable functions:   \n  clean: Returns a 2D array of the RMS values of noise in\n            the galaxy's data cube, and saves a spectral\n            cube of the signal data only.")
 
-def clean(galaxyname='M51',nmax=10):
+def clean(galaxyname='M51',nmax=20):
 
     """
     Parameters:
@@ -45,7 +45,8 @@ def clean(galaxyname='M51',nmax=10):
     data = cube.filled_data[:].value   # Pulls "cube"'s information (position, radial velocity, Tmax) into an array.
 
     p,n,m = data.shape     # The cube has n rows, m columns, and p "height units".
-    RMS = np.zeros(n*m).reshape(n,m)     # An array containing the RMS values of noise brightness temperatures.
+    RMS = np.zeros((n*m))  # An array containing the RMS values of noise brightness temperatures.
+    RMS.shape = (1,n,m)
     data0 = np.copy(data)  # Copy of "data" cube, just in case.
 
     # Calculates RMS map, then uses this map to remove signal. The signal-less map is used
@@ -53,27 +54,29 @@ def clean(galaxyname='M51',nmax=10):
 
     for iterations in range(0,nmax):
 
-        for j in range(0,n):
-            for i in range(0,m):
-                RMS[j][i] = np.nanstd(data0[:,j,i])
-
+#        for j in range(0,n):
+#            for i in range(0,m):
+#                RMS[j][i] = np.nanstd(data0[:,j,i])
+        RMS[0] = np.nanstd(data0,axis=0)
+    
         # Blank regions that aren't noise:
-        for k in range(0,p):
-            for j in range(0,n):
-                for i in range(0,m):
-
-                    if data[k,j,i] > 3*RMS[j,i]:
-                        data0[k,j,i] = np.nan
+#        for k in range(0,p):
+#            for j in range(0,n):
+#                for i in range(0,m):
+#                    if data[k,j,i] > 3*RMS[j,i]:
+#                        data0[k,j,i] = np.nan
+        data0[data0>3*RMS[0]] = np.nan
     
 
     # Final cube-blanking. This time, we remove noise and then save the noise-free cube.
     
-    for k in range(0,p):
-        for j in range(0,n):
-            for i in range(0,m):
+#    for k in range(0,p):
+#        for j in range(0,n):
+#            for i in range(0,m):
+#                if data[k,j,i] < 2*RMS[j,i]:
+#                    data[k,j,i] = np.nan
 
-                if data[k,j,i] < 2*RMS[j,i]:
-                    data[k,j,i] = np.nan
+    data[data<2*RMS] = np.nan
     
     # Saves the final blanked cube. This cube should ideally contain only SIGNAL data. 
     if os.path.isfile(filename+'_blank.fits') == False:

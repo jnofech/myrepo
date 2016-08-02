@@ -229,9 +229,9 @@ def plotgen(xi, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV=3, mapname="3Dcu
 	X = (np.arange(reselements)/mult) / ((reselements-1)/mult) * (dX**2 + dY**2)**0.5 * pixelwidthPC
 	for i in range (0, dV/ddV+1):
 	    if velocityres > 0:
-		plt.plot(X, corr_funct[i],label='xi at +'+str('{0:.2f}'.format(i*ddV*velocityres))+' km/s')
+		plt.plot(X[X<dX*pixelwidthPC], corr_funct[i][X<dX*pixelwidthPC],label='xi at +'+str('{0:.2f}'.format(i*ddV*velocityres))+' km/s')
 	    else:
-		plt.plot(X, corr_funct[i],label='xi at '+str('{0:.2f}'.format(i*ddV*velocityres))+' km/s')
+		plt.plot(X[X<dX*pixelwidthPC], corr_funct[i][X<dX*pixelwidthPC],label='xi at '+str('{0:.2f}'.format(i*ddV*velocityres))+' km/s')
 	plt.title('Avg. Corr. Funct. vs. Radial "Distance" from Center of xi Plots')
 	plt.xlabel('Distance from Initial Location (pc)')
 	plt.ylabel('Average xi')
@@ -241,6 +241,19 @@ def plotgen(xi, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV=3, mapname="3Dcu
 	plt.legend(loc='lower right')
 	plt.savefig('plot_xi_'+mapname+'.png')
 	plt.clf()
+
+
+	# Calculates the intercept (a) and slope (b) of log(average "xi") vs. log(radial distance) at distances between 50pc and 250pc.
+	Y = corr_funct[i][X<dX*pixelwidthPC]
+	X = X[X<dX*pixelwidthPC]
+
+	Y = Y[X>=50]
+	X = X[X>=50]
+	Y = Y[X<=250]
+	X = X[X<=250]
+	coeff_b, coeff_a = np.polyfit(np.log(X[np.isfinite(Y)]), np.log(Y[np.isfinite(Y)]), 1)
+	print coeff_a, coeff_b
+	return coeff_a, coeff_b
 
 def everythinggen(vmin, vmax, ymin, ymax, xmin, xmax, xi, deltaX, deltaV, deltadeltaX, deltadeltaV, imagename, filename):
 	

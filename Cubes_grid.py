@@ -20,7 +20,7 @@ from astropy.table import Table
 from decimal import Decimal
 import csv
 
-def arrayM51(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV=1, drawmap = False, normalization=False):
+def arrayM51(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV=1, drawmap = False, normalization=False, xi_mode=0):
 	"""
 	Activates Cubes(_corr)_multi.array for many procedurally-selected regions in
 		M51, all under spectral range (vmin,vmax) with maximum dX/dY, maximum dV,
@@ -45,6 +45,13 @@ def arrayM51(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, delt
 		Enables or disables using the normalized S2 map
 		instead of the usual one.
 		Automatically DISABLED for 'xi'. (?)
+	xi_mode : int
+		For xi calculations only. 
+		When "xi_mode" is 0, the program will use a cube from the default 
+			.fits file and a "noise cube" from that same .fits file.
+		When "xi_mode" is 1, the program will use ONLY a cube from the 
+			filename+"_blank" .fits file, which is assumed to have 
+			NO NOISE. 
 	"""
 
 	galaxyname = 'M51'
@@ -115,11 +122,11 @@ def arrayM51(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, delt
 				if (mode=='s2') or (mode=='S2') or (mode=='s_2') or (mode=='S_2'):
 					Cubes_multi.array(vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,deltadeltaX,deltadeltaV,filename,drawmap,galaxyname,normalization)
 				elif (mode=='xi') or (mode=='Xi'):
-					Cubes_corr_multi.array(vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,deltadeltaX,deltadeltaV,filename,drawmap,galaxyname)
+					Cubes_corr_multi.array(vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,deltadeltaX,deltadeltaV,filename,drawmap,galaxyname,xi_mode)
 				else:
 					print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."
 
-def drawM51(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV=1, normalization=False, S2threshold=0.7):
+def drawM51(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV=1, normalization=False, S2threshold=0.7, xi_mode=0):
 	"""
 	Activates Cubes_multi.draw and Cubes_array.generate for all of the previously-
 	generated subcube selections, with the same args as arrayM51.
@@ -159,6 +166,13 @@ def drawM51(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, delta
 		percentage of xi along the principal axis for which width 
 		will be	measured (e.g. S2threshold=0.7 -> width will be
 		measured at 30% of maximum "xi").
+	xi_mode : int
+		For xi calculations only. 
+		When "xi_mode" is 0, the program will use a cube from the default 
+			.fits file and a "noise cube" from that same .fits file.
+		When "xi_mode" is 1, the program will use ONLY a cube from the 
+			filename+"_blank" .fits file, which is assumed to have 
+			NO NOISE.
 	Everything else : (various types)
 		Same variables (and selected values) as in arrayM51.
 
@@ -208,18 +222,32 @@ def drawM51(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, delta
 			xmin = xmax-height
 			testcube = data[vmin:vmax,ymin:ymax,xmin:xmax]
 			if (np.float(np.count_nonzero(np.isnan(testcube))) / np.float(np.count_nonzero(testcube))) < 0.05:
+				# Counts the number of usable regions.
+				i = i+1
+
+	imax = i						# This is the number of cubes involved.
+	i = 0							# Resets the counter.
+
+	coeff_a = [None]*imax					# Intercept of the log-log plot of "xi" versus radius.
+	coeff_b = [None]*imax
+
+	for ymax in range(height, data.shape[1], height/2):
+		for xmax in range(width,data.shape[2],width/2):
+			ymin = ymax-height
+			xmin = xmax-height
+			testcube = data[vmin:vmax,ymin:ymax,xmin:xmax]
+			if (np.float(np.count_nonzero(np.isnan(testcube))) / np.float(np.count_nonzero(testcube))) < 0.05:
 				# ^ Checks if there are a hugely-significant number of "NaN" values in the region.
 				if (mode=='s2') or (mode=='S2') or (mode=='s_2') or (mode=='S_2'):
 					Cubes_multi.draw(vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,deltadeltaX,deltadeltaV,filename,galaxyname,normalization)
 				elif (mode=='xi') or (mode=='Xi'):
-					Cubes_corr_multi.draw(vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,deltadeltaX,deltadeltaV,filename,galaxyname)
+					coeff_a[i], coeff_b[i] = Cubes_corr_multi.draw(vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,deltadeltaX,deltadeltaV,filename,galaxyname,xi_mode)
 				else:
 					print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."
 					return np.nan, np.nan
-
+				print "LOOP: "+str(ymin)+", "+str(ymax)+", "+str(xmin)+", "+str(xmax)
 				i = i+1
-	imax = i						# This is the number of cubes involved.
-	i = 0							# Resets the counter.	
+	i = 0							# Resets the counter again.
 
 	cubename = [None]*imax
 	ymin_array = [None]*imax
@@ -298,6 +326,17 @@ def drawM51(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, delta
 	t2['xmax'].unit='pixels'
 	t2['ythres'].unit='pc'
 	t2['xthres'].unit='pc'
+
+	# "t3" - Table containing the two coefficients of the linear fit of log(correlation function) vs log(scale) between 50pc and 250pc scales, for EACH REGION.
+
+	if (mode=='xi') or (mode=='Xi'):
+		t3 = Table([cubename,ymin_array,ymax_array,xmin_array,xmax_array,coeff_a,coeff_b],names=('Cube Name','ymin','ymax','xmin','xmax',\
+													'intercept (a)', 'slope (b)'), meta={'name': 'TABLE'})
+		t3['ymin'].unit='pixels'
+		t3['ymax'].unit='pixels'
+		t3['xmin'].unit='pixels'
+		t3['xmax'].unit='pixels'
+
 
 	# Save table 't' as a list in .csv format
 	# Save table 't' as an array in .bin format
@@ -352,12 +391,23 @@ def drawM51(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, delta
 		print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."
 
 
+	# Save table 't3' as a list in .csv format
+	# Save table 't3' as an array in .bin format
+	if (mode=='xi') or (mode=='Xi'):
+		with open('xi_linear_M51_'+str(vmin)+'to'+str(vmax)+'.csv', 'w') as csvfile:	# Saves the following into 'xi_linear_M51_40to80.csv'.
+		    writer = csv.writer(csvfile)
+		    [writer.writerow(r) for r in t3]
+		f = file('xi_linear_M51_'+str(vmin)+'to'+str(vmax)+'.bin','wb')			# Saves the following into 'xi_linear_M51_40to80.bin'.
+		np.save(f,t3)
+		f.close()
+	else:
+		t3 = np.nan
 
-	return t,t2
+	return t,t2,t3
 
 
 
-def arrayM33(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=1, deltadeltaV=1, drawmap = False, normalization=False):
+def arrayM33(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=1, deltadeltaV=1, drawmap = False, normalization=False, xi_mode=0):
 	"""
 	Activates Cubes(_corr)_multi.array for many procedurally-selected regions in
 		M33, all under spectral range (vmin,vmax) with maximum dX/dY, maximum dV,
@@ -382,16 +432,25 @@ def arrayM33(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=1, delt
 		Enables or disables using the normalized S2 map
 		instead of the usual one.
 		Automatically DISABLED for 'xi'. (?)
+	xi_mode : int
+		For xi calculations only. 
+		When "xi_mode" is 0, the program will use a cube from the default 
+			.fits file and a "noise cube" from that same .fits file.
+		When "xi_mode" is 1, the program will use ONLY a cube from the 
+			filename+"_blank" .fits file, which is assumed to have 
+			NO NOISE. 
 	"""
+
 	galaxyname = 'M33'
-	filename = 'm33.co21_iram_CLEANED'
+	filename = "m33.co21_iram_CLEANED"
 
 	cube = SpectralCube.read(filename+".fits")
-	data = cube.filled_data[:]   # Pulls "cube"'s information (position, spectral info (?)) into a 3D Numpy array.
+	data = cube.filled_data[:]   				# Pulls "cube"'s information (position, spectral info (?)) into a 3D Numpy array.
 
 	pixelwidthDEG = cube.header['CDELT2']			# The width of each pixel, in degrees.
-	distancePC = 840000.0					# The distance to the galaxy that M33's .fits file deals with, in parsecs.
+	distancePC = cube.header['DIST']			# The distance to the galaxy that M33's .fits file deals with, in parsecs.  (???) Is this number accurate, though?
 	pixelwidthPC = pixelwidthDEG*np.pi/180.0*distancePC	# The width of each pixel, in pc.
+
 
 	height = 150						# Height of each selected region. Must be an even number.
 	width = np.copy(height)					# Width of each selected region. Must be an even number.
@@ -429,7 +488,10 @@ def arrayM33(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=1, delt
 
 
 		fig = plt.gcf()
-		fig.set_size_inches(15,7)	# Enlarges the image so as to prevent squishing.
+		if galaxyname=="M33":
+			fig.set_size_inches(15,7)	# Enlarges the image so as to prevent squishing.
+		else:
+			fig.set_size_inches(7,10)	# Enlarges the image for M33 (which is 'taller' than it is wide).
 		plt.xlabel('Resolution Units (x-direction)')
 		plt.ylabel('Resolution Units (y-direction)')
 		plt.colorbar()
@@ -447,15 +509,14 @@ def arrayM33(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=1, delt
 				if (mode=='s2') or (mode=='S2') or (mode=='s_2') or (mode=='S_2'):
 					Cubes_multi.array(vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,deltadeltaX,deltadeltaV,filename,drawmap,galaxyname,normalization)
 				elif (mode=='xi') or (mode=='Xi'):
-					Cubes_corr_multi.array(vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,deltadeltaX,deltadeltaV,filename,drawmap,galaxyname)
+					Cubes_corr_multi.array(vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,deltadeltaX,deltadeltaV,filename,drawmap,galaxyname,xi_mode)
 				else:
 					print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."
 
-def drawM33(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=1, deltadeltaV=1, normalization=False, S2threshold=0.7):
+def drawM33(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=1, deltadeltaV=1, normalization=False, S2threshold=0.7, xi_mode=0):
 	"""
-	Activates Cubes(_corr)_multi.draw and Cubes(_corr)_array.generate 
-	for all of the previously-generated subcube selections, with the 
-	same args as arrayM33.
+	Activates Cubes_multi.draw and Cubes_array.generate for all of the previously-
+	generated subcube selections, with the same args as arrayM33.
 
 	The arguments MUST match the args/kwargs used in arrayM33!
 
@@ -488,9 +549,17 @@ def drawM33(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=1, delta
 		be treated simply as a number that the normalized S2 has
 		to cross.
 		OR:
-		If 'xi' mode is enabled, this is the threshold percentage
-		(e.g. 0.7 -> 70%) of xi along the principal axis for
-		which coordinates will be returned.
+		If 'xi' mode is enabled, this is 100% - the threshold
+		percentage of xi along the principal axis for which width 
+		will be	measured (e.g. S2threshold=0.7 -> width will be
+		measured at 30% of maximum "xi").
+	xi_mode : int
+		For xi calculations only. 
+		When "xi_mode" is 0, the program will use a cube from the default 
+			.fits file and a "noise cube" from that same .fits file.
+		When "xi_mode" is 1, the program will use ONLY a cube from the 
+			filename+"_blank" .fits file, which is assumed to have 
+			NO NOISE.
 	Everything else : (various types)
 		Same variables (and selected values) as in arrayM33.
 
@@ -520,20 +589,34 @@ def drawM33(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=1, delta
 	"""
 
 	galaxyname = 'M33'
-	filename = 'm33.co21_iram_CLEANED'
+	filename = "m33.co21_iram_CLEANED"
 
 	cube = SpectralCube.read(filename+".fits")
-	data = cube.filled_data[:]   # Pulls "cube"'s information (position, spectral info (?)) into a 3D Numpy array.
+	data = cube.filled_data[:]   				# Pulls "cube"'s information (position, spectral info (?)) into a 3D Numpy array.
 
 	pixelwidthDEG = cube.header['CDELT2']			# The width of each pixel, in degrees.
-	distancePC = 840000.0					# The distance to the galaxy that M33's .fits file deals with, in parsecs.
+	distancePC = cube.header['DIST']			# The distance to the galaxy that M33's .fits file deals with, in parsecs.  (???) Is this number accurate, though?
 	pixelwidthPC = pixelwidthDEG*np.pi/180.0*distancePC	# The width of each pixel, in pc.
 
 	height = 150						# Height of each selected region. Must be an even number.
 	width = np.copy(height)					# Width of each selected region. Must be an even number.
 
-
 	i = 0							# Counts the number of cubes that we're dealing with.
+
+	for ymax in range(height, data.shape[1], height/2):
+		for xmax in range(width,data.shape[2],width/2):
+			ymin = ymax-height
+			xmin = xmax-height
+			testcube = data[vmin:vmax,ymin:ymax,xmin:xmax]
+			if (np.float(np.count_nonzero(np.isnan(testcube))) / np.float(np.count_nonzero(testcube))) < 0.05:
+				# Counts the number of usable regions.
+				i = i+1
+
+	imax = i						# This is the number of cubes involved.
+	i = 0							# Resets the counter.
+
+	coeff_a = [None]*imax					# Intercept of the log-log plot of "xi" versus radius.
+	coeff_b = [None]*imax
 
 	for ymax in range(height, data.shape[1], height/2):
 		for xmax in range(width,data.shape[2],width/2):
@@ -545,14 +628,13 @@ def drawM33(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=1, delta
 				if (mode=='s2') or (mode=='S2') or (mode=='s_2') or (mode=='S_2'):
 					Cubes_multi.draw(vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,deltadeltaX,deltadeltaV,filename,galaxyname,normalization)
 				elif (mode=='xi') or (mode=='Xi'):
-					Cubes_corr_multi.draw(vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,deltadeltaX,deltadeltaV,filename,galaxyname)
+					coeff_a[i], coeff_b[i] = Cubes_corr_multi.draw(vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,deltadeltaX,deltadeltaV,filename,galaxyname,xi_mode)
 				else:
 					print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."
 					return np.nan, np.nan
-
+				print "LOOP: "+str(ymin)+", "+str(ymax)+", "+str(xmin)+", "+str(xmax)
 				i = i+1
-	imax = i						# This is the number of cubes involved.
-	i = 0							# Resets the counter.	
+	i = 0							# Resets the counter again.
 
 	cubename = [None]*imax
 	ymin_array = [None]*imax
@@ -632,6 +714,17 @@ def drawM33(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=1, delta
 	t2['ythres'].unit='pc'
 	t2['xthres'].unit='pc'
 
+	# "t3" - Table containing the two coefficients of the linear fit of log(correlation function) vs log(scale) between 50pc and 250pc scales, for EACH REGION.
+
+	if (mode=='xi') or (mode=='Xi'):
+		t3 = Table([cubename,ymin_array,ymax_array,xmin_array,xmax_array,coeff_a,coeff_b],names=('Cube Name','ymin','ymax','xmin','xmax',\
+													'intercept (a)', 'slope (b)'), meta={'name': 'TABLE'})
+		t3['ymin'].unit='pixels'
+		t3['ymax'].unit='pixels'
+		t3['xmin'].unit='pixels'
+		t3['xmax'].unit='pixels'
+
+
 	# Save table 't' as a list in .csv format
 	# Save table 't' as an array in .bin format
 	if (mode=='s2') or (mode=='S2') or (mode=='s_2') or (mode=='S_2'):
@@ -685,8 +778,19 @@ def drawM33(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=1, delta
 		print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."
 
 
+	# Save table 't3' as a list in .csv format
+	# Save table 't3' as an array in .bin format
+	if (mode=='xi') or (mode=='Xi'):
+		with open('xi_linear_M33_'+str(vmin)+'to'+str(vmax)+'.csv', 'w') as csvfile:	# Saves the following into 'xi_linear_M33_40to80.csv'.
+		    writer = csv.writer(csvfile)
+		    [writer.writerow(r) for r in t3]
+		f = file('xi_linear_M33_'+str(vmin)+'to'+str(vmax)+'.bin','wb')			# Saves the following into 'xi_linear_M33_40to80.bin'.
+		np.save(f,t3)
+		f.close()
+	else:
+		t3 = np.nan
 
-	return t,t2
+	return t,t2,t3
 
 
 

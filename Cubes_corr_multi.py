@@ -13,18 +13,23 @@ import math
 import scipy.stats as ss
 from tempfile import TemporaryFile
  
-def array(vmin, vmax, ymin, ymax, xmin, xmax, deltaX = 100, deltaV = 3, deltadeltaX = 10, deltadeltaV = 1, filename="paws_norot", drawmap=False, galaxyname='M51'):
+def array(vmin, vmax, ymin, ymax, xmin, xmax, deltaX = 100, deltaV = 3, deltadeltaX = 10, deltadeltaV = 1, filename="paws_norot", drawmap=False, galaxyname='M51', xi_mode=0):
 	"""
 	   Generates a normalized (?) array of xi, from subcube of the 
 	   specified dimensions; using the .fits file in "Cubes_corr.py".
 
 	   Argument format: "(vmin,vmax, ymin,ymax, xmin,xmax, deltaX=100, deltaV=3,
 	      deltadeltaX=10, deltadeltaV=1, filename="paws_norot", drawmap=False,
-	      galaxyname='M51')."
+	      galaxyname='M51', xi_mode=0)."
 	   ^ These are the parameters of the desired subcube, along with maximum dX/dY,
 	     maximum dV, "step sizes" for calculating xi, the selected .fits file
 	     name (minus the ".fits" extension), and an option to draw the subcube
 	     as it appears on the galaxy T_max map (within the range specified).
+
+	   When "xi_mode" is 0, the program will use a cube from the default .fits file and
+		a "noise cube" from that same .fits file.
+	   When "xi_mode" is 1, the program will use ONLY a cube from the filename+"_blank"
+		.fits file, which is assumed to have NO NOISE.
 
 
 	   WARNING: Selecting too large of a subcube will hugely increase processing time.
@@ -35,33 +40,50 @@ def array(vmin, vmax, ymin, ymax, xmin, xmax, deltaX = 100, deltaV = 3, deltadel
 	   values, but can dramatically decrease with larger deltadeltaX at the cost of
 	   plot resolution (or with larget deltadeltaV at the cost of the number of 1D plots)."""
 
+
 	imagename = galaxyname+"_"+str(vmin)+"to"+str(vmax)+"_"+str(ymin)+"to"+str(ymax)+"_"+str(xmin)+"to"+str(xmax)
 	if deltadeltaX == 1 and deltadeltaV == 1:
 		tempname = 'saved_xiarray_'+imagename+'_dV_is_'+str(deltaV)+'_dX_is_'+str(deltaX)+'_MAXRES'
 	else:
 		tempname = 'saved_xiarray_'+imagename+'_dV_is_'+str(deltaV)+'_dX_is_'+str(deltaX)
 
-	subcube = Cubes_corr.cubegen(vmin,vmax,ymin,ymax,xmin,xmax,filename,drawmap, imagename)			# Will draw a map of the subcube if drawmap=True.
-	subcube_s = Cubes_corr.cubegen(vmin,vmax,ymin,ymax,xmin,xmax,filename+"_smooth",False, imagename)	# Smoothed subcube.
+	if xi_mode==0:
+		subcube = Cubes_corr.cubegen(vmin,vmax,ymin,ymax,xmin,xmax,filename,drawmap, imagename)			# Will draw a map of the subcube if drawmap=True.
+		subcube_s = Cubes_corr.cubegen(vmin,vmax,ymin,ymax,xmin,xmax,filename+"_smooth",False, imagename)	# Smoothed subcube.
 
-	xi_o = Cubes_corr.corrgen(subcube,deltaX,deltaV,deltadeltaX,deltadeltaV)
-	xi_s = Cubes_corr.corrgen(subcube_s,deltaX,deltaV,deltadeltaX,deltadeltaV)
+		xi_o = Cubes_corr.corrgen(subcube,deltaX,deltaV,deltadeltaX,deltadeltaV)
+		xi_s = Cubes_corr.corrgen(subcube_s,deltaX,deltaV,deltadeltaX,deltadeltaV)
 
-	xi = xi_o - xi_s
+		xi = xi_o - xi_s
 
+		# SAVE xi into an array, with the saved filename SPECIFICALLY including the parameters used.
+		f = file(tempname+".bin","wb")
+		np.save(f,xi)
+		f.close()
+	elif xi_mode==1:
+		filename = filename+"_blank"
+		tempname = tempname+"_blank"
+		subcube = Cubes_corr.cubegen(vmin,vmax,ymin,ymax,xmin,xmax,filename,drawmap, imagename)			# Will draw a map of the subcube if drawmap=True.
+
+		xi_o = Cubes_corr.corrgen(subcube,deltaX,deltaV,deltadeltaX,deltadeltaV)
+		xi = xi_o
+	else:
+		print "ERROR: Select xi_mode=0 for the default calculation, or xi_mode=1 for the blanked-cube calculation."
+		return
 	# SAVE xi into an array, with the saved filename SPECIFICALLY including the parameters used.
 	f = file(tempname+".bin","wb")
 	np.save(f,xi)
 	f.close()
 
-def draw(vmin, vmax, ymin, ymax, xmin, xmax, deltaX = 100, deltaV = 3, deltadeltaX = 10, deltadeltaV = 1, filename="paws_norot", galaxyname='M51'):
+def draw(vmin, vmax, ymin, ymax, xmin, xmax, deltaX = 100, deltaV = 3, deltadeltaX = 10, deltadeltaV = 1, filename="paws_norot", galaxyname='M51', xi_mode=0):
 	"""
 	   Generates plots of xi (including a 2D plot of xi vs position, and a 1D
 	   plot of xi vs radius) for each "dv" from subcube of the specified 
 	   dimensions; using the saved xi arrays from "array".
 
 	   Argument format: "(vmin,vmax, ymin,ymax, xmin,xmax, deltaX=100, deltaV=3,
-	      deltadeltaX=10, deltadeltaV=1, filename="paws_norot", galaxyname='M51')."
+	      deltadeltaX=10, deltadeltaV=1, filename="paws_norot", galaxyname='M51',
+	      xi_mode=0)."
 	   ^ These MUST MATCH the args/kwargs used in "array"."""
 
 
@@ -72,7 +94,9 @@ def draw(vmin, vmax, ymin, ymax, xmin, xmax, deltaX = 100, deltaV = 3, deltadelt
 		tempname = 'saved_xiarray_'+imagename+'_dV_is_'+str(deltaV)+'_dX_is_'+str(deltaX)
 
 
-
+	if xi_mode==1:
+#		filename = filename+"_blank"
+		tempname = tempname+"_blank"
 
 
 	# File-loading.
@@ -81,17 +105,24 @@ def draw(vmin, vmax, ymin, ymax, xmin, xmax, deltaX = 100, deltaV = 3, deltadelt
 	f.close()
 
 	Cubes_corr.mapgen(xi, deltaX, deltaV, deltadeltaV, imagename, filename)
-	Cubes_corr.plotgen(xi, deltaX, deltaV, deltadeltaX, deltadeltaV, imagename, filename)
+	coeff_a, coeff_b = Cubes_corr.plotgen(xi, deltaX, deltaV, deltadeltaX, deltadeltaV, imagename, filename)		# a = intercept, b = slope
 	Cubes_corr.everythinggen(vmin, vmax, ymin, ymax, xmin, xmax, xi, deltaX, deltaV, deltadeltaX, deltadeltaV, imagename, filename)
 
+	return coeff_a, coeff_b
 
-def arrayM51(vmin=40,vmax=80, deltaX=40, deltaV=3, deltadeltaX=10, deltadeltaV=1, drawmap = False):
+
+def arrayM51(vmin=40,vmax=80, deltaX=40, deltaV=3, deltadeltaX=1, deltadeltaV=1, drawmap = False, xi_mode=0):
 	"""Activates "array" for M51 with each of the .py file's subcube selections,
 	   all under spectral range (vmin,vmax) with maximum dX/dY, maximum dV,
 	   and "step sizes". Also draws maps of all regions involved.
 
 	   Argument format: "(vmin=40,vmax=80, deltaX=40, deltaV=3, deltadeltaX=10,
-	   deltadeltaV=1, drawmap=False).
+	   deltadeltaV=1, drawmap=False, xi_mode=0).
+
+	   When "xi_mode" is 0, the program will use a cube from the default .fits file and
+		a "noise cube" from that same .fits file.
+	   When "xi_mode" is 1, the program will use ONLY a cube from the filename+"_blank"
+		.fits file, which is assumed to have NO NOISE.
 
 	   WARNING: Selecting too large of a vmax-vmin will hugely increase
 	   processing time."""
@@ -145,14 +176,14 @@ def arrayM51(vmin=40,vmax=80, deltaX=40, deltaV=3, deltadeltaX=10, deltadeltaV=1
 
 	# Runs 'array(...)' for each of the regions that we're using. For descriptions of these regions, see the "OLD" section below.
 	for i in range(0,sets):
-		array(vmin,vmax,ymin[i],ymax[i],xmin[i],xmax[i],deltaX,deltaV,deltadeltaX,deltadeltaV,filename,drawmap,galaxyname)
+		array(vmin,vmax,ymin[i],ymax[i],xmin[i],xmax[i],deltaX,deltaV,deltadeltaX,deltadeltaV,filename,drawmap,galaxyname,xi_mode)
 		
-def drawM51(vmin=40,vmax=80, deltaX=40, deltaV=3, deltadeltaX=10, deltadeltaV=1):
+def drawM51(vmin=40,vmax=80, deltaX=40, deltaV=3, deltadeltaX=1, deltadeltaV=1,xi_mode=0):
 	"""Activates "draw" with each of the .py file's subcube selections,
 	   with the same args as "arrayM51".
 
 	   Argument format: "(vmin=40,vmax=80, deltaX=40, deltaV=3, deltadeltaX=10,
-	   deltadeltaV=1).
+	   deltadeltaV=1, xi_mode=0).
 
 	   These MUST match the args/kwargs used in "arrayM51"!"""
 
@@ -173,17 +204,22 @@ def drawM51(vmin=40,vmax=80, deltaX=40, deltaV=3, deltadeltaX=10, deltadeltaV=1)
 	sets = np.ravel(ymin.shape)[0]		# This is the number of regions that we're dealing with.
 
 	for i in range(0,sets):
-		draw(vmin,vmax,ymin[i],ymax[i],xmin[i],xmax[i],deltaX,deltaV,deltadeltaX,deltadeltaV,filename,galaxyname)
+		draw(vmin,vmax,ymin[i],ymax[i],xmin[i],xmax[i],deltaX,deltaV,deltadeltaX,deltadeltaV,filename,galaxyname,xi_mode)
 
 
 
-def arrayM33(vmin=40,vmax=80, deltaX=40, deltaV=6, deltadeltaX=10, deltadeltaV=1, drawmap=False):
+def arrayM33(vmin=40,vmax=80, deltaX=40, deltaV=6, deltadeltaX=1, deltadeltaV=1, drawmap=False, xi_mode=0):
 	"""Activates "array" for M33 with each of the .py file's subcube selections,
 	   all under spectral range (vmin,vmax) with maximum dX/dY, maximum dV,
 	   and "step sizes". Also draws maps of all regions involved.
 
 	   Argument format: "(vmin=40,vmax=80, deltaX=40, deltaV=6, deltadeltaX=10,
-	   deltadeltaV=1, drawmap=False).
+	   deltadeltaV=1, drawmap=False, xi_mode=0).
+
+	   When "xi_mode" is 0, the program will use a cube from the default .fits file and
+		a "noise cube" from that same .fits file.
+	   When "xi_mode" is 1, the program will use ONLY a cube from the filename+"_blank"
+		.fits file, which is assumed to have NO NOISE.
 
 	   WARNING: Selecting too large of a vmax-vmin will hugely increase
 	   processing time."""
@@ -239,14 +275,14 @@ def arrayM33(vmin=40,vmax=80, deltaX=40, deltaV=6, deltadeltaX=10, deltadeltaV=1
 
 	# Runs 'array(...)' for each of the regions that we're using. For descriptions of these regions, see the "OLD" section below.
 	for i in range(0,sets):
-		array(vmin,vmax,ymin[i],ymax[i],xmin[i],xmax[i],deltaX,deltaV,deltadeltaX,deltadeltaV,filename,drawmap,galaxyname)
+		array(vmin,vmax,ymin[i],ymax[i],xmin[i],xmax[i],deltaX,deltaV,deltadeltaX,deltadeltaV,filename,drawmap,galaxyname,xi_mode)
 
-def drawM33(vmin=40,vmax=80, deltaX=40, deltaV=6, deltadeltaX=10, deltadeltaV=1):
+def drawM33(vmin=40,vmax=80, deltaX=40, deltaV=6, deltadeltaX=1, deltadeltaV=1,xi_mode=0):
 	"""Activates "draw" with each of the .py file's subcube selections,
 	   with the same args as "arrayM33".
 
 	   Argument format: "(vmin=40,vmax=80, deltaX=40, deltaV=6, deltadeltaX=10,
-	   deltadeltaV=1).
+	   deltadeltaV=1, xi_mode=0).
 
 	   These MUST match the args/kwargs used in "arrayM33"!"""
 
@@ -267,7 +303,7 @@ def drawM33(vmin=40,vmax=80, deltaX=40, deltaV=6, deltadeltaX=10, deltadeltaV=1)
 	sets = np.ravel(ymin.shape)[0]		# This is the number of regions that we're dealing with.
 
 	for i in range(0,sets):
-		draw(vmin,vmax,ymin[i],ymax[i],xmin[i],xmax[i],deltaX,deltaV,deltadeltaX,deltadeltaV,filename,galaxyname)
+		draw(vmin,vmax,ymin[i],ymax[i],xmin[i],xmax[i],deltaX,deltaV,deltadeltaX,deltadeltaV,filename,galaxyname,xi_mode)
 
 
 

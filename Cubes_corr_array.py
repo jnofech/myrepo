@@ -12,7 +12,7 @@ from tempfile import TemporaryFile
 import scipy.interpolate as si
 from scipy.signal import argrelextrema as ae
 
-def generate(galaxyname='M51',vmin=40, vmax=80, ymin=200, ymax=400, xmin=360, xmax=560, deltaX=40, deltaV=3, deltadeltaX=1, deltadeltaV=1, nmax=201, xithreshold=0.7):
+def generate(mode='S2',galaxyname='M51',vmin=40, vmax=80, ymin=200, ymax=400, xmin=360, xmax=560, deltaX=40, deltaV=3, deltadeltaX=1, deltadeltaV=1, nmax=201, xithreshold=0.7, xi_mode=0):
 	"""
 	Takes a xi surface map whose name matches the given parameters, finds the angle
 		at which a line cutting through the origin has minimal xi, and then
@@ -21,6 +21,12 @@ def generate(galaxyname='M51',vmin=40, vmax=80, ymin=200, ymax=400, xmin=360, xm
 
 	Parameters:
 	-----------
+	mode : string
+		Selects Structure Function mode ('S2'/'S_2'), which proceeds
+		with default settings.
+		OR
+		Selects Correlation Function mode ('xi'), which may select
+		an alternate xi map file depending on "xi_mode".
 	galaxyname : string
 		Name of the galaxy we're dealing with ('M51' or 'M33').
 	vmin,...,deltadeltaV : int
@@ -34,6 +40,13 @@ def generate(galaxyname='M51',vmin=40, vmax=80, ymin=200, ymax=400, xmin=360, xm
 	normalization (DISABLED): bool
 		Enables or disables using the normalized xi map
 		instead of the usual one.
+	xi_mode : int
+		For xi calculations only. 
+		When "xi_mode" is 0, the program will use a cube from the default 
+			.fits file and a "noise cube" from that same .fits file.
+		When "xi_mode" is 1, the program will use ONLY a cube from the 
+			filename+"_blank" .fits file, which is assumed to have 
+			NO NOISE.
 	
 	Returns (DISABLED at the moment):
 	-----------
@@ -54,11 +67,14 @@ def generate(galaxyname='M51',vmin=40, vmax=80, ymin=200, ymax=400, xmin=360, xm
 	  	'maxradius' is the maximum radius of the xi 
 		surface map.)
 	"""
+
 	imagename = galaxyname+"_"+str(vmin)+"to"+str(vmax)+"_"+str(ymin)+"to"+str(ymax)+"_"+str(xmin)+"to"+str(xmax)
 	if deltadeltaX == 1 and deltadeltaV == 1:
 		tempname = 'saved_xiarray_'+imagename+'_dV_is_'+str(deltaV)+'_dX_is_'+str(deltaX)+'_MAXRES'
 	else:
 		tempname = 'saved_xiarray_'+imagename+'_dV_is_'+str(deltaV)+'_dX_is_'+str(deltaX)
+	if ((mode=="xi") or (mode=="Xi")) and (xi_mode==1):
+		tempname = tempname+"_blank"
 
 #	if normalization==True:
 #		tempname = tempname+"_norm"

@@ -273,8 +273,8 @@ def drawM51(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, delta
 					theta, linearray1_min, thres_radii, radlist = Cubes_array.generate(galaxyname,vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,\
 														deltadeltaX,deltadeltaV,201,S2threshold, normalization)
 				elif (mode=='xi') or (mode=='Xi'):
-					theta, linearray1_min, thres_radii, radlist = Cubes_corr_array.generate(galaxyname,vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,\
-														deltadeltaX,deltadeltaV,201,1.0-S2threshold)
+					theta, linearray1_min, thres_radii, radlist = Cubes_corr_array.generate(mode,galaxyname,vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,\
+														deltadeltaX,deltadeltaV,201,1.0-S2threshold,xi_mode)
 				else:
 					print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."
 
@@ -448,7 +448,7 @@ def arrayM33(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=1, delt
 	data = cube.filled_data[:]   				# Pulls "cube"'s information (position, spectral info (?)) into a 3D Numpy array.
 
 	pixelwidthDEG = cube.header['CDELT2']			# The width of each pixel, in degrees.
-	distancePC = cube.header['DIST']			# The distance to the galaxy that M33's .fits file deals with, in parsecs.  (???) Is this number accurate, though?
+	distancePC = 840000.0					# The distance to the galaxy that M33's .fits file deals with, in parsecs.  (???) Is this number accurate, though?
 	pixelwidthPC = pixelwidthDEG*np.pi/180.0*distancePC	# The width of each pixel, in pc.
 
 
@@ -464,7 +464,7 @@ def arrayM33(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=1, delt
 		plt.imshow(np.nanmax(data[vmin:vmax].value,axis=0), vmin=0, extent=[-xshape*pixelwidthPC,xshape*pixelwidthPC,-yshape*pixelwidthPC,yshape*pixelwidthPC], origin='lower')
 		plt.colorbar()
 		fig = plt.gcf()
-		fig.set_size_inches(15,7)	# Enlarges the image so as to prevent squishing.
+		fig.set_size_inches(7,10)	# Enlarges the image so as to prevent squishing.
 		plt.xlabel('Distance from Centre in x-direction (pc)')
 		plt.ylabel('Distance from Centre in y-direction (pc)')
 		plt.savefig('galaxy_'+galaxyname+'_'+str(vmin)+'to'+str(vmax)+'_entire.png')
@@ -489,7 +489,7 @@ def arrayM33(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=1, delt
 
 		fig = plt.gcf()
 		if galaxyname=="M33":
-			fig.set_size_inches(15,7)	# Enlarges the image so as to prevent squishing.
+			fig.set_size_inches(7,10)	# Enlarges the image so as to prevent squishing.
 		else:
 			fig.set_size_inches(7,10)	# Enlarges the image for M33 (which is 'taller' than it is wide).
 		plt.xlabel('Resolution Units (x-direction)')
@@ -595,7 +595,7 @@ def drawM33(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=1, delta
 	data = cube.filled_data[:]   				# Pulls "cube"'s information (position, spectral info (?)) into a 3D Numpy array.
 
 	pixelwidthDEG = cube.header['CDELT2']			# The width of each pixel, in degrees.
-	distancePC = cube.header['DIST']			# The distance to the galaxy that M33's .fits file deals with, in parsecs.  (???) Is this number accurate, though?
+	distancePC = 840000.0					# The distance to the galaxy that M33's .fits file deals with, in parsecs.  (???) Is this number accurate, though?
 	pixelwidthPC = pixelwidthDEG*np.pi/180.0*distancePC	# The width of each pixel, in pc.
 
 	height = 150						# Height of each selected region. Must be an even number.

@@ -111,20 +111,30 @@ def arrayM51(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, delt
 		plt.savefig('galaxy_'+galaxyname+'_'+str(vmin)+'to'+str(vmax)+'_regions_procedural.png')
 		plt.clf()
 
+
 	# Runs 'Cubes_multi.array(...)' for each of the regions that we're using.
+
+	### Generate EVERYTHING (Comment everything out to disable!): ###
 	for ymax in range(height, data.shape[1], height/2):
 		for xmax in range(width,data.shape[2],width/2):
 			ymin = ymax-height
 			xmin = xmax-height
 			testcube = data[vmin:vmax,ymin:ymax,xmin:xmax]
+			# Checks if there are a hugely-significant number of "NaN" values in the region.
 			if (np.float(np.count_nonzero(np.isnan(testcube))) / np.float(np.count_nonzero(testcube))) < 0.05:
-				# Checks if there are a hugely-significant number of "NaN" values in the region.
 				if (mode=='s2') or (mode=='S2') or (mode=='s_2') or (mode=='S_2'):
 					Cubes_multi.array(vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,deltadeltaX,deltadeltaV,filename,drawmap,galaxyname,normalization)
 				elif (mode=='xi') or (mode=='Xi'):
 					Cubes_corr_multi.array(vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,deltadeltaX,deltadeltaV,filename,drawmap,galaxyname,xi_mode)
 				else:
 					print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."
+
+	### Generate SPECIFIC REGIONS (Comment them out to disable!): ###
+#	Cubes_corr_multi.array(0,40,150,300,150,300,deltaX,1,deltadeltaX,deltadeltaV,filename,drawmap,galaxyname,xi_mode)
+#	Cubes_corr_multi.array(0,40,150,300,375,525,deltaX,1,deltadeltaX,deltadeltaV,filename,drawmap,galaxyname,xi_mode)
+#	Cubes_corr_multi.array(80,120,150,300,150,300,deltaX,1,deltadeltaX,deltadeltaV,filename,drawmap,galaxyname,xi_mode)
+#	Cubes_corr_multi.array(80,120,150,300,375,525,deltaX,1,deltadeltaX,deltadeltaV,filename,drawmap,galaxyname,xi_mode)
+
 
 def drawM51(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV=1, normalization=False, S2threshold=0.7, xi_mode=0):
 	"""
@@ -231,6 +241,7 @@ def drawM51(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, delta
 	coeff_a = [None]*imax					# Intercept of the log-log plot of "xi" versus radius.
 	coeff_b = [None]*imax
 
+	### Generate EVERYTHING ###
 	for ymax in range(height, data.shape[1], height/2):
 		for xmax in range(width,data.shape[2],width/2):
 			ymin = ymax-height
@@ -248,6 +259,12 @@ def drawM51(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, delta
 				print "LOOP: "+str(ymin)+", "+str(ymax)+", "+str(xmin)+", "+str(xmax)
 				i = i+1
 	i = 0							# Resets the counter again.
+
+	### Generate SPECIFIC REGIONS (Comment them out to disable!): ###
+#	Cubes_corr_multi.draw(0,40,150,300,150,300,deltaX,1,deltadeltaX,deltadeltaV,filename,galaxyname,0)
+#	Cubes_corr_multi.draw(0,40,150,300,375,525,deltaX,1,deltadeltaX,deltadeltaV,filename,galaxyname,0)
+#	Cubes_corr_multi.draw(80,120,150,300,150,300,deltaX,1,deltadeltaX,deltadeltaV,filename,galaxyname,0)
+#	Cubes_corr_multi.draw(80,120,150,300,375,525,deltaX,1,deltadeltaX,deltadeltaV,filename,galaxyname,0)
 
 	cubename = [None]*imax
 	ymin_array = [None]*imax
@@ -302,6 +319,12 @@ def drawM51(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, delta
 				cubename[i] = galaxyname#+"_"+str(vmin)+"to"+str(vmax)+"_"+str(ymin)+"to"+str(ymax)+"_"+str(xmin)+"to"+str(xmax)
 
 				i = i+1
+
+	### Generate SPECIFIC REGIONS (Comment them out to disable!): ###
+#	Cubes_corr_array.generate(mode,galaxyname,0,40,150,300,150,300,deltaX,1,deltadeltaX,deltadeltaV,201,1.0-S2threshold,0)
+#	Cubes_corr_array.generate(mode,galaxyname,0,40,150,300,375,525,deltaX,1,deltadeltaX,deltadeltaV,201,1.0-S2threshold,0)
+#	Cubes_corr_array.generate(mode,galaxyname,80,120,150,300,150,300,deltaX,1,deltadeltaX,deltadeltaV,201,1.0-S2threshold,0)
+#	Cubes_corr_array.generate(mode,galaxyname,80,120,150,300,375,525,deltaX,1,deltadeltaX,deltadeltaV,201,1.0-S2threshold,0)
 
 	# "t" - Table containing the regions used and the corresponding extrema coordinates.
 	t = Table([cubename,ymin_array,ymax_array,xmin_array,xmax_array,ycoord1,xcoord1,ycoord2,xcoord2,ycoord3,xcoord3],names=('Cube Name','ymin','ymax','xmin','xmax',\
@@ -498,20 +521,29 @@ def arrayM33(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=1, delt
 		plt.savefig('galaxy_'+galaxyname+'_'+str(vmin)+'to'+str(vmax)+'_regions_procedural.png')
 		plt.clf()
 
+
 	# Runs 'Cubes_multi.array(...)' for each of the regions that we're using.
+
+	### Generate EVERYTHING (Comment everything out to disable!): ###
 	for ymax in range(height, data.shape[1], height/2):
 		for xmax in range(width,data.shape[2],width/2):
 			ymin = ymax-height
 			xmin = xmax-height
 			testcube = data[vmin:vmax,ymin:ymax,xmin:xmax]
+			# Checks if there are a hugely-significant number of "NaN" values in the region.
 			if (np.float(np.count_nonzero(np.isnan(testcube))) / np.float(np.count_nonzero(testcube))) < 0.05:
-				# Checks if there are a hugely-significant number of "NaN" values in the region.
 				if (mode=='s2') or (mode=='S2') or (mode=='s_2') or (mode=='S_2'):
 					Cubes_multi.array(vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,deltadeltaX,deltadeltaV,filename,drawmap,galaxyname,normalization)
 				elif (mode=='xi') or (mode=='Xi'):
 					Cubes_corr_multi.array(vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,deltadeltaX,deltadeltaV,filename,drawmap,galaxyname,xi_mode)
 				else:
 					print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."
+
+	### Generate SPECIFIC REGIONS (Comment them out to disable!): ###
+#	Cubes_corr_multi.array(0,40,?,?,?,?,deltaX,1,deltadeltaX,deltadeltaV,filename,drawmap,galaxyname,xi_mode)
+#	Cubes_corr_multi.array(0,40,?,?,?,?,deltaX,1,deltadeltaX,deltadeltaV,filename,drawmap,galaxyname,xi_mode)
+#	Cubes_corr_multi.array(80,120,?,?,?,?,deltaX,1,deltadeltaX,deltadeltaV,filename,drawmap,galaxyname,xi_mode)
+#	Cubes_corr_multi.array(80,120,?,?,?,?,deltaX,1,deltadeltaX,deltadeltaV,filename,drawmap,galaxyname,xi_mode)
 
 def drawM33(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=1, deltadeltaV=1, normalization=False, S2threshold=0.7, xi_mode=0):
 	"""
@@ -636,6 +668,12 @@ def drawM33(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=1, delta
 				i = i+1
 	i = 0							# Resets the counter again.
 
+	### Generate SPECIFIC REGIONS (Comment them out to disable!): ###
+#	Cubes_corr_multi.draw(0,40,?,?,?,?,deltaX,1,deltadeltaX,deltadeltaV,filename,galaxyname,0)
+#	Cubes_corr_multi.draw(0,40,?,?,?,?,deltaX,1,deltadeltaX,deltadeltaV,filename,galaxyname,0)
+#	Cubes_corr_multi.draw(80,120,?,?,?,?,deltaX,1,deltadeltaX,deltadeltaV,filename,galaxyname,0)
+#	Cubes_corr_multi.draw(80,120,?,?,?,?,deltaX,1,deltadeltaX,deltadeltaV,filename,galaxyname,0)
+
 	cubename = [None]*imax
 	ymin_array = [None]*imax
 	ymax_array = [None]*imax
@@ -689,6 +727,12 @@ def drawM33(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=1, delta
 				cubename[i] = galaxyname#+"_"+str(vmin)+"to"+str(vmax)+"_"+str(ymin)+"to"+str(ymax)+"_"+str(xmin)+"to"+str(xmax)
 
 				i = i+1
+
+	### Generate SPECIFIC REGIONS (Comment them out to disable!): ###
+#	Cubes_corr_array.generate(mode,galaxyname,0,40,?,?,?,?,deltaX,1,deltadeltaX,deltadeltaV,201,1.0-S2threshold,0)
+#	Cubes_corr_array.generate(mode,galaxyname,0,40,?,?,?,?,deltaX,1,deltadeltaX,deltadeltaV,201,1.0-S2threshold,0)
+#	Cubes_corr_array.generate(mode,galaxyname,80,120,?,?,?,?,deltaX,1,deltadeltaX,deltadeltaV,201,1.0-S2threshold,0)
+#	Cubes_corr_array.generate(mode,galaxyname,80,120,?,?,?,?,deltaX,1,deltadeltaX,deltadeltaV,201,1.0-S2threshold,0)
 
 	# "t" - Table containing the regions used and the corresponding extrema coordinates.
 	t = Table([cubename,ymin_array,ymax_array,xmin_array,xmax_array,ycoord1,xcoord1,ycoord2,xcoord2,ycoord3,xcoord3],names=('Cube Name','ymin','ymax','xmin','xmax',\

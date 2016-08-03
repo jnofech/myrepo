@@ -31,7 +31,7 @@ def cubegen(vmin,vmax,ymin,ymax,xmin,xmax, filename = "paws_norot", drawmap = Fa
 	xshape = data.shape[2]/2.0
 
 	pixelwidthDEG = cube.header['CDELT2']			# The width of each pixel, in degrees.
-	if (filename =='m33.co21_iram_CLEANED') or (filename =='m33.co21_iram_CLEANED_smooth'):			# Checks if the galaxy's Header file contains its distance.
+	if (filename =='m33.co21_iram_CLEANED') or (filename =='m33.co21_iram_CLEANED_smooth') or (filename =='m33.co21_iram_CLEANED_blank'):	# Checks if the galaxy's Header file contains its distance.
 		distancePC = 840000.0				# The distance to the galaxy that M33's .fits file deals with, in parsecs. ONLY works on the CLEANED file!
 	else:
 		distancePC = cube.header['DIST']		# The distance to the galaxy that M51's .fits file deals with, in parsecs.  (???) Is this number accurate, though?
@@ -251,7 +251,10 @@ def plotgen(xi, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV=3, mapname="3Dcu
 	X = X[X>=50]
 	Y = Y[X<=250]
 	X = X[X<=250]
-	coeff_b, coeff_a = np.polyfit(np.log(X[np.isfinite(Y)]), np.log(Y[np.isfinite(Y)]), 1)
+	X = np.log(X)
+	Y = np.log(Y)
+	gooddata = np.isfinite(X)*np.isfinite(Y)
+	coeff_b, coeff_a = np.polyfit(X[gooddata], Y[gooddata], 1)
 	print coeff_a, coeff_b
 	return coeff_a, coeff_b
 

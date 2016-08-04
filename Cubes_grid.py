@@ -134,6 +134,8 @@ def arrayM51(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, delt
 #	Cubes_corr_multi.array(0,40,150,300,375,525,deltaX,1,deltadeltaX,deltadeltaV,filename,drawmap,galaxyname,xi_mode)
 #	Cubes_corr_multi.array(80,120,150,300,150,300,deltaX,1,deltadeltaX,deltadeltaV,filename,drawmap,galaxyname,xi_mode)
 #	Cubes_corr_multi.array(80,120,150,300,375,525,deltaX,1,deltadeltaX,deltadeltaV,filename,drawmap,galaxyname,xi_mode)
+#
+#	Cubes_corr_multi.array(40,80,75,225,450,600,deltaX,1,deltadeltaX,deltadeltaV,filename,drawmap,galaxyname,xi_mode)
 
 
 def drawM51(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV=1, normalization=False, S2threshold=0.7, xi_mode=0):
@@ -265,6 +267,8 @@ def drawM51(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, delta
 #	Cubes_corr_multi.draw(0,40,150,300,375,525,deltaX,1,deltadeltaX,deltadeltaV,filename,galaxyname,0)
 #	Cubes_corr_multi.draw(80,120,150,300,150,300,deltaX,1,deltadeltaX,deltadeltaV,filename,galaxyname,0)
 #	Cubes_corr_multi.draw(80,120,150,300,375,525,deltaX,1,deltadeltaX,deltadeltaV,filename,galaxyname,0)
+#
+#	Cubes_corr_multi.draw(40,80,75,225,450,600,deltaX,1,deltadeltaX,deltadeltaV,filename,galaxyname,1)
 
 	cubename = [None]*imax
 	ymin_array = [None]*imax
@@ -290,7 +294,7 @@ def drawM51(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, delta
 					theta, linearray1_min, thres_radii, radlist = Cubes_array.generate(galaxyname,vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,\
 														deltadeltaX,deltadeltaV,201,S2threshold, normalization)
 				elif (mode=='xi') or (mode=='Xi'):
-					theta, linearray1_min, thres_radii, radlist = Cubes_corr_array.generate(mode,galaxyname,vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,\
+					theta, linearray1_min, thres_radii, radlist = Cubes_corr_array.generate(galaxyname,vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,\
 														deltadeltaX,deltadeltaV,201,1.0-S2threshold,xi_mode)
 				else:
 					print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."
@@ -321,10 +325,12 @@ def drawM51(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, delta
 				i = i+1
 
 	### Generate SPECIFIC REGIONS (Comment them out to disable!): ###
-#	Cubes_corr_array.generate(mode,galaxyname,0,40,150,300,150,300,deltaX,1,deltadeltaX,deltadeltaV,201,1.0-S2threshold,0)
-#	Cubes_corr_array.generate(mode,galaxyname,0,40,150,300,375,525,deltaX,1,deltadeltaX,deltadeltaV,201,1.0-S2threshold,0)
-#	Cubes_corr_array.generate(mode,galaxyname,80,120,150,300,150,300,deltaX,1,deltadeltaX,deltadeltaV,201,1.0-S2threshold,0)
-#	Cubes_corr_array.generate(mode,galaxyname,80,120,150,300,375,525,deltaX,1,deltadeltaX,deltadeltaV,201,1.0-S2threshold,0)
+#	Cubes_corr_array.generate(galaxyname,0,40,150,300,150,300,deltaX,1,deltadeltaX,deltadeltaV,201,1.0-S2threshold,0)
+#	Cubes_corr_array.generate(galaxyname,0,40,150,300,375,525,deltaX,1,deltadeltaX,deltadeltaV,201,1.0-S2threshold,0)
+#	Cubes_corr_array.generate(galaxyname,80,120,150,300,150,300,deltaX,1,deltadeltaX,deltadeltaV,201,1.0-S2threshold,0)
+#	Cubes_corr_array.generate(galaxyname,80,120,150,300,375,525,deltaX,1,deltadeltaX,deltadeltaV,201,1.0-S2threshold,0)
+#
+#	Cubes_corr_array.generate(galaxyname,40,80,75,225,450,600,deltaX,1,deltadeltaX,deltadeltaV,201,1.0-S2threshold,1)
 
 	# "t" - Table containing the regions used and the corresponding extrema coordinates.
 	t = Table([cubename,ymin_array,ymax_array,xmin_array,xmax_array,ycoord1,xcoord1,ycoord2,xcoord2,ycoord3,xcoord3],names=('Cube Name','ymin','ymax','xmin','xmax',\
@@ -699,7 +705,7 @@ def drawM33(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=1, delta
 														deltadeltaX,deltadeltaV,201,S2threshold, normalization)
 				elif (mode=='xi') or (mode=='Xi'):
 					theta, linearray1_min, thres_radii, radlist = Cubes_corr_array.generate(galaxyname,vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,\
-														deltadeltaX,deltadeltaV,201,1.0-S2threshold)
+														deltadeltaX,deltadeltaV,201,1.0-S2threshold,xi_mode)
 				else:
 					print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."
 
@@ -729,10 +735,10 @@ def drawM33(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=1, delta
 				i = i+1
 
 	### Generate SPECIFIC REGIONS (Comment them out to disable!): ###
-#	Cubes_corr_array.generate(mode,galaxyname,0,40,?,?,?,?,deltaX,1,deltadeltaX,deltadeltaV,201,1.0-S2threshold,0)
-#	Cubes_corr_array.generate(mode,galaxyname,0,40,?,?,?,?,deltaX,1,deltadeltaX,deltadeltaV,201,1.0-S2threshold,0)
-#	Cubes_corr_array.generate(mode,galaxyname,80,120,?,?,?,?,deltaX,1,deltadeltaX,deltadeltaV,201,1.0-S2threshold,0)
-#	Cubes_corr_array.generate(mode,galaxyname,80,120,?,?,?,?,deltaX,1,deltadeltaX,deltadeltaV,201,1.0-S2threshold,0)
+#	Cubes_corr_array.generate(galaxyname,0,40,?,?,?,?,deltaX,1,deltadeltaX,deltadeltaV,201,1.0-S2threshold,0)
+#	Cubes_corr_array.generate(galaxyname,0,40,?,?,?,?,deltaX,1,deltadeltaX,deltadeltaV,201,1.0-S2threshold,0)
+#	Cubes_corr_array.generate(galaxyname,80,120,?,?,?,?,deltaX,1,deltadeltaX,deltadeltaV,201,1.0-S2threshold,0)
+#	Cubes_corr_array.generate(galaxyname,80,120,?,?,?,?,deltaX,1,deltadeltaX,deltadeltaV,201,1.0-S2threshold,0)
 
 	# "t" - Table containing the regions used and the corresponding extrema coordinates.
 	t = Table([cubename,ymin_array,ymax_array,xmin_array,xmax_array,ycoord1,xcoord1,ycoord2,xcoord2,ycoord3,xcoord3],names=('Cube Name','ymin','ymax','xmin','xmax',\

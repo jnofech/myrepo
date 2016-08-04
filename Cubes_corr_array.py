@@ -12,7 +12,7 @@ from tempfile import TemporaryFile
 import scipy.interpolate as si
 from scipy.signal import argrelextrema as ae
 
-def generate(mode='S2',galaxyname='M51',vmin=40, vmax=80, ymin=200, ymax=400, xmin=360, xmax=560, deltaX=40, deltaV=3, deltadeltaX=1, deltadeltaV=1, nmax=201, xithreshold=0.7, xi_mode=0):
+def generate(galaxyname='M51',vmin=40, vmax=80, ymin=200, ymax=400, xmin=360, xmax=560, deltaX=40, deltaV=3, deltadeltaX=1, deltadeltaV=1, nmax=201, xithreshold=0.7, xi_mode=0):
 	"""
 	Takes a xi surface map whose name matches the given parameters, finds the angle
 		at which a line cutting through the origin has minimal xi, and then
@@ -21,12 +21,6 @@ def generate(mode='S2',galaxyname='M51',vmin=40, vmax=80, ymin=200, ymax=400, xm
 
 	Parameters:
 	-----------
-	mode : string
-		Selects Structure Function mode ('S2'/'S_2'), which proceeds
-		with default settings.
-		OR
-		Selects Correlation Function mode ('xi'), which may select
-		an alternate xi map file depending on "xi_mode".
 	galaxyname : string
 		Name of the galaxy we're dealing with ('M51' or 'M33').
 	vmin,...,deltadeltaV : int
@@ -73,7 +67,7 @@ def generate(mode='S2',galaxyname='M51',vmin=40, vmax=80, ymin=200, ymax=400, xm
 		tempname = 'saved_xiarray_'+imagename+'_dV_is_'+str(deltaV)+'_dX_is_'+str(deltaX)+'_MAXRES'
 	else:
 		tempname = 'saved_xiarray_'+imagename+'_dV_is_'+str(deltaV)+'_dX_is_'+str(deltaX)
-	if ((mode=="xi") or (mode=="Xi")) and (xi_mode==1):
+	if xi_mode==1:
 		tempname = tempname+"_blank"
 
 #	if normalization==True:

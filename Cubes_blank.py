@@ -11,7 +11,7 @@ import os.path
 print("\nWelcome to Cubes_blank! \
         \n \nAvailable functions:   \n  clean: Returns a 2D array of the RMS values of noise in\n            the galaxy's data cube, and saves a spectral\n            cube of the signal data only.")
 
-def clean(galaxyname='M51',nmax=20):
+def clean(galaxyname='M51',nmax=20,mode=0):
 
     """
     Parameters:
@@ -24,13 +24,16 @@ def clean(galaxyname='M51',nmax=20):
     nmax : int
         Number of iterations for the noise-removing
         loop.
+    mode : int
+        When mode==0, noise is set to np.nan.
+        When mode==1, noise is set to zero.
         
     Returns:
     --------
     RMS : numpy array
         This is a 2D array across the selected galaxy,
-	which shows the RMS values of the galaxy's
-	noise data.        
+        which shows the RMS values of the galaxy's
+        noise data.        
     """
     if (galaxyname=='m51') or (galaxyname=='M51'):
         filename = 'paws_norot'
@@ -76,7 +79,14 @@ def clean(galaxyname='M51',nmax=20):
 #                if data[k,j,i] < 2*RMS[j,i]:
 #                    data[k,j,i] = np.nan
 
-    data[data<2*RMS] = np.nan
+    if mode==0:
+        data[data<2*RMS] = np.nan
+    elif mode==1:
+        data[data<2*RMS] = 0
+    else:
+        print "ERROR: Select a valid mode."
+        return
+
     
     # Saves the final blanked cube. This cube should ideally contain only SIGNAL data. 
     if os.path.isfile(filename+'_blank.fits') == False:

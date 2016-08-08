@@ -239,8 +239,6 @@ def plotgen(xi, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV=3, mapname="3Dcu
         plt.yscale('log')
         plt.xscale('log')
 	plt.legend(loc='lower right')
-	plt.savefig('plot_xi_'+mapname+'.png')
-	plt.clf()
 
 
 	# Calculates the intercept (a) and slope (b) of log(average "xi") vs. log(radial distance) at distances between 50pc and 250pc.
@@ -251,11 +249,21 @@ def plotgen(xi, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV=3, mapname="3Dcu
 	X = X[X>=50]
 	Y = Y[X<=250]
 	X = X[X<=250]
-	X = np.log(X)
-	Y = np.log(Y)
+	X = np.log10(X)
+	Y = np.log10(Y)
 	gooddata = np.isfinite(X)*np.isfinite(Y)
 	coeff_b, coeff_a = np.polyfit(X[gooddata], Y[gooddata], 1)
 	print coeff_a, coeff_b
+
+#	plt.figtext(0.1,0.1,'egg')
+	if coeff_b > 0:
+		plt.figtext(.15,.2,"y = "+str(coeff_a)+" + "+str(coeff_b)+"x")
+	else:
+		plt.figtext(.15,.2,"y = "+str(coeff_a)+" - "+str(np.abs(coeff_b))+"x")
+	plt.savefig('plot_xi_'+mapname+'.png')
+	plt.clf()
+
+
 	return coeff_a, coeff_b
 
 def everythinggen(vmin, vmax, ymin, ymax, xmin, xmax, xi, deltaX, deltaV, deltadeltaX, deltadeltaV, imagename, filename):

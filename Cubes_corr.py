@@ -238,8 +238,6 @@ def plotgen(xi, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV=3, mapname="3Dcu
 #	plt.ylim([0.9,1.1])
         plt.yscale('log')
         plt.xscale('log')
-	plt.legend(loc='lower right')
-
 
 	# Calculates the intercept (a) and slope (b) of log(average "xi") vs. log(radial distance) at distances between 50pc and 250pc.
 	Y = corr_funct[i][X<dX*pixelwidthPC]
@@ -255,11 +253,18 @@ def plotgen(xi, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV=3, mapname="3Dcu
 	coeff_b, coeff_a = np.polyfit(X[gooddata], Y[gooddata], 1)
 	print coeff_a, coeff_b
 
-#	plt.figtext(0.1,0.1,'egg')
-	if coeff_b > 0:
-		plt.figtext(.15,.2,"y = "+str(coeff_a)+" + "+str(coeff_b)+"x")
+	# Plots the line (or, without the log-log plot, curve) of best fit.
+	if velocityres>0:
+		plt.plot(10**X,10**(coeff_a + coeff_b*X),'k--',label='Best fit, at +'+str('{0:.2f}'.format(i*ddV*velocityres))+' km/s')
 	else:
-		plt.figtext(.15,.2,"y = "+str(coeff_a)+" - "+str(np.abs(coeff_b))+"x")
+		plt.plot(10**X,10**(coeff_a + coeff_b*X),'k--',label='Best fit, at '+str('{0:.2f}'.format(i*ddV*velocityres))+' km/s')
+	plt.legend(loc='upper right')
+
+#	plt.figtext(0.09,0.1,'egg')
+	if coeff_b > 0:
+		plt.figtext(.15,.15,"Best fit, from 50pc to 250pc: \nlog(y) = "+str(coeff_a)+" + "+str(coeff_b)+"log(x)")
+	else:
+		plt.figtext(.15,.15,"Best fit, from 50pc to 250pc: \nlog(y) = "+str(coeff_a)+" - "+str(np.abs(coeff_b))+"log(x)")
 	plt.savefig('plot_xi_'+mapname+'.png')
 	plt.clf()
 

@@ -36,6 +36,14 @@ def plotM51(mode='S2',vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadelt
         S_2/xi threshold and the center of the S_2/xi map, in parsecs) as a
         function of the distance of each region to the centre of the galaxy (in 
         pixels).
+        
+    drawmode=3 : "xi slope mode"
+        Takes the table of coefficients of the lines-of-best-fit for xi (and the 
+        locations at which these results were found); and displays a 2D Tmax map 
+        of the galaxy, marking the positions of the various regions on the map 
+        and indicating their respective xi best-fit slopes with differently-sized 
+        markers.
+	Does not work with S2.
 
     Parameters:
     -----------
@@ -79,6 +87,10 @@ def plotM51(mode='S2',vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadelt
             f = file('xi_thres_M51_'+str(vmin)+'to'+str(vmax)+'.bin','rb')
             table2 = np.load(f)
             f.close()
+            
+            f = file('xi_linear_M51_'+str(vmin)+'to'+str(vmax)+'.bin','rb')
+            table3 = np.load(f)
+            f.close()
     else:
         print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."
         return
@@ -116,6 +128,8 @@ def plotM51(mode='S2',vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadelt
             plt.xlabel("Distance from M51's Centre (Pixels)")
         else:
             print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."
+        plt.yscale('log')
+        plt.xscale('log')
 
 
         
@@ -176,7 +190,7 @@ def plotM51(mode='S2',vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadelt
         
         ax1.imshow(np.nanmax(data[vmin:vmax].value,axis=0), vmin=0, origin='lower')
         
-        ax1.scatter(xcoord,ycoord,c='w',s=size3,label='3rd minima distance')
+        ax1.scatter(xcoord,ycoord,c='white',s=size3,label='3rd minima distance')
         ax1.scatter(xcoord,ycoord,c='blue',s=size2,label='2nd minima distance')
         ax1.scatter(xcoord,ycoord,c='r',s=size1,label='1st minima distance')
         ax1.scatter(xcoord,ycoord,color='k',s=0.1)
@@ -231,7 +245,8 @@ def plotM51(mode='S2',vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadelt
             plt.xlabel("Distance from M51's Centre (Pixels)")
         else:
             print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."
-
+        plt.yscale('log')
+        plt.xscale('log')
 
         fig = plt.gcf()
         fig.set_size_inches(15,7.5)	# Enlarges the image so as to prevent squishing.
@@ -248,11 +263,97 @@ def plotM51(mode='S2',vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadelt
             
         plt.clf()
 
+
+    elif drawmode==3:
+        print "xi Slope Mode activated"
+        
+        if (mode!='xi') and (mode!='Xi'):
+            print "ERROR: This mode only works for the mode=='xi'."
+            return
+
+        coeff_a = np.zeros(table3.size)      # Intercept of linear fit
+        coeff_b = np.zeros(table3.size)      # Slope of best fit
+        ymin = np.zeros(table3.size)
+        ymax = np.zeros(table3.size)
+        xmin = np.zeros(table3.size)
+        xmax = np.zeros(table3.size)
+
+        for i in range(0,table3.size):
+            ymin[i],ymax[i] = table3[i][1], table3[i][2]
+            xmin[i],xmax[i] = table3[i][3], table3[i][4]
+
+            coeff_a[i] = table3[i][5]
+            coeff_b[i] = table3[i][6]
+            
+        maxslope = max(coeff_b)     # Steepest positive slope.
+        minslope = min(coeff_b)     # Steepest negative slope.
+        
+        if np.abs(maxslope) > np.abs(minslope):
+            bigcircle_sign = '+'    # If the steepest slope is POSITIVE, then the largest circle will
+                                    #    represent a positive slope and will be pink in colour.
+        else:
+            bigcircle_sign = '-'    # If the steepest slope is NEGATIVE, then the largest circle will
+                                    #    represent a negative slope and will be light blue in colour.
+        steepslope = max(np.abs(maxslope),np.abs(minslope))     # Abs. value of steepest slope overall.
+        
+        sizemax=1000                                                # Size of the largest dot.
+        
+        xcoord = (xmax+xmin)/2.0
+        ycoord = (ymax+ymin)/2.0
+        # NOTE: In the following, the extrema distances are proportional to the RADII of their
+        #   corresponding scatterplot dots.
+        
+        
+        # Dinstinguishes negative and positive slopes.
+        b_pos = np.copy(coeff_b)     # Coeff_b where all negative values are np.nan.
+        b_neg = np.copy(coeff_b)     # Coeff_b where all positive values are np.nan. 
+        b_pos[coeff_b<0 ] = np.nan
+        b_neg[coeff_b>0] = np.nan
+        
+        size2 = sizemax*(steepslope/steepslope)**2
+        size1_pos = sizemax*(np.abs(b_pos)/steepslope)**2
+        size1_neg = sizemax*(np.abs(b_neg)/steepslope)**2
+            
+        fig, axarr = plt.subplots(nrows=1,ncols=1)
+        ax1 = axarr
+        fig = plt.gcf()
+        fig.set_size_inches(15,7.5)	# Enlarges the image so as to prevent squishing.
+        
+        ax1.imshow(np.nanmax(data[vmin:vmax].value,axis=0), vmin=0, origin='lower')
+        
+        # Displaying max-slope circles:
+        if bigcircle_sign=='+':
+            ax1.scatter(xcoord,ycoord,c='pink',s=size2,label='Steepest xi slope (positive)')
+        else:
+            ax1.scatter(xcoord,ycoord,c='cyan',s=size2,label='Steepest xi slope (negative)')
+        
+        ax1.scatter(xcoord,ycoord,c='red',s=size1_pos/2,label='xi slope (positive)')
+        ax1.scatter(xcoord,ycoord,c='blue',s=size1_neg/2,label='xi slope (negative)')
+        # ^ This is for getting the legend to display properly, since the rest of the dots must be
+        #        looped over due to a bug.
+
+        
+        for i in range(0,xcoord.size-1):
+            ax1.scatter(xcoord[i],ycoord[i],c='red',s=size1_pos[i])
+            ax1.scatter(xcoord[i],ycoord[i],c='blue',s=size1_neg[i])
+        # ^ The loop shouldn't be necessary; however, there is a freak bug that causes the circles to be
+        #        noticeably off-centre if "s" is an array.
+        ax1.scatter(xcoord,ycoord,color='k',s=0.1)
+        
+        ax1.set_title('xi Slopes over Various Regions in M51')
+        ax1.set_ylabel('y-position (pixels)')
+        ax1.set_xlabel('x-position (pixels)')
+        ax1.legend()
+        
+        plt.savefig('xi_slope_M51_'+str(vmin)+'to'+str(vmax)+'.png')
+
+	plt.clf()
+
     else:
         print "ERROR: Select drawmode=0 (Extrema Distance Mode),\
         \n              drawmode=1 (Extrema Coordinates Mode),\
-        \n              or drawmode=2 (S_2 Threshold Mode)."
-
+        \n              drawmode=2 (S_2/xi Threshold Mode),\
+        \n              or drawmode=3 (xi Slope Mode)."
 
 
 def plotM33(mode='S2',vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadeltaV=1,drawmode=0):
@@ -278,6 +379,14 @@ def plotM33(mode='S2',vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadelt
         S_2/xi threshold and the center of the S_2/xi map, in parsecs) as a
         function of the distance of each region to the centre of the galaxy (in 
         pixels).
+        
+    drawmode=3 : "xi slope mode"
+        Takes the table of coefficients of the lines-of-best-fit for xi (and the 
+        locations at which these results were found); and displays a 2D Tmax map 
+        of the galaxy, marking the positions of the various regions on the map 
+        and indicating their respective xi best-fit slopes with differently-sized 
+        markers.
+	Does not work with S2.
 
     Parameters:
     -----------
@@ -321,6 +430,10 @@ def plotM33(mode='S2',vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadelt
             f = file('xi_thres_M33_'+str(vmin)+'to'+str(vmax)+'.bin','rb')
             table2 = np.load(f)
             f.close()
+            
+            f = file('xi_linear_M33_'+str(vmin)+'to'+str(vmax)+'.bin','rb')
+            table3 = np.load(f)
+            f.close()
     else:
         print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."
         return
@@ -358,7 +471,8 @@ def plotM33(mode='S2',vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadelt
             plt.xlabel("Distance from M33's Centre (Pixels)")
         else:
             print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."
-
+        plt.yscale('log')
+        plt.xscale('log')
 
         
         fig = plt.gcf()
@@ -401,7 +515,7 @@ def plotM33(mode='S2',vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadelt
             minima3[i] = np.sqrt( y3**2 + x3**2 )
             
         maxdist = max(np.nanmax(minima1),np.nanmax(minima2),np.nanmax(minima3))    # Largest measured extrema distance.
-        sizemax=1000                                                # Size of the largest dot.
+        sizemax=1000                                                # Size of the largest dot for M51. Set to 600 for M33.
         
         xcoord = (xmax+xmin)/2.0
         ycoord = (ymax+ymin)/2.0
@@ -418,7 +532,7 @@ def plotM33(mode='S2',vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadelt
         
         ax1.imshow(np.nanmax(data[vmin:vmax].value,axis=0), vmin=0, origin='lower')
         
-        ax1.scatter(xcoord,ycoord,c='w',s=size3,label='3rd minima distance')
+        ax1.scatter(xcoord,ycoord,c='white',s=size3,label='3rd minima distance')
         ax1.scatter(xcoord,ycoord,c='blue',s=size2,label='2nd minima distance')
         ax1.scatter(xcoord,ycoord,c='r',s=size1,label='1st minima distance')
         ax1.scatter(xcoord,ycoord,color='k',s=0.1)
@@ -473,7 +587,8 @@ def plotM33(mode='S2',vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadelt
             plt.xlabel("Distance from M33's Centre (Pixels)")
         else:
             print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."
-
+        plt.yscale('log')
+        plt.xscale('log')
 
         fig = plt.gcf()
         fig.set_size_inches(15,7.5)	# Enlarges the image so as to prevent squishing.
@@ -490,7 +605,94 @@ def plotM33(mode='S2',vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadelt
             
         plt.clf()
 
+
+    elif drawmode==3:
+        print "xi Slope Mode activated"
+        
+        if (mode!='xi') and (mode!='Xi'):
+            print "ERROR: This mode only works for the mode=='xi'."
+            return
+
+        coeff_a = np.zeros(table3.size)      # Intercept of linear fit
+        coeff_b = np.zeros(table3.size)      # Slope of best fit
+        ymin = np.zeros(table3.size)
+        ymax = np.zeros(table3.size)
+        xmin = np.zeros(table3.size)
+        xmax = np.zeros(table3.size)
+
+        for i in range(0,table3.size):
+            ymin[i],ymax[i] = table3[i][1], table3[i][2]
+            xmin[i],xmax[i] = table3[i][3], table3[i][4]
+
+            coeff_a[i] = table3[i][5]
+            coeff_b[i] = table3[i][6]
+            
+        maxslope = max(coeff_b)     # Steepest positive slope.
+        minslope = min(coeff_b)     # Steepest negative slope.
+        
+        if np.abs(maxslope) > np.abs(minslope):
+            bigcircle_sign = '+'    # If the steepest slope is POSITIVE, then the largest circle will
+                                    #    represent a positive slope and will be pink in colour.
+        else:
+            bigcircle_sign = '-'    # If the steepest slope is NEGATIVE, then the largest circle will
+                                    #    represent a negative slope and will be light blue in colour.
+        steepslope = max(np.abs(maxslope),np.abs(minslope))     # Abs. value of steepest slope overall.
+        
+        sizemax=600                                                # Size of the largest dot for M33.
+        
+        xcoord = (xmax+xmin)/2.0
+        ycoord = (ymax+ymin)/2.0
+        # NOTE: In the following, the extrema distances are proportional to the RADII of their
+        #   corresponding scatterplot dots.
+        
+        
+        # Dinstinguishes negative and positive slopes.
+        b_pos = np.copy(coeff_b)     # Coeff_b where all negative values are np.nan.
+        b_neg = np.copy(coeff_b)     # Coeff_b where all positive values are np.nan. 
+        b_pos[coeff_b<0 ] = np.nan
+        b_neg[coeff_b>0] = np.nan
+        
+        size2 = sizemax*(steepslope/steepslope)**2
+        size1_pos = sizemax*(np.abs(b_pos)/steepslope)**2
+        size1_neg = sizemax*(np.abs(b_neg)/steepslope)**2
+            
+        fig, axarr = plt.subplots(nrows=1,ncols=1)
+        ax1 = axarr
+        fig = plt.gcf()
+        fig.set_size_inches(15,7.5)	# Enlarges the image so as to prevent squishing.
+        
+        ax1.imshow(np.nanmax(data[vmin:vmax].value,axis=0), vmin=0, origin='lower')
+        
+        # Displaying max-slope circles:
+        if bigcircle_sign=='+':
+            ax1.scatter(xcoord,ycoord,c='pink',s=size2,label='Steepest xi slope (positive)')
+        else:
+            ax1.scatter(xcoord,ycoord,c='cyan',s=size2,label='Steepest xi slope (negative)')
+        
+        ax1.scatter(xcoord,ycoord,color='red',s=size1_pos/2,label='xi slope (positive)')
+        ax1.scatter(xcoord,ycoord,c='blue',s=size1_neg/2,label='xi slope (negative)')
+        # ^ This is for getting the legend to display properly, since the rest of the dots must be
+        #        looped over due to a bug.
+
+        
+        for i in range(0,xcoord.size-1):
+            ax1.scatter(xcoord[i],ycoord[i],color='red',s=size1_pos[i])
+            ax1.scatter(xcoord[i],ycoord[i],c='blue',s=size1_neg[i])
+        # ^ The loop shouldn't be necessary; however, there is a freak bug that causes the circles to be
+        #        noticeably off-centre if "s" is an array.
+        ax1.scatter(xcoord,ycoord,color='k',s=0.1)
+        
+        ax1.set_title('xi Slopes over Various Regions in M33')
+        ax1.set_ylabel('y-position (pixels)')
+        ax1.set_xlabel('x-position (pixels)')
+        ax1.legend()
+        
+        plt.savefig('xi_slope_M33_'+str(vmin)+'to'+str(vmax)+'.png')
+
+	plt.clf()
+
     else:
         print "ERROR: Select drawmode=0 (Extrema Distance Mode),\
         \n              drawmode=1 (Extrema Coordinates Mode),\
-        \n              or drawmode=2 (S_2 Threshold Mode)."
+        \n              drawmode=2 (S_2/xi Threshold Mode),\
+        \n              or drawmode=3 (xi Slope Mode)."

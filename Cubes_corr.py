@@ -262,9 +262,9 @@ def plotgen(xi, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV=3, mapname="3Dcu
 
 #	plt.figtext(0.09,0.1,'egg')
 	if coeff_b > 0:
-		plt.figtext(.15,.15,"Best fit, from 50pc to 250pc: \nlog(y) = "+str(coeff_a)+" + "+str(coeff_b)+"log(x)")
+		plt.figtext(.15,.15,"Best fit, from 50pc to 250pc: \nlog(xi) = "+str(coeff_a)+" + "+str(coeff_b)+"log(radius)")
 	else:
-		plt.figtext(.15,.15,"Best fit, from 50pc to 250pc: \nlog(y) = "+str(coeff_a)+" - "+str(np.abs(coeff_b))+"log(x)")
+		plt.figtext(.15,.15,"Best fit, from 50pc to 250pc: \nlog(xi) = "+str(coeff_a)+" - "+str(np.abs(coeff_b))+"log(radius)")
 	plt.savefig('plot_xi_'+mapname+'.png')
 	plt.clf()
 

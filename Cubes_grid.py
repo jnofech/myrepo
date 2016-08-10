@@ -284,157 +284,159 @@ def drawM51(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, delta
 	xthres = [None]*imax
 	ythres = [None]*imax
 
-	for ymax in range(height, data.shape[1], height/2):
-		for xmax in range(width,data.shape[2],width/2):
-			ymin = ymax-height
-			xmin = xmax-height
-			testcube = data[vmin:vmax,ymin:ymax,xmin:xmax]
-			if (np.float(np.count_nonzero(np.isnan(testcube))) / np.float(np.count_nonzero(testcube))) < 0.05:	
-				if (mode=='s2') or (mode=='S2') or (mode=='s_2') or (mode=='S_2'):
-					theta, linearray1_min, thres_radii, radlist = Cubes_array.generate(galaxyname,vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,\
-														deltadeltaX,deltadeltaV,201,S2threshold, normalization)
-				elif (mode=='xi') or (mode=='Xi'):
-					theta, linearray1_min, thres_radii, radlist = Cubes_corr_array.generate(galaxyname,vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,\
-														deltadeltaX,deltadeltaV,201,1.0-S2threshold,xi_mode)
-				else:
-					print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."
+	if deltaX != 0:
+		for ymax in range(height, data.shape[1], height/2):
+			for xmax in range(width,data.shape[2],width/2):
+				ymin = ymax-height
+				xmin = xmax-height
+				testcube = data[vmin:vmax,ymin:ymax,xmin:xmax]
+				if (np.float(np.count_nonzero(np.isnan(testcube))) / np.float(np.count_nonzero(testcube))) < 0.05:	
+					if (mode=='s2') or (mode=='S2') or (mode=='s_2') or (mode=='S_2'):
+						theta, linearray1_min, thres_radii, radlist = Cubes_array.generate(galaxyname,vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,\
+															deltadeltaX,deltadeltaV,201,S2threshold, normalization)
+					elif (mode=='xi') or (mode=='Xi'):
+						theta, linearray1_min, thres_radii, radlist = Cubes_corr_array.generate(galaxyname,vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,\
+															deltadeltaX,deltadeltaV,201,1.0-S2threshold,xi_mode)
+					else:
+						print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."
 
-				# ^ 'theta' is the position angle, 'radlist' are the radius values along the principal axis, 'linearray1_min' are the S_2 local minima
-				#	values on this line, and 'thres_radii' are the S_2 threshold-crossing values on this line-- corresponding to 'radlist' for convenience.
-				# For linearray1_min, we want to find the three closest-to-zero-but-still-above-a-threshold-radius positions along this principal axis at which there 
-				#	are minima.
+					# ^ 'theta' is the position angle, 'radlist' are the radius values along the principal axis, 'linearray1_min' are the S_2 local minima
+					#	values on this line, and 'thres_radii' are the S_2 threshold-crossing values on this line-- corresponding to 'radlist' for convenience.
+					# For linearray1_min, we want to find the three closest-to-zero-but-still-above-a-threshold-radius positions along this principal axis at which there 
+					#	are minima.
 			
-				xpositions, ypositions = extremacoords(theta,linearray1_min,radlist)		# Returns the x- and y-coordinates of three extrema near the center of the map.
-				xthres[i], ythres[i] = thresholdcoords(mode,theta,thres_radii, True)	# Returns the x- and y-coordinates of the radius at which S2 crosses S2threshold.
+					xpositions, ypositions = extremacoords(theta,linearray1_min,radlist)		# Returns the x- and y-coordinates of three extrema near the center of the map.
+					xthres[i], ythres[i] = thresholdcoords(mode,theta,thres_radii, True)	# Returns the x- and y-coordinates of the radius at which S2 crosses S2threshold.
 
-				ymin_array[i] = ymin
-				ymax_array[i] = ymax
-				xmin_array[i] = xmin
-				xmax_array[i] = xmax
+					ymin_array[i] = ymin
+					ymax_array[i] = ymax
+					xmin_array[i] = xmin
+					xmax_array[i] = xmax
 
-				xcoord1[i] = xpositions[0]
-				xcoord2[i] = xpositions[1]
-				xcoord3[i] = xpositions[2]
+					xcoord1[i] = xpositions[0]
+					xcoord2[i] = xpositions[1]
+					xcoord3[i] = xpositions[2]
 
-				ycoord1[i] = ypositions[0]
-				ycoord2[i] = ypositions[1]
-				ycoord3[i] = ypositions[2]
+					ycoord1[i] = ypositions[0]
+					ycoord2[i] = ypositions[1]
+					ycoord3[i] = ypositions[2]
 
-				cubename[i] = galaxyname#+"_"+str(vmin)+"to"+str(vmax)+"_"+str(ymin)+"to"+str(ymax)+"_"+str(xmin)+"to"+str(xmax)
+					cubename[i] = galaxyname#+"_"+str(vmin)+"to"+str(vmax)+"_"+str(ymin)+"to"+str(ymax)+"_"+str(xmin)+"to"+str(xmax)
 
-				i = i+1
+					i = i+1
 
-	### Generate SPECIFIC REGIONS (Comment them out to disable!): ###
-#	Cubes_corr_array.generate(galaxyname,0,40,150,300,150,300,deltaX,1,deltadeltaX,deltadeltaV,201,1.0-S2threshold,0)
-#	Cubes_corr_array.generate(galaxyname,0,40,150,300,375,525,deltaX,1,deltadeltaX,deltadeltaV,201,1.0-S2threshold,0)
-#	Cubes_corr_array.generate(galaxyname,80,120,150,300,150,300,deltaX,1,deltadeltaX,deltadeltaV,201,1.0-S2threshold,0)
-#	Cubes_corr_array.generate(galaxyname,80,120,150,300,375,525,deltaX,1,deltadeltaX,deltadeltaV,201,1.0-S2threshold,0)
-#
-#	Cubes_corr_array.generate(galaxyname,40,80,75,225,450,600,deltaX,1,deltadeltaX,deltadeltaV,201,1.0-S2threshold,1)
+		### Generate SPECIFIC REGIONS (Comment them out to disable!): ###
+#		Cubes_corr_array.generate(galaxyname,0,40,150,300,150,300,deltaX,1,deltadeltaX,deltadeltaV,201,1.0-S2threshold,0)
+#		Cubes_corr_array.generate(galaxyname,0,40,150,300,375,525,deltaX,1,deltadeltaX,deltadeltaV,201,1.0-S2threshold,0)
+#		Cubes_corr_array.generate(galaxyname,80,120,150,300,150,300,deltaX,1,deltadeltaX,deltadeltaV,201,1.0-S2threshold,0)
+#		Cubes_corr_array.generate(galaxyname,80,120,150,300,375,525,deltaX,1,deltadeltaX,deltadeltaV,201,1.0-S2threshold,0)
+	
+#		Cubes_corr_array.generate(galaxyname,40,80,75,225,450,600,deltaX,1,deltadeltaX,deltadeltaV,201,1.0-S2threshold,1)
 
-	# "t" - Table containing the regions used and the corresponding extrema coordinates.
-	t = Table([cubename,ymin_array,ymax_array,xmin_array,xmax_array,ycoord1,xcoord1,ycoord2,xcoord2,ycoord3,xcoord3],names=('Cube Name','ymin','ymax','xmin','xmax',\
-																'y1','x1','y2','x2','y3','x3'), meta={'name': 'TABLE'})
-	t['ymin'].unit='pixels'
-	t['ymax'].unit='pixels'
-	t['xmin'].unit='pixels'
-	t['xmax'].unit='pixels'
-	t['y1'].unit='pc'
-	t['y2'].unit='pc'
-	t['y3'].unit='pc'
-	t['x1'].unit='pc'
-	t['x2'].unit='pc'
-	t['x3'].unit='pc'
+		# "t" - Table containing the regions used and the corresponding extrema coordinates.
+		t = Table([cubename,ymin_array,ymax_array,xmin_array,xmax_array,ycoord1,xcoord1,ycoord2,xcoord2,ycoord3,xcoord3],names=('Cube Name','ymin','ymax','xmin','xmax',\
+																	'y1','x1','y2','x2','y3','x3'), meta={'name': 'TABLE'})
+		t['ymin'].unit='pixels'
+		t['ymax'].unit='pixels'
+		t['xmin'].unit='pixels'
+		t['xmax'].unit='pixels'
+		t['y1'].unit='pc'
+		t['y2'].unit='pc'
+		t['y3'].unit='pc'
+		t['x1'].unit='pc'
+		t['x2'].unit='pc'
+		t['x3'].unit='pc'
 
-	# "t2" - Table containing the regions used and the corresponding coordinates of S_2 threshold locations.
-	t2 = Table([cubename,ymin_array,ymax_array,xmin_array,xmax_array,ythres,xthres],names=('Cube Name','ymin','ymax','xmin','xmax','ythres','xthres'), meta={'name': 'TABLE'})
+		# "t2" - Table containing the regions used and the corresponding coordinates of S_2 threshold locations.
+		t2 = Table([cubename,ymin_array,ymax_array,xmin_array,xmax_array,ythres,xthres],names=('Cube Name','ymin','ymax','xmin','xmax','ythres','xthres'), meta={'name': 'TABLE'})
 
-	t2['ymin'].unit='pixels'
-	t2['ymax'].unit='pixels'
-	t2['xmin'].unit='pixels'
-	t2['xmax'].unit='pixels'
-	t2['ythres'].unit='pc'
-	t2['xthres'].unit='pc'
+		t2['ymin'].unit='pixels'
+		t2['ymax'].unit='pixels'
+		t2['xmin'].unit='pixels'
+		t2['xmax'].unit='pixels'
+		t2['ythres'].unit='pc'
+		t2['xthres'].unit='pc'
 
-	# "t3" - Table containing the two coefficients of the linear fit of log(correlation function) vs log(scale) between 50pc and 250pc scales, for EACH REGION.
+		# "t3" - Table containing the two coefficients of the linear fit of log(correlation function) vs log(scale) between 50pc and 250pc scales, for EACH REGION.
 
-	if (mode=='xi') or (mode=='Xi'):
-		t3 = Table([cubename,ymin_array,ymax_array,xmin_array,xmax_array,coeff_a,coeff_b],names=('Cube Name','ymin','ymax','xmin','xmax',\
-													'intercept (a)', 'slope (b)'), meta={'name': 'TABLE'})
-		t3['ymin'].unit='pixels'
-		t3['ymax'].unit='pixels'
-		t3['xmin'].unit='pixels'
-		t3['xmax'].unit='pixels'
+		if (mode=='xi') or (mode=='Xi'):
+			t3 = Table([cubename,ymin_array,ymax_array,xmin_array,xmax_array,coeff_a,coeff_b],names=('Cube Name','ymin','ymax','xmin','xmax',\
+														'intercept (a)', 'slope (b)'), meta={'name': 'TABLE'})
+			t3['ymin'].unit='pixels'
+			t3['ymax'].unit='pixels'
+			t3['xmin'].unit='pixels'
+			t3['xmax'].unit='pixels'
 
 
-	# Save table 't' as a list in .csv format
-	# Save table 't' as an array in .bin format
-	if (mode=='s2') or (mode=='S2') or (mode=='s_2') or (mode=='S_2'):
-		if normalization==True:
-			with open('S2_minimal_M51_'+str(vmin)+'to'+str(vmax)+'_norm.csv', 'w') as csvfile:	# Saves the following into 'S2_minimal_M51_40to80_norm.csv'.
+		# Save table 't' as a list in .csv format
+		# Save table 't' as an array in .bin format
+		if (mode=='s2') or (mode=='S2') or (mode=='s_2') or (mode=='S_2'):
+			if normalization==True:
+				with open('S2_minimal_M51_'+str(vmin)+'to'+str(vmax)+'_norm.csv', 'w') as csvfile:	# Saves the following into 'S2_minimal_M51_40to80_norm.csv'.
+				    writer = csv.writer(csvfile)
+				    [writer.writerow(r) for r in t]
+				f = file('S2_minimal_M51_'+str(vmin)+'to'+str(vmax)+'_norm.bin','wb')			# Saves the following into 'S2_minimal_M51_40to80_norm.bin'.
+				np.save(f,t)
+				f.close()
+			else:
+				with open('S2_minimal_M51_'+str(vmin)+'to'+str(vmax)+'.csv', 'w') as csvfile:		# Saves the following into 'S2_minimal_M51_40to80.csv'.
+				    writer = csv.writer(csvfile)
+				    [writer.writerow(r) for r in t]
+				f = file('S2_minimal_M51_'+str(vmin)+'to'+str(vmax)+'.bin','wb')			# Saves the following into 'S2_minimal_M51_40to80.bin'.
+				np.save(f,t)
+				f.close()
+		elif (mode=='xi') or (mode=='Xi'):
+			with open('xi_minimal_M51_'+str(vmin)+'to'+str(vmax)+'.csv', 'w') as csvfile:		# Saves the following into 'xi_minimal_M51_40to80.csv'.
 			    writer = csv.writer(csvfile)
 			    [writer.writerow(r) for r in t]
-			f = file('S2_minimal_M51_'+str(vmin)+'to'+str(vmax)+'_norm.bin','wb')			# Saves the following into 'S2_minimal_M51_40to80_norm.bin'.
+			f = file('xi_minimal_M51_'+str(vmin)+'to'+str(vmax)+'.bin','wb')			# Saves the following into 'xi_minimal_M51_40to80.bin'.
 			np.save(f,t)
 			f.close()
 		else:
-			with open('S2_minimal_M51_'+str(vmin)+'to'+str(vmax)+'.csv', 'w') as csvfile:		# Saves the following into 'S2_minimal_M51_40to80.csv'.
-			    writer = csv.writer(csvfile)
-			    [writer.writerow(r) for r in t]
-			f = file('S2_minimal_M51_'+str(vmin)+'to'+str(vmax)+'.bin','wb')			# Saves the following into 'S2_minimal_M51_40to80.bin'.
-			np.save(f,t)
-			f.close()
-	elif (mode=='xi') or (mode=='Xi'):
-		with open('xi_minimal_M51_'+str(vmin)+'to'+str(vmax)+'.csv', 'w') as csvfile:		# Saves the following into 'xi_minimal_M51_40to80.csv'.
-		    writer = csv.writer(csvfile)
-		    [writer.writerow(r) for r in t]
-		f = file('xi_minimal_M51_'+str(vmin)+'to'+str(vmax)+'.bin','wb')			# Saves the following into 'xi_minimal_M51_40to80.bin'.
-		np.save(f,t)
-		f.close()
-	else:
-		print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."
+			print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."
 
 
-	# Save table 't2' as a list in .csv format
-	# Save table 't2' as an array in .bin format
-	if (mode=='s2') or (mode=='S2') or (mode=='s_2') or (mode=='S_2'):
-		if normalization==True:
-			with open('S2_thres_M51_'+str(vmin)+'to'+str(vmax)+'_norm.csv', 'w') as csvfile:	# Saves the following into 'S2_thres_M51_40to80_norm.csv'.
+		# Save table 't2' as a list in .csv format
+		# Save table 't2' as an array in .bin format
+		if (mode=='s2') or (mode=='S2') or (mode=='s_2') or (mode=='S_2'):
+			if normalization==True:
+				with open('S2_thres_M51_'+str(vmin)+'to'+str(vmax)+'_norm.csv', 'w') as csvfile:	# Saves the following into 'S2_thres_M51_40to80_norm.csv'.
+				    writer = csv.writer(csvfile)
+				    [writer.writerow(r) for r in t2]
+				f = file('S2_thres_M51_'+str(vmin)+'to'+str(vmax)+'_norm.bin','wb')			# Saves the following into 'S2_thres_M51_40to80_norm.bin'.
+				np.save(f,t2)
+				f.close()
+			else:
+				print "NOTE: Normalization must be enabled for the S2 threshold-\n \
+					crossing table to be saved."							# DOESN'T save 't2' into 'S2_thres_M51_40to80.csv'.
+															# DOESN'T save 't2' into 'S2_thres_M51_40to80.bin'.
+		elif (mode=='xi') or (mode=='Xi'):
+			with open('xi_thres_M51_'+str(vmin)+'to'+str(vmax)+'.csv', 'w') as csvfile:	# Saves the following into 'xi_thres_M51_40to80.csv'.
 			    writer = csv.writer(csvfile)
 			    [writer.writerow(r) for r in t2]
-			f = file('S2_thres_M51_'+str(vmin)+'to'+str(vmax)+'_norm.bin','wb')			# Saves the following into 'S2_thres_M51_40to80_norm.bin'.
+			f = file('xi_thres_M51_'+str(vmin)+'to'+str(vmax)+'.bin','wb')			# Saves the following into 'xi_thres_M51_40to80.bin'.
 			np.save(f,t2)
 			f.close()
 		else:
-			print "NOTE: Normalization must be enabled for the S2 threshold-\n \
-				crossing table to be saved."							# DOESN'T save 't2' into 'S2_thres_M51_40to80.csv'.
-														# DOESN'T save 't2' into 'S2_thres_M51_40to80.bin'.
-	elif (mode=='xi') or (mode=='Xi'):
-		with open('xi_thres_M51_'+str(vmin)+'to'+str(vmax)+'.csv', 'w') as csvfile:	# Saves the following into 'xi_thres_M51_40to80.csv'.
-		    writer = csv.writer(csvfile)
-		    [writer.writerow(r) for r in t2]
-		f = file('xi_thres_M51_'+str(vmin)+'to'+str(vmax)+'.bin','wb')			# Saves the following into 'xi_thres_M51_40to80.bin'.
-		np.save(f,t2)
-		f.close()
+			print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."
+
+
+		# Save table 't3' as a list in .csv format
+		# Save table 't3' as an array in .bin format
+		if (mode=='xi') or (mode=='Xi'):
+			with open('xi_linear_M51_'+str(vmin)+'to'+str(vmax)+'.csv', 'w') as csvfile:	# Saves the following into 'xi_linear_M51_40to80.csv'.
+			    writer = csv.writer(csvfile)
+			    [writer.writerow(r) for r in t3]
+			f = file('xi_linear_M51_'+str(vmin)+'to'+str(vmax)+'.bin','wb')			# Saves the following into 'xi_linear_M51_40to80.bin'.
+			np.save(f,t3)
+			f.close()
+		else:
+			t3 = np.nan
+
+		return t,t2,t3
+
 	else:
-		print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."
-
-
-	# Save table 't3' as a list in .csv format
-	# Save table 't3' as an array in .bin format
-	if (mode=='xi') or (mode=='Xi'):
-		with open('xi_linear_M51_'+str(vmin)+'to'+str(vmax)+'.csv', 'w') as csvfile:	# Saves the following into 'xi_linear_M51_40to80.csv'.
-		    writer = csv.writer(csvfile)
-		    [writer.writerow(r) for r in t3]
-		f = file('xi_linear_M51_'+str(vmin)+'to'+str(vmax)+'.bin','wb')			# Saves the following into 'xi_linear_M51_40to80.bin'.
-		np.save(f,t3)
-		f.close()
-	else:
-		t3 = np.nan
-
-	return t,t2,t3
-
-
+		print "NOTE: deltaX must be nonzero for principal axis plots to be generated."
 
 def arrayM33(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=1, deltadeltaV=1, drawmap = False, normalization=False, xi_mode=0):
 	"""
@@ -694,155 +696,158 @@ def drawM33(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=1, delta
 	xthres = [None]*imax
 	ythres = [None]*imax
 
-	for ymax in range(height, data.shape[1], height/2):
-		for xmax in range(width,data.shape[2],width/2):
-			ymin = ymax-height
-			xmin = xmax-height
-			testcube = data[vmin:vmax,ymin:ymax,xmin:xmax]
-			if (np.float(np.count_nonzero(np.isnan(testcube))) / np.float(np.count_nonzero(testcube))) < 0.05:	
-				if (mode=='s2') or (mode=='S2') or (mode=='s_2') or (mode=='S_2'):
-					theta, linearray1_min, thres_radii, radlist = Cubes_array.generate(galaxyname,vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,\
-														deltadeltaX,deltadeltaV,201,S2threshold, normalization)
-				elif (mode=='xi') or (mode=='Xi'):
-					theta, linearray1_min, thres_radii, radlist = Cubes_corr_array.generate(galaxyname,vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,\
-														deltadeltaX,deltadeltaV,201,1.0-S2threshold,xi_mode)
-				else:
-					print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."
 
-				# ^ 'theta' is the position angle, 'radlist' are the radius values along the principal axis, 'linearray1_min' are the S_2 local minima
-				#	values on this line, and 'thres_radii' are the S_2 threshold-crossing values on this line-- corresponding to 'radlist' for convenience.
-				# For linearray1_min, we want to find the three closest-to-zero-but-still-above-a-threshold-radius positions along this principal axis at which there 
-				#	are minima.
+	if deltaX != 0:
+		for ymax in range(height, data.shape[1], height/2):
+			for xmax in range(width,data.shape[2],width/2):
+				ymin = ymax-height
+				xmin = xmax-height
+				testcube = data[vmin:vmax,ymin:ymax,xmin:xmax]
+				if (np.float(np.count_nonzero(np.isnan(testcube))) / np.float(np.count_nonzero(testcube))) < 0.05:	
+					if (mode=='s2') or (mode=='S2') or (mode=='s_2') or (mode=='S_2'):
+						theta, linearray1_min, thres_radii, radlist = Cubes_array.generate(galaxyname,vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,\
+															deltadeltaX,deltadeltaV,201,S2threshold, normalization)
+					elif (mode=='xi') or (mode=='Xi'):
+						theta, linearray1_min, thres_radii, radlist = Cubes_corr_array.generate(galaxyname,vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,\
+															deltadeltaX,deltadeltaV,201,1.0-S2threshold,xi_mode)
+					else:
+						print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."
+
+					# ^ 'theta' is the position angle, 'radlist' are the radius values along the principal axis, 'linearray1_min' are the S_2 local minima
+					#	values on this line, and 'thres_radii' are the S_2 threshold-crossing values on this line-- corresponding to 'radlist' for convenience.
+					# For linearray1_min, we want to find the three closest-to-zero-but-still-above-a-threshold-radius positions along this principal axis at which there 
+					#	are minima.
 			
-				xpositions, ypositions = extremacoords(theta,linearray1_min,radlist)		# Returns the x- and y-coordinates of three extrema near the center of the map.
-				xthres[i], ythres[i] = thresholdcoords(mode,theta,thres_radii, True)	# Returns the x- and y-coordinates of the radius at which S2 crosses S2threshold.
+					xpositions, ypositions = extremacoords(theta,linearray1_min,radlist)		# Returns the x- and y-coordinates of three extrema near the center of the map.
+					xthres[i], ythres[i] = thresholdcoords(mode,theta,thres_radii, True)	# Returns the x- and y-coordinates of the radius at which S2 crosses S2threshold.
 
-				ymin_array[i] = ymin
-				ymax_array[i] = ymax
-				xmin_array[i] = xmin
-				xmax_array[i] = xmax
+					ymin_array[i] = ymin
+					ymax_array[i] = ymax
+					xmin_array[i] = xmin
+					xmax_array[i] = xmax
 
-				xcoord1[i] = xpositions[0]
-				xcoord2[i] = xpositions[1]
-				xcoord3[i] = xpositions[2]
+					xcoord1[i] = xpositions[0]
+					xcoord2[i] = xpositions[1]
+					xcoord3[i] = xpositions[2]
 
-				ycoord1[i] = ypositions[0]
-				ycoord2[i] = ypositions[1]
-				ycoord3[i] = ypositions[2]
+					ycoord1[i] = ypositions[0]
+					ycoord2[i] = ypositions[1]
+					ycoord3[i] = ypositions[2]
 
-				cubename[i] = galaxyname#+"_"+str(vmin)+"to"+str(vmax)+"_"+str(ymin)+"to"+str(ymax)+"_"+str(xmin)+"to"+str(xmax)
+					cubename[i] = galaxyname#+"_"+str(vmin)+"to"+str(vmax)+"_"+str(ymin)+"to"+str(ymax)+"_"+str(xmin)+"to"+str(xmax)
 
-				i = i+1
+					i = i+1
 
-	### Generate SPECIFIC REGIONS (Comment them out to disable!): ###
-#	Cubes_corr_array.generate(galaxyname,0,40,?,?,?,?,deltaX,1,deltadeltaX,deltadeltaV,201,1.0-S2threshold,0)
-#	Cubes_corr_array.generate(galaxyname,0,40,?,?,?,?,deltaX,1,deltadeltaX,deltadeltaV,201,1.0-S2threshold,0)
-#	Cubes_corr_array.generate(galaxyname,80,120,?,?,?,?,deltaX,1,deltadeltaX,deltadeltaV,201,1.0-S2threshold,0)
-#	Cubes_corr_array.generate(galaxyname,80,120,?,?,?,?,deltaX,1,deltadeltaX,deltadeltaV,201,1.0-S2threshold,0)
+		### Generate SPECIFIC REGIONS (Comment them out to disable!): ###
+#		Cubes_corr_array.generate(galaxyname,0,40,?,?,?,?,deltaX,1,deltadeltaX,deltadeltaV,201,1.0-S2threshold,0)
+#		Cubes_corr_array.generate(galaxyname,0,40,?,?,?,?,deltaX,1,deltadeltaX,deltadeltaV,201,1.0-S2threshold,0)
+#		Cubes_corr_array.generate(galaxyname,80,120,?,?,?,?,deltaX,1,deltadeltaX,deltadeltaV,201,1.0-S2threshold,0)
+#		Cubes_corr_array.generate(galaxyname,80,120,?,?,?,?,deltaX,1,deltadeltaX,deltadeltaV,201,1.0-S2threshold,0)
 
-	# "t" - Table containing the regions used and the corresponding extrema coordinates.
-	t = Table([cubename,ymin_array,ymax_array,xmin_array,xmax_array,ycoord1,xcoord1,ycoord2,xcoord2,ycoord3,xcoord3],names=('Cube Name','ymin','ymax','xmin','xmax',\
-																'y1','x1','y2','x2','y3','x3'), meta={'name': 'TABLE'})
-	t['ymin'].unit='pixels'
-	t['ymax'].unit='pixels'
-	t['xmin'].unit='pixels'
-	t['xmax'].unit='pixels'
-	t['y1'].unit='pc'
-	t['y2'].unit='pc'
-	t['y3'].unit='pc'
-	t['x1'].unit='pc'
-	t['x2'].unit='pc'
-	t['x3'].unit='pc'
+		# "t" - Table containing the regions used and the corresponding extrema coordinates.
+		t = Table([cubename,ymin_array,ymax_array,xmin_array,xmax_array,ycoord1,xcoord1,ycoord2,xcoord2,ycoord3,xcoord3],names=('Cube Name','ymin','ymax','xmin','xmax',\
+																	'y1','x1','y2','x2','y3','x3'), meta={'name': 'TABLE'})
+		t['ymin'].unit='pixels'
+		t['ymax'].unit='pixels'
+		t['xmin'].unit='pixels'
+		t['xmax'].unit='pixels'
+		t['y1'].unit='pc'
+		t['y2'].unit='pc'
+		t['y3'].unit='pc'
+		t['x1'].unit='pc'
+		t['x2'].unit='pc'
+		t['x3'].unit='pc'
 
-	# "t2" - Table containing the regions used and the corresponding coordinates of S_2 threshold locations.
-	t2 = Table([cubename,ymin_array,ymax_array,xmin_array,xmax_array,ythres,xthres],names=('Cube Name','ymin','ymax','xmin','xmax','ythres','xthres'), meta={'name': 'TABLE'})
+		# "t2" - Table containing the regions used and the corresponding coordinates of S_2 threshold locations.
+		t2 = Table([cubename,ymin_array,ymax_array,xmin_array,xmax_array,ythres,xthres],names=('Cube Name','ymin','ymax','xmin','xmax','ythres','xthres'), meta={'name': 'TABLE'})
 
-	t2['ymin'].unit='pixels'
-	t2['ymax'].unit='pixels'
-	t2['xmin'].unit='pixels'
-	t2['xmax'].unit='pixels'
-	t2['ythres'].unit='pc'
-	t2['xthres'].unit='pc'
+		t2['ymin'].unit='pixels'
+		t2['ymax'].unit='pixels'
+		t2['xmin'].unit='pixels'
+		t2['xmax'].unit='pixels'
+		t2['ythres'].unit='pc'
+		t2['xthres'].unit='pc'
 
-	# "t3" - Table containing the two coefficients of the linear fit of log(correlation function) vs log(scale) between 50pc and 250pc scales, for EACH REGION.
+		# "t3" - Table containing the two coefficients of the linear fit of log(correlation function) vs log(scale) between 50pc and 250pc scales, for EACH REGION.
 
-	if (mode=='xi') or (mode=='Xi'):
-		t3 = Table([cubename,ymin_array,ymax_array,xmin_array,xmax_array,coeff_a,coeff_b],names=('Cube Name','ymin','ymax','xmin','xmax',\
-													'intercept (a)', 'slope (b)'), meta={'name': 'TABLE'})
-		t3['ymin'].unit='pixels'
-		t3['ymax'].unit='pixels'
-		t3['xmin'].unit='pixels'
-		t3['xmax'].unit='pixels'
+		if (mode=='xi') or (mode=='Xi'):
+			t3 = Table([cubename,ymin_array,ymax_array,xmin_array,xmax_array,coeff_a,coeff_b],names=('Cube Name','ymin','ymax','xmin','xmax',\
+														'intercept (a)', 'slope (b)'), meta={'name': 'TABLE'})
+			t3['ymin'].unit='pixels'
+			t3['ymax'].unit='pixels'
+			t3['xmin'].unit='pixels'
+			t3['xmax'].unit='pixels'
 
 
-	# Save table 't' as a list in .csv format
-	# Save table 't' as an array in .bin format
-	if (mode=='s2') or (mode=='S2') or (mode=='s_2') or (mode=='S_2'):
-		if normalization==True:
-			with open('S2_minimal_M33_'+str(vmin)+'to'+str(vmax)+'_norm.csv', 'w') as csvfile:	# Saves the following into 'S2_minimal_M33_40to80_norm.csv'.
+		# Save table 't' as a list in .csv format
+		# Save table 't' as an array in .bin format
+		if (mode=='s2') or (mode=='S2') or (mode=='s_2') or (mode=='S_2'):
+			if normalization==True:
+				with open('S2_minimal_M33_'+str(vmin)+'to'+str(vmax)+'_norm.csv', 'w') as csvfile:	# Saves the following into 'S2_minimal_M33_40to80_norm.csv'.
+				    writer = csv.writer(csvfile)
+				    [writer.writerow(r) for r in t]
+				f = file('S2_minimal_M33_'+str(vmin)+'to'+str(vmax)+'_norm.bin','wb')			# Saves the following into 'S2_minimal_M33_40to80_norm.bin'.
+				np.save(f,t)
+				f.close()
+			else:
+				with open('S2_minimal_M33_'+str(vmin)+'to'+str(vmax)+'.csv', 'w') as csvfile:		# Saves the following into 'S2_minimal_M33_40to80.csv'.
+				    writer = csv.writer(csvfile)
+				    [writer.writerow(r) for r in t]
+				f = file('S2_minimal_M33_'+str(vmin)+'to'+str(vmax)+'.bin','wb')			# Saves the following into 'S2_minimal_M33_40to80.bin'.
+				np.save(f,t)
+				f.close()
+		elif (mode=='xi') or (mode=='Xi'):
+			with open('xi_minimal_M33_'+str(vmin)+'to'+str(vmax)+'.csv', 'w') as csvfile:		# Saves the following into 'xi_minimal_M33_40to80.csv'.
 			    writer = csv.writer(csvfile)
 			    [writer.writerow(r) for r in t]
-			f = file('S2_minimal_M33_'+str(vmin)+'to'+str(vmax)+'_norm.bin','wb')			# Saves the following into 'S2_minimal_M33_40to80_norm.bin'.
+			f = file('xi_minimal_M33_'+str(vmin)+'to'+str(vmax)+'.bin','wb')			# Saves the following into 'xi_minimal_M33_40to80.bin'.
 			np.save(f,t)
 			f.close()
 		else:
-			with open('S2_minimal_M33_'+str(vmin)+'to'+str(vmax)+'.csv', 'w') as csvfile:		# Saves the following into 'S2_minimal_M33_40to80.csv'.
-			    writer = csv.writer(csvfile)
-			    [writer.writerow(r) for r in t]
-			f = file('S2_minimal_M33_'+str(vmin)+'to'+str(vmax)+'.bin','wb')			# Saves the following into 'S2_minimal_M33_40to80.bin'.
-			np.save(f,t)
-			f.close()
-	elif (mode=='xi') or (mode=='Xi'):
-		with open('xi_minimal_M33_'+str(vmin)+'to'+str(vmax)+'.csv', 'w') as csvfile:		# Saves the following into 'xi_minimal_M33_40to80.csv'.
-		    writer = csv.writer(csvfile)
-		    [writer.writerow(r) for r in t]
-		f = file('xi_minimal_M33_'+str(vmin)+'to'+str(vmax)+'.bin','wb')			# Saves the following into 'xi_minimal_M33_40to80.bin'.
-		np.save(f,t)
-		f.close()
-	else:
-		print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."
+			print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."
 
 
-	# Save table 't2' as a list in .csv format
-	# Save table 't2' as an array in .bin format
-	if (mode=='s2') or (mode=='S2') or (mode=='s_2') or (mode=='S_2'):
-		if normalization==True:
-			with open('S2_thres_M33_'+str(vmin)+'to'+str(vmax)+'_norm.csv', 'w') as csvfile:	# Saves the following into 'S2_thres_M33_40to80_norm.csv'.
+		# Save table 't2' as a list in .csv format
+		# Save table 't2' as an array in .bin format
+		if (mode=='s2') or (mode=='S2') or (mode=='s_2') or (mode=='S_2'):
+			if normalization==True:
+				with open('S2_thres_M33_'+str(vmin)+'to'+str(vmax)+'_norm.csv', 'w') as csvfile:	# Saves the following into 'S2_thres_M33_40to80_norm.csv'.
+				    writer = csv.writer(csvfile)
+				    [writer.writerow(r) for r in t2]
+				f = file('S2_thres_M33_'+str(vmin)+'to'+str(vmax)+'_norm.bin','wb')			# Saves the following into 'S2_thres_M33_40to80_norm.bin'.
+				np.save(f,t2)
+				f.close()
+			else:
+				print "NOTE: Normalization must be enabled for the S2 threshold-\n \
+					crossing table to be saved."							# DOESN'T save 't2' into 'S2_thres_M33_40to80.csv'.
+															# DOESN'T save 't2' into 'S2_thres_M33_40to80.bin'.
+		elif (mode=='xi') or (mode=='Xi'):
+			with open('xi_thres_M33_'+str(vmin)+'to'+str(vmax)+'.csv', 'w') as csvfile:	# Saves the following into 'xi_thres_M33_40to80.csv'.
 			    writer = csv.writer(csvfile)
 			    [writer.writerow(r) for r in t2]
-			f = file('S2_thres_M33_'+str(vmin)+'to'+str(vmax)+'_norm.bin','wb')			# Saves the following into 'S2_thres_M33_40to80_norm.bin'.
+			f = file('xi_thres_M33_'+str(vmin)+'to'+str(vmax)+'.bin','wb')			# Saves the following into 'xi_thres_M33_40to80.bin'.
 			np.save(f,t2)
 			f.close()
 		else:
-			print "NOTE: Normalization must be enabled for the S2 threshold-\n \
-				crossing table to be saved."							# DOESN'T save 't2' into 'S2_thres_M33_40to80.csv'.
-														# DOESN'T save 't2' into 'S2_thres_M33_40to80.bin'.
-	elif (mode=='xi') or (mode=='Xi'):
-		with open('xi_thres_M33_'+str(vmin)+'to'+str(vmax)+'.csv', 'w') as csvfile:	# Saves the following into 'xi_thres_M33_40to80.csv'.
-		    writer = csv.writer(csvfile)
-		    [writer.writerow(r) for r in t2]
-		f = file('xi_thres_M33_'+str(vmin)+'to'+str(vmax)+'.bin','wb')			# Saves the following into 'xi_thres_M33_40to80.bin'.
-		np.save(f,t2)
-		f.close()
+			print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."
+
+
+		# Save table 't3' as a list in .csv format
+		# Save table 't3' as an array in .bin format
+		if (mode=='xi') or (mode=='Xi'):
+			with open('xi_linear_M33_'+str(vmin)+'to'+str(vmax)+'.csv', 'w') as csvfile:	# Saves the following into 'xi_linear_M33_40to80.csv'.
+			    writer = csv.writer(csvfile)
+			    [writer.writerow(r) for r in t3]
+			f = file('xi_linear_M33_'+str(vmin)+'to'+str(vmax)+'.bin','wb')			# Saves the following into 'xi_linear_M33_40to80.bin'.
+			np.save(f,t3)
+			f.close()
+		else:
+			t3 = np.nan
+
+		return t,t2,t3
+
 	else:
-		print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."
-
-
-	# Save table 't3' as a list in .csv format
-	# Save table 't3' as an array in .bin format
-	if (mode=='xi') or (mode=='Xi'):
-		with open('xi_linear_M33_'+str(vmin)+'to'+str(vmax)+'.csv', 'w') as csvfile:	# Saves the following into 'xi_linear_M33_40to80.csv'.
-		    writer = csv.writer(csvfile)
-		    [writer.writerow(r) for r in t3]
-		f = file('xi_linear_M33_'+str(vmin)+'to'+str(vmax)+'.bin','wb')			# Saves the following into 'xi_linear_M33_40to80.bin'.
-		np.save(f,t3)
-		f.close()
-	else:
-		t3 = np.nan
-
-	return t,t2,t3
-
-
+		print "NOTE: deltaX must be nonzero for principal axis plots to be generated."
 
 def extremacoords(theta,linearray1_min,radlist):
 	radii = radlist[~np.isnan(linearray1_min)]

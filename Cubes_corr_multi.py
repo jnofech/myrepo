@@ -1,4 +1,4 @@
-
+ 
 # 6.15.16 - Calculates and plots xi using functions from "Cubes_corr.py".
 
 print('\nWelcome to Cubes_corr_multi! \n \nAvailable functions: \n  array: Saves a "xi" array. \n  draw: Generates a 2D map and 1D plot of xi.  \n  arrayM51: Activates "array" for several preset subcubes all at\n                        once for M51.\n  drawM51: Activates "draw" for the above subcubes.\n  arrayM33: Activates "array" for several preset subcubes all at\n                        once for M33.\n  drawM33: Activates "draw" for the above subcubes.\n  compare_xiarray: Saves xi arrays for M51 and M33 at dV=0. \n  compare_xidraw: Draws a 1D plot comparing the above xi arrays.\n \nThis program makes use of Cubes_corr.py.\n \n')

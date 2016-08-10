@@ -183,93 +183,166 @@ def plotgen(xi, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV=3, mapname="3Dcu
 
 	   Be sure that your filename and desired plot name (same as in mapgen) are in quotes."""
 
-	# Goal: Create a 1D plot, for each value of "dv", of the average value of correlation function (inside a thin ring
-	#       at radius r) versus radius. Each "dv" is a different sheet of dx,dy.
+	if deltaX != 0:
+		# Goal: Create a 1D plot, for each value of "dv", of the average value of correlation function (inside a thin ring
+		#       at radius r) versus radius. Each "dv" is a different sheet of dx,dy.
 
-	dX = deltaX                    	# This is simply the maximum absolute value of "dx". So if dX = 1, then dx = {-1,0,1}.
-	dY = np.copy(dX)                # Same as above, but for "dy". For simplicity, let it be the same as dX.
-	dV = deltaV		     	# Same as above, but for "dv".
-	ddX = deltadeltaX
-	ddY = np.copy(ddX)
-	ddV = deltadeltaV
-	nmax = abs(2*dX/ddX)+1
+		dX = deltaX                    	# This is simply the maximum absolute value of "dx". So if dX = 1, then dx = {-1,0,1}.
+		dY = np.copy(dX)                # Same as above, but for "dy". For simplicity, let it be the same as dX.
+		dV = deltaV		     	# Same as above, but for "dv".
+		ddX = deltadeltaX
+		ddY = np.copy(ddX)
+		ddV = deltadeltaV
+		nmax = abs(2*dX/ddX)+1
 
-	cube = SpectralCube.read(filename+".fits")
-	pixelwidthDEG = cube.header['CDELT2']	# The width of each pixel, in degrees.
-	if filename =='m33.co21_iram_CLEANED':			# Checks if the galaxy's Header file contains its distance.
-		distancePC = 840000.0				# The distance to the galaxy that M33's .fits file deals with, in parsecs. ONLY works on the CLEANED file!
-	else:
-		distancePC = cube.header['DIST']		# The distance to the galaxy that M51's .fits file deals with, in parsecs.  (???) Is this number accurate, though?
-	pixelwidthPC = pixelwidthDEG*np.pi/180.0*distancePC	# The width of each pixel, in pc.
-	velocityres = cube.header['CDELT3']	# Velocity resolution in m/s or km/s.
-	if filename != 'paws_norot':            # 'paws_norot' already has its velocity resolution in km/s.
-	    velocityres = velocityres / 1000.0
-	# (!)					# May need to edit these above three lines for other .fits files!
+		cube = SpectralCube.read(filename+".fits")
+		pixelwidthDEG = cube.header['CDELT2']	# The width of each pixel, in degrees.
+		if filename =='m33.co21_iram_CLEANED':			# Checks if the galaxy's Header file contains its distance.
+			distancePC = 840000.0				# The distance to the galaxy that M33's .fits file deals with, in parsecs. ONLY works on the CLEANED file!
+		else:
+			distancePC = cube.header['DIST']		# The distance to the galaxy that M51's .fits file deals with, in parsecs.  (???) Is this number accurate, though?
+		pixelwidthPC = pixelwidthDEG*np.pi/180.0*distancePC	# The width of each pixel, in pc.
+		velocityres = cube.header['CDELT3']	# Velocity resolution in m/s or km/s.
+		if filename != 'paws_norot':            # 'paws_norot' already has its velocity resolution in km/s.
+		    velocityres = velocityres / 1000.0
+		# (!)					# May need to edit these above three lines for other .fits files!
 
-	x = np.linspace(-dX/ddX,dX/ddX,nmax)
-	y = np.linspace(-dY/ddY,dY/ddY,nmax)
-	xx, yy = np.meshgrid(x,y)
+		x = np.linspace(-dX/ddX,dX/ddX,nmax)
+		y = np.linspace(-dY/ddY,dY/ddY,nmax)
+		xx, yy = np.meshgrid(x,y)
 
-	maxradius = ( (dX/ddX)**2 + (dY/ddY)**2 )**0.5
-	mult = 1                        # Increases or decreases the numbers of bins used. Most accurate results at mult=1.
-	reselements = math.floor(mult*maxradius)
-		                        # This is the number of "resolution elements" (i.e. the number of points
-		                        #      on the corr_funct vs. radius plot) that we're dealing with.
-	radiusmap = (xx**2 + yy**2)**0.5
+		maxradius = ( (dX/ddX)**2 + (dY/ddY)**2 )**0.5
+		mult = 1                        # Increases or decreases the numbers of bins used. Most accurate results at mult=1.
+		reselements = math.floor(mult*maxradius)
+				                # This is the number of "resolution elements" (i.e. the number of points
+				                #      on the corr_funct vs. radius plot) that we're dealing with.
+		radiusmap = (xx**2 + yy**2)**0.5
 
-	corr_funct = np.arange(nmax*reselements).reshape(nmax,reselements)
+		corr_funct = np.arange(nmax*reselements).reshape(nmax,reselements)
 
-	for i in range (0, dV/ddV+1):	# "delv" defined as "dv/ddV".
-		corr_funct[i], edges, counts = ss.binned_statistic(
-		radiusmap[radiusmap<maxradius], xi[i][radiusmap<maxradius], statistic=np.nanmean, bins = reselements)
+		for i in range (0, dV/ddV+1):	# "delv" defined as "dv/ddV".
+			corr_funct[i], edges, counts = ss.binned_statistic(
+			radiusmap[radiusmap<maxradius], xi[i][radiusmap<maxradius], statistic=np.nanmean, bins = reselements)
 
-	plt.figure(3)
-	fig = matplotlib.pyplot.gcf()	
-	fig.set_size_inches(15, 7)	# Enlarges the image so as to prevent squishing.
-	X = (np.arange(reselements)/mult) / ((reselements-1)/mult) * (dX**2 + dY**2)**0.5 * pixelwidthPC
-	for i in range (0, dV/ddV+1):
-	    if velocityres > 0:
-		plt.plot(X[X<dX*pixelwidthPC], corr_funct[i][X<dX*pixelwidthPC],label='xi at +'+str('{0:.2f}'.format(i*ddV*velocityres))+' km/s')
-	    else:
-		plt.plot(X[X<dX*pixelwidthPC], corr_funct[i][X<dX*pixelwidthPC],label='xi at '+str('{0:.2f}'.format(i*ddV*velocityres))+' km/s')
-	plt.title('Avg. Corr. Funct. vs. Radial "Distance" from Center of xi Plots')
-	plt.xlabel('Distance from Initial Location (pc)')
-	plt.ylabel('Average xi')
-#	plt.ylim([0.9,1.1])
-        plt.yscale('log')
-        plt.xscale('log')
+		plt.figure(3)
+		fig = matplotlib.pyplot.gcf()	
+		fig.set_size_inches(15, 7)	# Enlarges the image so as to prevent squishing.
+		X = (np.arange(reselements)/mult) / ((reselements-1)/mult) * (dX**2 + dY**2)**0.5 * pixelwidthPC
+		for i in range (0, dV/ddV+1):
+		    if velocityres > 0:
+			plt.plot(X[X<dX*pixelwidthPC], corr_funct[i][X<dX*pixelwidthPC],label='xi at +'+str('{0:.2f}'.format(i*ddV*velocityres))+' km/s')
+		    else:
+			plt.plot(X[X<dX*pixelwidthPC], corr_funct[i][X<dX*pixelwidthPC],label='xi at '+str('{0:.2f}'.format(i*ddV*velocityres))+' km/s')
+		plt.title('Avg. Corr. Funct. vs. Radial "Distance" from Center of xi Plots')
+		plt.xlabel('Distance from Initial Location (pc)')
+		plt.ylabel('Average xi')
+	#	plt.ylim([0.9,1.1])
+		plt.yscale('log')
+		plt.xscale('log')
 
-	# Calculates the intercept (a) and slope (b) of log(average "xi") vs. log(radial distance) at distances between 50pc and 250pc.
-	Y = corr_funct[i][X<dX*pixelwidthPC]
-	X = X[X<dX*pixelwidthPC]
+		# Calculates the intercept (a) and slope (b) of log(average "xi") vs. log(radial distance) at distances between 50pc and 250pc.
+		Y = corr_funct[0][X<dX*pixelwidthPC]
+		X = X[X<dX*pixelwidthPC]
 
-	Y = Y[X>=50]
-	X = X[X>=50]
-	Y = Y[X<=250]
-	X = X[X<=250]
-	X = np.log10(X)
-	Y = np.log10(Y)
-	gooddata = np.isfinite(X)*np.isfinite(Y)
-	coeff_b, coeff_a = np.polyfit(X[gooddata], Y[gooddata], 1)
-	print coeff_a, coeff_b
+		Y = Y[X>=50]
+		X = X[X>=50]
+		Y = Y[X<=250]
+		X = X[X<=250]
+		X = np.log10(X)
+		Y = np.log10(Y)
+		gooddata = np.isfinite(X)*np.isfinite(Y)
+		coeff_b, coeff_a = np.polyfit(X[gooddata], Y[gooddata], 1)
+		print coeff_a, coeff_b
 
-	# Plots the line (or, without the log-log plot, curve) of best fit.
-	if velocityres>0:
-		plt.plot(10**X,10**(coeff_a + coeff_b*X),'k--',label='Best fit, at +'+str('{0:.2f}'.format(i*ddV*velocityres))+' km/s')
-	else:
-		plt.plot(10**X,10**(coeff_a + coeff_b*X),'k--',label='Best fit, at '+str('{0:.2f}'.format(i*ddV*velocityres))+' km/s')
-	plt.legend(loc='upper right')
+		# Plots the line (or, without the log-log plot, curve) of best fit.
+		if velocityres>0:
+			plt.plot(10**X,10**(coeff_a + coeff_b*X),'k--',label='Best fit, at +'+str('{0:.2f}'.format(0*ddV*velocityres))+' km/s')
+		else:
+			plt.plot(10**X,10**(coeff_a + coeff_b*X),'k--',label='Best fit, at '+str('{0:.2f}'.format(0*ddV*velocityres))+' km/s')
+		plt.legend(loc='upper right')
 
-#	plt.figtext(0.09,0.1,'egg')
-	if coeff_b > 0:
-		plt.figtext(.15,.15,"Best fit, from 50pc to 250pc: \nlog(xi) = "+str(coeff_a)+" + "+str(coeff_b)+"log(radius)")
-	else:
-		plt.figtext(.15,.15,"Best fit, from 50pc to 250pc: \nlog(xi) = "+str(coeff_a)+" - "+str(np.abs(coeff_b))+"log(radius)")
-	plt.savefig('plot_xi_'+mapname+'.png')
-	plt.clf()
+	#	plt.figtext(0.09,0.1,'egg')
+		if coeff_b > 0:
+			plt.figtext(.15,.15,"Best fit, from 50pc to 250pc: \nlog(xi) = "+str(coeff_a)+" + "+str(coeff_b)+"log(radius)")
+		else:
+			plt.figtext(.15,.15,"Best fit, from 50pc to 250pc: \nlog(xi) = "+str(coeff_a)+" - "+str(np.abs(coeff_b))+"log(radius)")
+		plt.savefig('plot_xi_'+mapname+'.png')
+		plt.clf()
 
 
-	return coeff_a, coeff_b
+		return coeff_a, coeff_b
+
+	elif deltaX==0:
+		# Goal: Create a 1D plot of the correlation function at each shift in velocity resolution element "dv". Basically, "xi" vs. "shift in radial velocity".
+
+		dX = deltaX                    	# This is simply the maximum absolute value of "dx". So if dX = 1, then dx = {-1,0,1}.
+		dY = np.copy(dX)                # Same as above, but for "dy". For simplicity, let it be the same as dX.
+		dV = deltaV		     	# Same as above, but for "dv".
+		ddV = deltadeltaV
+		nmax = 1
+
+		cube = SpectralCube.read(filename+".fits")
+		pixelwidthDEG = cube.header['CDELT2']	# The width of each pixel, in degrees.
+		if filename =='m33.co21_iram_CLEANED':			# Checks if the galaxy's Header file contains its distance.
+			distancePC = 840000.0				# The distance to the galaxy that M33's .fits file deals with, in parsecs. ONLY works on the CLEANED file!
+		else:
+			distancePC = cube.header['DIST']		# The distance to the galaxy that M51's .fits file deals with, in parsecs.  (???) Is this number accurate, though?
+		pixelwidthPC = pixelwidthDEG*np.pi/180.0*distancePC	# The width of each pixel, in pc.
+		velocityres = cube.header['CDELT3']	# Velocity resolution in m/s or km/s.
+		if filename != 'paws_norot':            # 'paws_norot' already has its velocity resolution in km/s.
+		    velocityres = velocityres / 1000.0
+		# (!)					# May need to edit these above three lines for other .fits files!
+
+		corr_funct = xi
+		corr_funct.shape = corr_funct.shape[0]
+
+		print xi.shape
+
+		plt.figure(3)
+		fig = matplotlib.pyplot.gcf()	
+		fig.set_size_inches(15, 7)			# Enlarges the image so as to prevent squishing.
+
+		V = (np.arange(dV/ddV+1)) * velocityres		# This is an array of the different velocity shift values.
+		plt.plot(V, corr_funct,label='xi vs. radial velocity shift')
+
+		plt.title('Corr. Funct. vs. "Radial Velocity Shift" from Center of xi Plots')
+		plt.xlabel('Shift in Radial Velocity (km/s)')
+		plt.ylabel('xi')
+
+#		plt.yscale('log')
+#		plt.xscale('log')
+
+		# Calculates the intercept (a) and slope (b) of log(average "xi") vs. log(Radial Velocity Shift).
+#		Y = corr_funct
+#		X = V
+#
+#		Y = Y[X>=50]
+#		X = X[X>=50]
+#		Y = Y[X<=250]
+#		X = X[X<=250]
+#		X = np.log10(X)
+#		Y = np.log10(Y)
+#		gooddata = np.isfinite(X)*np.isfinite(Y)
+#		coeff_b, coeff_a = np.polyfit(X[gooddata], Y[gooddata], 1)
+#		print coeff_a, coeff_b
+#
+#		# Plots the line (or, without the log-log plot, curve) of best fit.
+#		if velocityres>0:
+#			plt.plot(10**X,10**(coeff_a + coeff_b*X),'k--',label='Best fit, at +'+str('{0:.2f}'.format(0*ddV*velocityres))+' km/s')
+#		else:
+#			plt.plot(10**X,10**(coeff_a + coeff_b*X),'k--',label='Best fit, at '+str('{0:.2f}'.format(0*ddV*velocityres))+' km/s')
+		plt.legend(loc='upper right')
+#
+#		if coeff_b > 0:
+#			plt.figtext(.15,.15,"Best fit, from 50pc to 250pc: \nlog(xi) = "+str(coeff_a)+" + "+str(coeff_b)+"log(radius)")
+#		else:
+#			plt.figtext(.15,.15,"Best fit, from 50pc to 250pc: \nlog(xi) = "+str(coeff_a)+" - "+str(np.abs(coeff_b))+"log(radius)")
+		plt.savefig('plot_xi_'+mapname+'.png')
+		plt.clf()
+
+		coeff_a, coeff_b = np.nan, np.nan
+		return coeff_a, coeff_b
+
 
 def everythinggen(vmin, vmax, ymin, ymax, xmin, xmax, xi, deltaX, deltaV, deltadeltaX, deltadeltaV, imagename, filename):
 	

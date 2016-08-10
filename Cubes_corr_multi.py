@@ -104,9 +104,10 @@ def draw(vmin, vmax, ymin, ymax, xmin, xmax, deltaX = 100, deltaV = 3, deltadelt
 	xi = np.load(f)
 	f.close()
 
-	Cubes_corr.mapgen(xi, deltaX, deltaV, deltadeltaV, imagename, filename)
 	coeff_a, coeff_b = Cubes_corr.plotgen(xi, deltaX, deltaV, deltadeltaX, deltadeltaV, imagename, filename)		# a = intercept, b = slope
-	Cubes_corr.everythinggen(vmin, vmax, ymin, ymax, xmin, xmax, xi, deltaX, deltaV, deltadeltaX, deltadeltaV, imagename, filename)
+	if deltaX != 0:
+		Cubes_corr.mapgen(xi, deltaX, deltaV, deltadeltaV, imagename, filename)
+		Cubes_corr.everythinggen(vmin, vmax, ymin, ymax, xmin, xmax, xi, deltaX, deltaV, deltadeltaX, deltadeltaV, imagename, filename)
 
 	return coeff_a, coeff_b
 

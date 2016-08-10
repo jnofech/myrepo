@@ -303,44 +303,47 @@ def plotgen(xi, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV=3, mapname="3Dcu
 		fig.set_size_inches(15, 7)			# Enlarges the image so as to prevent squishing.
 
 		V = (np.arange(dV/ddV+1)) * velocityres		# This is an array of the different velocity shift values.
-		plt.plot(V, corr_funct,label='xi vs. radial velocity shift')
+		if filename =='m33.co21_iram_CLEANED':
+		    V = V*-1					# Flips sign of x-axis, so that the log of xi can be taken properly.
 
-		plt.title('Corr. Funct. vs. "Radial Velocity Shift" from Center of xi Plots')
-		plt.xlabel('Shift in Radial Velocity (km/s)')
-		plt.ylabel('xi')
+		    plt.plot(V, corr_funct,label='xi vs. negative radial velocity shift')
+		    plt.title('Corr. Funct. vs. "Radial Velocity Shift" from Center of xi Plots')
+		    plt.xlabel('Shift in Radial Velocity in the NEGATIVE Direction (km/s)')
+		    plt.ylabel('xi')
+		elif filename =='paws_norot':
+		    plt.plot(V, corr_funct,label='xi vs. radial velocity shift')
+		    plt.title('Corr. Funct. vs. "Radial Velocity Shift" from Center of xi Plots')
+		    plt.xlabel('Shift in Radial Velocity (km/s)')
+		    plt.ylabel('xi')
+		else:
+		    print "ERROR: Galaxy selected is neither M51 nor M33."
 
-#		plt.yscale('log')
-#		plt.xscale('log')
+		plt.yscale('log')
+		plt.xscale('log')
 
 		# Calculates the intercept (a) and slope (b) of log(average "xi") vs. log(Radial Velocity Shift).
-#		Y = corr_funct
-#		X = V
-#
-#		Y = Y[X>=50]
-#		X = X[X>=50]
-#		Y = Y[X<=250]
-#		X = X[X<=250]
-#		X = np.log10(X)
-#		Y = np.log10(Y)
-#		gooddata = np.isfinite(X)*np.isfinite(Y)
-#		coeff_b, coeff_a = np.polyfit(X[gooddata], Y[gooddata], 1)
-#		print coeff_a, coeff_b
-#
-#		# Plots the line (or, without the log-log plot, curve) of best fit.
-#		if velocityres>0:
-#			plt.plot(10**X,10**(coeff_a + coeff_b*X),'k--',label='Best fit, at +'+str('{0:.2f}'.format(0*ddV*velocityres))+' km/s')
-#		else:
-#			plt.plot(10**X,10**(coeff_a + coeff_b*X),'k--',label='Best fit, at '+str('{0:.2f}'.format(0*ddV*velocityres))+' km/s')
+		Y = corr_funct
+		X = V
+
+		X = np.log10(X)
+		Y = np.log10(Y)
+
+
+		gooddata = np.isfinite(X)*np.isfinite(Y)
+		coeff_b, coeff_a = np.polyfit(X[gooddata], Y[gooddata], 1)
+
+		# Plots the line (or, without the log-log plot, curve) of best fit.
+
+		plt.plot(10**X,10**(coeff_a + coeff_b*X),'k--',label='Best fit')
 		plt.legend(loc='upper right')
-#
-#		if coeff_b > 0:
-#			plt.figtext(.15,.15,"Best fit, from 50pc to 250pc: \nlog(xi) = "+str(coeff_a)+" + "+str(coeff_b)+"log(radius)")
-#		else:
-#			plt.figtext(.15,.15,"Best fit, from 50pc to 250pc: \nlog(xi) = "+str(coeff_a)+" - "+str(np.abs(coeff_b))+"log(radius)")
+
+		if coeff_b > 0:
+			plt.figtext(.15,.15,"Best fit: \nlog(xi) = "+str(coeff_a)+" + "+str(coeff_b)+"log(shift)")
+		else:
+			plt.figtext(.15,.15,"Best fit: \nlog(xi) = "+str(coeff_a)+" - "+str(np.abs(coeff_b))+"log(shift)")
 		plt.savefig('plot_xi_'+mapname+'.png')
 		plt.clf()
 
-		coeff_a, coeff_b = np.nan, np.nan
 		return coeff_a, coeff_b
 
 

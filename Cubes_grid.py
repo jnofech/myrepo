@@ -436,6 +436,43 @@ def drawM51(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, delta
 		return t,t2,t3
 
 	else:
+		# "t3" - Table containing the two coefficients of the linear fit of log(correlation function) vs log(shift in radial velocity), for EACH REGION.
+
+		if (mode=='xi') or (mode=='Xi'):
+			i = 0
+			for ymax in range(height, data.shape[1], height/2):
+				for xmax in range(width,data.shape[2],width/2):
+					ymin = ymax-height
+					xmin = xmax-height
+					testcube = data[vmin:vmax,ymin:ymax,xmin:xmax]
+					if (np.float(np.count_nonzero(np.isnan(testcube))) / np.float(np.count_nonzero(testcube))) < 0.05:
+						ymin_array[i] = ymin
+						ymax_array[i] = ymax
+						xmin_array[i] = xmin
+						xmax_array[i] = xmax
+
+						cubename[i] = galaxyname#+"_"+str(vmin)+"to"+str(vmax)+"_"+str(ymin)+"to"+str(ymax)+"_"+str(xmin)+"to"+str(xmax)
+
+						i = i+1
+
+			t3 = Table([cubename,ymin_array,ymax_array,xmin_array,xmax_array,coeff_a,coeff_b],names=('Cube Name','ymin','ymax','xmin','xmax',\
+														'intercept (a)', 'slope (b)'), meta={'name': 'TABLE'})
+			t3['ymin'].unit='pixels'
+			t3['ymax'].unit='pixels'
+			t3['xmin'].unit='pixels'
+			t3['xmax'].unit='pixels'
+
+		# Save table 't3' as a list in .csv format
+		# Save table 't3' as an array in .bin format
+		if (mode=='xi') or (mode=='Xi'):
+			with open('xi_linear_M51_'+str(vmin)+'to'+str(vmax)+'_VELOCITY.csv', 'w') as csvfile:		# Saves the following into 'xi_linear_M51_40to80_VELOCITY.csv'.
+			    writer = csv.writer(csvfile)
+			    [writer.writerow(r) for r in t3]
+			f = file('xi_linear_M51_'+str(vmin)+'to'+str(vmax)+'_VELOCITY.bin','wb')			# Saves the following into 'xi_linear_M51_40to80_VELOCITY.bin'.
+			np.save(f,t3)
+			f.close()
+		else:
+			t3 = np.nan
 		print "NOTE: deltaX must be nonzero for principal axis plots to be generated."
 
 def arrayM33(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=1, deltadeltaV=1, drawmap = False, normalization=False, xi_mode=0):
@@ -847,6 +884,43 @@ def drawM33(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=1, delta
 		return t,t2,t3
 
 	else:
+		# "t3" - Table containing the two coefficients of the linear fit of log(correlation function) vs log(shift in radial velocity), for EACH REGION.
+
+		if (mode=='xi') or (mode=='Xi'):
+			i = 0
+			for ymax in range(height, data.shape[1], height/2):
+				for xmax in range(width,data.shape[2],width/2):
+					ymin = ymax-height
+					xmin = xmax-height
+					testcube = data[vmin:vmax,ymin:ymax,xmin:xmax]
+					if (np.float(np.count_nonzero(np.isnan(testcube))) / np.float(np.count_nonzero(testcube))) < 0.05:
+						ymin_array[i] = ymin
+						ymax_array[i] = ymax
+						xmin_array[i] = xmin
+						xmax_array[i] = xmax
+
+						cubename[i] = galaxyname#+"_"+str(vmin)+"to"+str(vmax)+"_"+str(ymin)+"to"+str(ymax)+"_"+str(xmin)+"to"+str(xmax)
+
+						i = i+1
+
+			t3 = Table([cubename,ymin_array,ymax_array,xmin_array,xmax_array,coeff_a,coeff_b],names=('Cube Name','ymin','ymax','xmin','xmax',\
+														'intercept (a)', 'slope (b)'), meta={'name': 'TABLE'})
+			t3['ymin'].unit='pixels'
+			t3['ymax'].unit='pixels'
+			t3['xmin'].unit='pixels'
+			t3['xmax'].unit='pixels'
+
+		# Save table 't3' as a list in .csv format
+		# Save table 't3' as an array in .bin format
+		if (mode=='xi') or (mode=='Xi'):
+			with open('xi_linear_M33_'+str(vmin)+'to'+str(vmax)+'_VELOCITY.csv', 'w') as csvfile:		# Saves the following into 'xi_linear_M33_40to80_VELOCITY.csv'.
+			    writer = csv.writer(csvfile)
+			    [writer.writerow(r) for r in t3]
+			f = file('xi_linear_M33_'+str(vmin)+'to'+str(vmax)+'_VELOCITY.bin','wb')			# Saves the following into 'xi_linear_M33_40to80_VELOCITY.bin'.
+			np.save(f,t3)
+			f.close()
+		else:
+			t3 = np.nan
 		print "NOTE: deltaX must be nonzero for principal axis plots to be generated."
 
 def extremacoords(theta,linearray1_min,radlist):

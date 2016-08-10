@@ -91,6 +91,13 @@ def plotM51(mode='S2',vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadelt
             f = file('xi_linear_M51_'+str(vmin)+'to'+str(vmax)+'.bin','rb')
             table3 = np.load(f)
             f.close()
+            
+            if deltaX==0:
+                table3 = np.nan    # Clears table3, so that its replacement may be used by the same code.
+                
+                f = file('xi_linear_M51_'+str(vmin)+'to'+str(vmax)+'_VELOCITY.bin','rb')
+                table3 = np.load(f)
+                f.close()
     else:
         print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."
         return
@@ -340,12 +347,18 @@ def plotM51(mode='S2',vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadelt
         #        noticeably off-centre if "s" is an array.
         ax1.scatter(xcoord,ycoord,color='k',s=0.1)
         
-        ax1.set_title('xi Slopes over Various Regions in M51')
+        if deltaX != 0:
+            ax1.set_title('xi Slopes vs. Position Shift over Various Regions in M51')
+        else:
+            ax1.set_title('xi Slopes vs. Radial Velocity Shift over Various Regions in M51')
         ax1.set_ylabel('y-position (pixels)')
         ax1.set_xlabel('x-position (pixels)')
         ax1.legend()
         
-        plt.savefig('xi_slope_M51_'+str(vmin)+'to'+str(vmax)+'.png')
+        if deltaX != 0:
+            plt.savefig('xi_slope_M51_'+str(vmin)+'to'+str(vmax)+'.png')
+        else:
+            plt.savefig('xi_velocityslope_M51_'+str(vmin)+'to'+str(vmax)+'.png')
 
 	plt.clf()
 
@@ -434,6 +447,13 @@ def plotM33(mode='S2',vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadelt
             f = file('xi_linear_M33_'+str(vmin)+'to'+str(vmax)+'.bin','rb')
             table3 = np.load(f)
             f.close()
+            
+            if deltaX==0:
+                table3 = np.nan    # Clears table3, so that its replacement may be used by the same code.
+                
+                f = file('xi_linear_M33_'+str(vmin)+'to'+str(vmax)+'_VELOCITY.bin','rb')
+                table3 = np.load(f)
+                f.close()
     else:
         print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."
         return
@@ -682,12 +702,18 @@ def plotM33(mode='S2',vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadelt
         #        noticeably off-centre if "s" is an array.
         ax1.scatter(xcoord,ycoord,color='k',s=0.1)
         
-        ax1.set_title('xi Slopes over Various Regions in M33')
+        if deltaX != 0:
+            ax1.set_title('xi Slopes vs. Position Shift over Various Regions in M33')
+        else:
+            ax1.set_title('xi Slopes vs. Radial Velocity Shift over Various Regions in M33')
         ax1.set_ylabel('y-position (pixels)')
         ax1.set_xlabel('x-position (pixels)')
         ax1.legend()
         
-        plt.savefig('xi_slope_M33_'+str(vmin)+'to'+str(vmax)+'.png')
+        if deltaX != 0:
+            plt.savefig('xi_slope_M33_'+str(vmin)+'to'+str(vmax)+'.png')
+        else:
+            plt.savefig('xi_velocityslope_M33_'+str(vmin)+'to'+str(vmax)+'.png')
 
 	plt.clf()
 

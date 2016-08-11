@@ -78,39 +78,70 @@ def corrgen(subcube0, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV = 1):
 	ddY = np.copy(ddX)            	# Same as above, but for dY.
 	ddV = deltadeltaV		# Same as above, but for dV (in units of spectral resolutions). Not the same as ddX or ddY.
 	nmax = abs(2*dX/ddX)+1
-	xi = np.zeros([dV/ddV+1,nmax,nmax])
+	xi = np.zeros([np.abs(dV/ddV)+1,nmax,nmax])
 
 	p,n,m = data0.shape     # The subcube has n rows, m columns, and p "height units".
 
 
-	for delv in range (0,dV/ddV+1):                 # "delv" defined as "dv / ddV"
-	    for delx in range (-dX/ddX,dX/ddX+1):       # "delx" defined as "dx / ddX"
-		for dely in range (-dY/ddY,dY/ddY+1):   # "dely" defined as "dy / ddY"
+	if dV>=0:
+		for delv in range (0,dV/ddV+1):                 # "delv" defined as "dv / ddV"
+		    for delx in range (-dX/ddX,dX/ddX+1):       # "delx" defined as "dx / ddX"
+			for dely in range (-dY/ddY,dY/ddY+1):   # "dely" defined as "dy / ddY"
 
-		    dx = delx*ddX
-		    dy = dely*ddY
-		    dv = delv*ddV
+			    dx = delx*ddX
+			    dy = dely*ddY
+			    dv = delv*ddV
 		
-		    M = data0.value         		# This is the subcube information (unitless).
-		    P = np.arange(p*n*m).reshape(p,n,m) # This will be used to track the shifting "pixels" of M(r) and M(r+dr).
-		    D = np.zeros([p,n,m])   		# This will be the difference between M(r) and M(r+dr).
+			    M = data0.value         		# This is the subcube information (unitless).
+			    P = np.arange(p*n*m).reshape(p,n,m) # This will be used to track the shifting "pixels" of M(r) and M(r+dr).
+			    D = np.zeros([p,n,m])   		# This will be the difference between M(r) and M(r+dr).
 
-		    RollMap = np.roll((np.roll(np.roll(M,-dv,axis=0),-dy,axis=1)),-dx,axis=2)
-		    D = M - RollMap
+			    RollMap = np.roll((np.roll(np.roll(M,-dv,axis=0),-dy,axis=1)),-dx,axis=2)
+			    D = M - RollMap
 
-		    goodpix = (P - np.roll(P,-dv,axis=0) == -dv*n*m) * (P - np.roll(P,-dy,axis=1) == -dy*m) * (P - np.roll(P,-dx,axis=2) == -dx)
-		            # Note: The "-dy*m" is because, for P, a pixel's value is separated from that of a
-		            #        pixel above or below it by exactly m. So, the difference between a pixel's value and
-		            #        that of a pixel "dy" rows below is simply dy*m.
-			    #	    Similar case for a pixel "dv" layers below.
-			    #
-		            # In "goodpix", pixels that have wrapped around are treated as False.
+			    goodpix = (P - np.roll(P,-dv,axis=0) == -dv*n*m) * (P - np.roll(P,-dy,axis=1) == -dy*m) * (P - np.roll(P,-dx,axis=2) == -dx)
+				    # Note: The "-dy*m" is because, for P, a pixel's value is separated from that of a
+				    #        pixel above or below it by exactly m. So, the difference between a pixel's value and
+				    #        that of a pixel "dy" rows below is simply dy*m.
+				    #	    Similar case for a pixel "dv" layers below.
+				    #
+				    # In "goodpix", pixels that have wrapped around are treated as False.
 
-#		    OrigMapPower = np.nanmean(M[goodpix]**2)
-#		    RollMapPower = np.nanmean(RollMap[goodpix]**2)
+	#		    OrigMapPower = np.nanmean(M[goodpix]**2)
+	#		    RollMapPower = np.nanmean(RollMap[goodpix]**2)
 
-		    xi[(dv/ddV,(dy+dY)/ddY,(dx+dX)/ddX)] = (np.nanmean(D[goodpix]**2) - np.nanmean(M**2) - np.nanmean(RollMap**2)) / (-2*np.nanmean(M)**2)
-#		    Power = (OrigMapPower + RollMapPower)
+			    xi[(dv/ddV,(dy+dY)/ddY,(dx+dX)/ddX)] = (np.nanmean(D[goodpix]**2) - np.nanmean(M**2) - np.nanmean(RollMap**2)) / (-2*np.nanmean(M)**2)
+	#		    Power = (OrigMapPower + RollMapPower)
+	else:	# If dV < 0:
+		for delv in range (dV/ddV,0+1,1):                 	# "delv" defined as "dv / ddV"		# <-- (!) SAME AS ABOVE, but in the NEGATIVE "direction".
+		    for delx in range (-dX/ddX,dX/ddX+1):       	# "delx" defined as "dx / ddX"
+			for dely in range (-dY/ddY,dY/ddY+1):   	# "dely" defined as "dy / ddY"
+
+			    dx = delx*ddX
+			    dy = dely*ddY
+			    dv = delv*ddV
+		
+			    M = data0.value         		# This is the subcube information (unitless).
+			    P = np.arange(p*n*m).reshape(p,n,m) # This will be used to track the shifting "pixels" of M(r) and M(r+dr).
+			    D = np.zeros([p,n,m])   		# This will be the difference between M(r) and M(r+dr).
+
+			    RollMap = np.roll((np.roll(np.roll(M,-dv,axis=0),-dy,axis=1)),-dx,axis=2)
+			    D = M - RollMap
+
+			    goodpix = (P - np.roll(P,-dv,axis=0) == -dv*n*m) * (P - np.roll(P,-dy,axis=1) == -dy*m) * (P - np.roll(P,-dx,axis=2) == -dx)
+				    # Note: The "-dy*m" is because, for P, a pixel's value is separated from that of a
+				    #        pixel above or below it by exactly m. So, the difference between a pixel's value and
+				    #        that of a pixel "dy" rows below is simply dy*m.
+				    #	    Similar case for a pixel "dv" layers below.
+				    #
+				    # In "goodpix", pixels that have wrapped around are treated as False.
+
+	#		    OrigMapPower = np.nanmean(M[goodpix]**2)
+	#		    RollMapPower = np.nanmean(RollMap[goodpix]**2)
+
+			    xi[(-dv/ddV,(dy+dY)/ddY,(dx+dX)/ddX)] = (np.nanmean(D[goodpix]**2) - np.nanmean(M**2) - np.nanmean(RollMap**2)) / (-2*np.nanmean(M)**2)	# <-- (!) "-dv/ddV" so that xi[0]
+																					#    is dv=0, and xi[|dV|] is dv=dV.
+	#		    Power = (OrigMapPower + RollMapPower)
 
 	return xi
 
@@ -158,8 +189,8 @@ def mapgen(xi, deltaX=30, deltaV=3, deltadeltaV=1, mapname="3Dcube", filename = 
 	#plt.ylabel('Distance from Initial Location in y-direction (pc)')
 
 	plt.subplot(122)
-	plt.imshow(xi[dV/ddV], interpolation = 'none', extent = [-dX*pixelwidthPC,dX*pixelwidthPC,-dY*pixelwidthPC,dY*pixelwidthPC], vmin=0, vmax=xi.max(), aspect='auto', origin='lower')
-	if velocityres > 0:
+	plt.imshow(xi[np.abs(dV/ddV)], interpolation = 'none', extent = [-dX*pixelwidthPC,dX*pixelwidthPC,-dY*pixelwidthPC,dY*pixelwidthPC], vmin=0, vmax=xi.max(), aspect='auto', origin='lower')
+	if dV*velocityres > 0:
 	    plt.title('xi at +'+str('{0:.2f}'.format(dV*velocityres))+' km/s')
 	else:
 	    plt.title('xi at '+str('{0:.2f}'.format(dV*velocityres))+' km/s')
@@ -220,7 +251,7 @@ def plotgen(xi, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV=3, mapname="3Dcu
 
 		corr_funct = np.arange(nmax*reselements).reshape(nmax,reselements)
 
-		for i in range (0, dV/ddV+1):	# "delv" defined as "dv/ddV".
+		for i in range (0, np.abs(dV/ddV)+1):	# "delv" defined as "dv/ddV".
 			corr_funct[i], edges, counts = ss.binned_statistic(
 			radiusmap[radiusmap<maxradius], xi[i][radiusmap<maxradius], statistic=np.nanmean, bins = reselements)
 
@@ -228,7 +259,7 @@ def plotgen(xi, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV=3, mapname="3Dcu
 		fig = matplotlib.pyplot.gcf()	
 		fig.set_size_inches(15, 7)	# Enlarges the image so as to prevent squishing.
 		X = (np.arange(reselements)/mult) / ((reselements-1)/mult) * (dX**2 + dY**2)**0.5 * pixelwidthPC
-		for i in range (0, dV/ddV+1):
+		for i in range (0, np.abs(dV/ddV)+1):
 		    if velocityres > 0:
 			plt.plot(X[X<dX*pixelwidthPC], corr_funct[i][X<dX*pixelwidthPC],label='xi at +'+str('{0:.2f}'.format(i*ddV*velocityres))+' km/s')
 		    else:
@@ -302,21 +333,19 @@ def plotgen(xi, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV=3, mapname="3Dcu
 		fig = matplotlib.pyplot.gcf()	
 		fig.set_size_inches(15, 7)			# Enlarges the image so as to prevent squishing.
 
-		V = (np.arange(dV/ddV+1)) * velocityres		# This is an array of the different velocity shift values.
-		if filename =='m33.co21_iram_CLEANED':
+		V = (np.arange(np.abs(dV/ddV)+1)) * velocityres	* (dV/np.abs(dV))	# This is an array of the different velocity shift values.
+		if (V[0]<=0) and (V[-1]<0):
 		    V = V*-1					# Flips sign of x-axis, so that the log of xi can be taken properly.
 
-		    plt.plot(V, corr_funct,label='xi vs. negative radial velocity shift')
+		    plt.plot(V, corr_funct,label='xi vs. NEGATIVE radial velocity shift')
 		    plt.title('Corr. Funct. vs. "Radial Velocity Shift" from Center of xi Plots')
 		    plt.xlabel('Shift in Radial Velocity in the NEGATIVE Direction (km/s)')
 		    plt.ylabel('xi')
-		elif filename =='paws_norot':
+		else:
 		    plt.plot(V, corr_funct,label='xi vs. radial velocity shift')
 		    plt.title('Corr. Funct. vs. "Radial Velocity Shift" from Center of xi Plots')
 		    plt.xlabel('Shift in Radial Velocity (km/s)')
 		    plt.ylabel('xi')
-		else:
-		    print "ERROR: Galaxy selected is neither M51 nor M33."
 
 		plt.yscale('log')
 		plt.xscale('log')
@@ -386,7 +415,7 @@ def everythinggen(vmin, vmax, ymin, ymax, xmin, xmax, xi, deltaX, deltaV, deltad
 
 	corr_funct = np.arange(nmax*reselements).reshape(nmax,reselements)
 
-	for i in range (0, dV/ddV+1):	# "delv" defined as "dv/ddV".
+	for i in range (0, np.abs(dV/ddV)+1):	# "delv" defined as "dv/ddV".
 		corr_funct[i], edges, counts = ss.binned_statistic(
 		radiusmap[radiusmap<maxradius], xi[i][radiusmap<maxradius], statistic=np.nanmean, bins = reselements)
 	X = (np.arange(reselements)/mult) / ((reselements-1)/mult) * (dX**2 + dY**2)**0.5 * pixelwidthPC
@@ -424,11 +453,11 @@ def everythinggen(vmin, vmax, ymin, ymax, xmin, xmax, xi, deltaX, deltaV, deltad
 
 	#ax3 = fig.add_subplot(133)
 	### Plot
-	for i in range (0, dV/ddV+1):
-	    if velocityres > 0:
-		ax3.plot(X, corr_funct[i],label='xi at +'+str('{0:.2f}'.format(i*ddV*velocityres))+' km/s')
+	for i in range (0, np.abs(dV/ddV)+1):
+	    if dV*velocityres > 0:
+		ax3.plot(X, corr_funct[i],label='xi at +'+str('{0:.2f}'.format(i*ddV*velocityres*dV/np.abs(dV)))+' km/s')
 	    else:
-		ax3.plot(X, corr_funct[i],label='xi at '+str('{0:.2f}'.format(i*ddV*velocityres))+' km/s')
+		ax3.plot(X, corr_funct[i],label='xi at '+str('{0:.2f}'.format(i*ddV*velocityres*dV/np.abs(dV)))+' km/s')
 	ax3.set_title('Avg. Corr. Funct. vs. Radial "Distance" from Center of xi Plots')
 	ax3.set_xlabel('Distance from Initial Location (pc)')
 	ax3.set_ylabel('Average xi')

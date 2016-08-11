@@ -43,12 +43,20 @@ def plotM51(mode='S2',vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadelt
         of the galaxy, marking the positions of the various regions on the map 
         and indicating their respective xi best-fit slopes with differently-sized 
         markers.
-	Does not work with S2.
+        Does not work with S2.
+        
+    drawmode=4 : "xi slope comparison mode"
+        Takes the tables of coefficients of the lines-of-best-fit for "xi vs.
+        radial velocity shift" and "xi vs. position shift; and compares the slopes
+        for each of the regions of the galaxy.
+        Does not work with S2.
 
     Parameters:
     -----------
     vmin,...,deltadeltaV : int
         Parameters used in relevant S_2/xi map.
+        If deltaX==0, then "xi slope mode" will use the slopes of "xi vs.
+        radial velocity shift" instead of "xi vs. position shift".
     drawmode : int (0, 1, or 2)
         Changes the mode of the function.
     """
@@ -91,13 +99,10 @@ def plotM51(mode='S2',vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadelt
             f = file('xi_linear_M51_'+str(vmin)+'to'+str(vmax)+'.bin','rb')
             table3 = np.load(f)
             f.close()
-            
-            if deltaX==0:
-                table3 = np.nan    # Clears table3, so that its replacement may be used by the same code.
                 
-                f = file('xi_linear_M51_'+str(vmin)+'to'+str(vmax)+'_VELOCITY.bin','rb')
-                table3 = np.load(f)
-                f.close()
+            f = file('xi_linear_M51_'+str(vmin)+'to'+str(vmax)+'_VELOCITY.bin','rb')
+            table4 = np.load(f)
+            f.close()
     else:
         print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."
         return
@@ -278,6 +283,11 @@ def plotM51(mode='S2',vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadelt
             print "ERROR: This mode only works for the mode=='xi'."
             return
 
+        if deltaX==0:               # Basically, enables "xi vs. velocity shift" mode if deltaX==0.
+            table3 = np.nan
+            table3 = np.copy(table4)
+            
+        
         coeff_a = np.zeros(table3.size)      # Intercept of linear fit
         coeff_b = np.zeros(table3.size)      # Slope of best fit
         ymin = np.zeros(table3.size)
@@ -348,9 +358,9 @@ def plotM51(mode='S2',vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadelt
         ax1.scatter(xcoord,ycoord,color='k',s=0.1)
         
         if deltaX != 0:
-            ax1.set_title('xi Slopes vs. Position Shift over Various Regions in M51')
+            ax1.set_title('"xi vs. Position Shift" Slopes over Various Regions in M51')
         else:
-            ax1.set_title('xi Slopes vs. Radial Velocity Shift over Various Regions in M51')
+            ax1.set_title('"xi vs. Radial Velocity Shift" Slopes over Various Regions in M51')
         ax1.set_ylabel('y-position (pixels)')
         ax1.set_xlabel('x-position (pixels)')
         ax1.legend()
@@ -362,11 +372,51 @@ def plotM51(mode='S2',vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadelt
 
 	plt.clf()
 
+
+    elif drawmode==4:
+        print "xi Slope Comparison Mode activated"
+                
+        if (mode!='xi') and (mode!='Xi'):
+            print "ERROR: This mode only works for the mode=='xi'."
+            return
+        
+        if table3.size != table4.size:
+            print "ERROR: Something went wrong! The two tables for slopes should have matching size."
+            # ^ table3 and table4 should have the exact same size.
+            return
+        
+        
+        b_pos = np.zeros(table3.size)      # Slope of best fit, for xi vs. position shift
+        b_vel = np.zeros(table4.size)      # Slope of best fit, for xi vs. velocity shift
+        ymin = np.zeros(table3.size)
+        ymax = np.zeros(table3.size)
+        xmin = np.zeros(table3.size)
+        xmax = np.zeros(table3.size)
+        
+        for i in range(0,table3.size):
+            ymin[i],ymax[i] = table3[i][1], table3[i][2]
+            xmin[i],xmax[i] = table3[i][3], table3[i][4]
+
+            b_pos[i] = table3[i][6]
+            b_vel[i] = table4[i][6]
+
+        fig = plt.gcf()
+        fig.set_size_inches(15,7.5)	# Enlarges the image so as to prevent squishing.
+        plt.scatter(b_pos,b_vel)
+        plt.xlabel('Slope for "xi vs. position shift" (dV==0)')
+        plt.ylabel('Slope for "xi vs. velocity shift" (dR==0)')
+        plt.title('Slopes for dR==0 vs. Slopes for dV==0')
+        
+        
+        plt.savefig('xi_slopecomparison_M51_'+str(vmin)+'to'+str(vmax)+'.png')
+        plt.clf() 
+        
     else:
         print "ERROR: Select drawmode=0 (Extrema Distance Mode),\
         \n              drawmode=1 (Extrema Coordinates Mode),\
         \n              drawmode=2 (S_2/xi Threshold Mode),\
-        \n              or drawmode=3 (xi Slope Mode)."
+        \n              drawmode=3 (xi Slope Mode),\
+        \n              or drawmode=4 (xi Slope Comparison Mode)."
 
 
 def plotM33(mode='S2',vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadeltaV=1,drawmode=0):
@@ -399,12 +449,20 @@ def plotM33(mode='S2',vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadelt
         of the galaxy, marking the positions of the various regions on the map 
         and indicating their respective xi best-fit slopes with differently-sized 
         markers.
-	Does not work with S2.
+        Does not work with S2.
+        
+    drawmode=4 : "xi slope comparison mode"
+        Takes the tables of coefficients of the lines-of-best-fit for "xi vs.
+        radial velocity shift" and "xi vs. position shift; and compares the slopes
+        for each of the regions of the galaxy.
+        Does not work with S2.
 
     Parameters:
     -----------
     vmin,...,deltadeltaV : int
         Parameters used in relevant S_2/xi map.
+        If deltaX==0, then "xi slope mode" will use the slopes of "xi vs.
+        radial velocity shift" instead of "xi vs. position shift".
     drawmode : int (0, 1, or 2)
         Changes the mode of the function.
     """
@@ -447,13 +505,10 @@ def plotM33(mode='S2',vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadelt
             f = file('xi_linear_M33_'+str(vmin)+'to'+str(vmax)+'.bin','rb')
             table3 = np.load(f)
             f.close()
-            
-            if deltaX==0:
-                table3 = np.nan    # Clears table3, so that its replacement may be used by the same code.
                 
-                f = file('xi_linear_M33_'+str(vmin)+'to'+str(vmax)+'_VELOCITY.bin','rb')
-                table3 = np.load(f)
-                f.close()
+            f = file('xi_linear_M33_'+str(vmin)+'to'+str(vmax)+'_VELOCITY.bin','rb')
+            table4 = np.load(f)
+            f.close()
     else:
         print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."
         return
@@ -633,6 +688,11 @@ def plotM33(mode='S2',vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadelt
             print "ERROR: This mode only works for the mode=='xi'."
             return
 
+        if deltaX==0:               # Basically, enables "xi vs. velocity shift" mode if deltaX==0.
+            table3 = np.nan
+            table3 = np.copy(table4)
+            
+        
         coeff_a = np.zeros(table3.size)      # Intercept of linear fit
         coeff_b = np.zeros(table3.size)      # Slope of best fit
         ymin = np.zeros(table3.size)
@@ -696,29 +756,69 @@ def plotM33(mode='S2',vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadelt
 
         
         for i in range(0,xcoord.size-1):
-            ax1.scatter(xcoord[i],ycoord[i],color='red',s=size1_pos[i])
+            ax1.scatter(xcoord[i],ycoord[i],c='red',s=size1_pos[i])
             ax1.scatter(xcoord[i],ycoord[i],c='blue',s=size1_neg[i])
         # ^ The loop shouldn't be necessary; however, there is a freak bug that causes the circles to be
         #        noticeably off-centre if "s" is an array.
         ax1.scatter(xcoord,ycoord,color='k',s=0.1)
         
         if deltaX != 0:
-            ax1.set_title('xi Slopes vs. Position Shift over Various Regions in M33')
+            ax1.set_title('"xi vs. Position Shift" Slopes over Various Regions in M51')
         else:
-            ax1.set_title('xi Slopes vs. Radial Velocity Shift over Various Regions in M33')
+            ax1.set_title('"xi vs. Radial Velocity Shift" Slopes over Various Regions in M51')
         ax1.set_ylabel('y-position (pixels)')
         ax1.set_xlabel('x-position (pixels)')
         ax1.legend()
         
         if deltaX != 0:
-            plt.savefig('xi_slope_M33_'+str(vmin)+'to'+str(vmax)+'.png')
+            plt.savefig('xi_slope_M51_'+str(vmin)+'to'+str(vmax)+'.png')
         else:
-            plt.savefig('xi_velocityslope_M33_'+str(vmin)+'to'+str(vmax)+'.png')
+            plt.savefig('xi_velocityslope_M51_'+str(vmin)+'to'+str(vmax)+'.png')
 
 	plt.clf()
 
+
+    elif drawmode==4:
+        print "xi Slope Comparison Mode activated"
+                
+        if (mode!='xi') and (mode!='Xi'):
+            print "ERROR: This mode only works for the mode=='xi'."
+            return
+        
+        if table3.size != table4.size:
+            print "ERROR: Something went wrong! The two tables for slopes should have matching size."
+            # ^ table3 and table4 should have the exact same size.
+            return
+        
+        
+        b_pos = np.zeros(table3.size)      # Slope of best fit, for xi vs. position shift
+        b_vel = np.zeros(table4.size)      # Slope of best fit, for xi vs. velocity shift
+        ymin = np.zeros(table3.size)
+        ymax = np.zeros(table3.size)
+        xmin = np.zeros(table3.size)
+        xmax = np.zeros(table3.size)
+        
+        for i in range(0,table3.size):
+            ymin[i],ymax[i] = table3[i][1], table3[i][2]
+            xmin[i],xmax[i] = table3[i][3], table3[i][4]
+
+            b_pos[i] = table3[i][6]
+            b_vel[i] = table4[i][6]
+
+        fig = plt.gcf()
+        fig.set_size_inches(15,7.5)	# Enlarges the image so as to prevent squishing.
+        plt.scatter(b_pos,b_vel)
+        plt.xlabel('Slope for "xi vs. position shift" (dV==0)')
+        plt.ylabel('Slope for "xi vs. velocity shift" (dR==0)')
+        plt.title('Slopes for dR==0 vs. Slopes for dV==0')
+        
+        
+        plt.savefig('xi_slopecomparison_M33_'+str(vmin)+'to'+str(vmax)+'.png')
+        plt.clf() 
+        
     else:
         print "ERROR: Select drawmode=0 (Extrema Distance Mode),\
         \n              drawmode=1 (Extrema Coordinates Mode),\
         \n              drawmode=2 (S_2/xi Threshold Mode),\
-        \n              or drawmode=3 (xi Slope Mode)."
+        \n              drawmode=3 (xi Slope Mode),\
+        \n              or drawmode=4 (xi Slope Comparison Mode)."

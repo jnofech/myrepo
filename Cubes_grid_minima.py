@@ -590,7 +590,7 @@ def plotM33(mode='S2',vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadelt
             minima3[i] = np.sqrt( y3**2 + x3**2 )
             
         maxdist = max(np.nanmax(minima1),np.nanmax(minima2),np.nanmax(minima3))    # Largest measured extrema distance.
-        sizemax=1000                                                # Size of the largest dot for M51. Set to 600 for M33.
+        sizemax=600                                                # Size of the largest dot for M51. Set to 600 for M33.
         
         xcoord = (xmax+xmin)/2.0
         ycoord = (ymax+ymin)/2.0
@@ -763,17 +763,17 @@ def plotM33(mode='S2',vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadelt
         ax1.scatter(xcoord,ycoord,color='k',s=0.1)
         
         if deltaX != 0:
-            ax1.set_title('"xi vs. Position Shift" Slopes over Various Regions in M51')
+            ax1.set_title('"xi vs. Position Shift" Slopes over Various Regions in M33')
         else:
-            ax1.set_title('"xi vs. Radial Velocity Shift" Slopes over Various Regions in M51')
+            ax1.set_title('"xi vs. Radial Velocity Shift" Slopes over Various Regions in M33')
         ax1.set_ylabel('y-position (pixels)')
         ax1.set_xlabel('x-position (pixels)')
         ax1.legend()
         
         if deltaX != 0:
-            plt.savefig('xi_slope_M51_'+str(vmin)+'to'+str(vmax)+'.png')
+            plt.savefig('xi_slope_M33_'+str(vmin)+'to'+str(vmax)+'.png')
         else:
-            plt.savefig('xi_velocityslope_M51_'+str(vmin)+'to'+str(vmax)+'.png')
+            plt.savefig('xi_velocityslope_M33_'+str(vmin)+'to'+str(vmax)+'.png')
 
 	plt.clf()
 

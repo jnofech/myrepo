@@ -268,8 +268,10 @@ def plotgen(xi, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV=3, mapname="3Dcu
 		for i in range (0, np.abs(dV/ddV)+1):
 		    if dV*velocityres > 0:
 			plt.plot(x_axis[x_axis<dX*pixelwidthPC], corr_funct[i][x_axis<dX*pixelwidthPC],label='xi at +'+str('{0:.2f}'.format(i*ddV*velocityres*dV/np.abs(dV)))+' km/s')
-		    else:
+		    elif dV*velocityres < 0:
 			plt.plot(x_axis[x_axis<dX*pixelwidthPC], corr_funct[i][x_axis<dX*pixelwidthPC],label='xi at '+str('{0:.2f}'.format(i*ddV*velocityres*dV/np.abs(dV)))+' km/s')
+		    else:
+			plt.plot(x_axis[x_axis<dX*pixelwidthPC], corr_funct[i][x_axis<dX*pixelwidthPC],label='xi at '+str('{0:.2f}'.format(i*ddV*velocityres))+' km/s')
 		plt.title('Avg. Corr. Funct. vs. Radial "Distance" from Center of xi Plots')
 		plt.xlabel('Distance from Initial Location (pc)')
 		plt.ylabel('Average xi')
@@ -500,8 +502,10 @@ def everythinggen(vmin, vmax, ymin, ymax, xmin, xmax, xi, deltaX, deltaV, deltad
 	for i in range (0, np.abs(dV/ddV)+1):
 	    if dV*velocityres > 0:
 		ax3.plot(X, corr_funct[i],label='xi at +'+str('{0:.2f}'.format(i*ddV*velocityres*dV/np.abs(dV)))+' km/s')
-	    else:
+	    elif dV*velocityres < 0:
 		ax3.plot(X, corr_funct[i],label='xi at '+str('{0:.2f}'.format(i*ddV*velocityres*dV/np.abs(dV)))+' km/s')
+	    else:
+		ax3.plot(X, corr_funct[i],label='xi at '+str('{0:.2f}'.format(i*ddV*velocityres))+' km/s')
 	ax3.set_title('Avg. Corr. Funct. vs. Radial "Distance" from Center of xi Plots')
 	ax3.set_xlabel('Distance from Initial Location (pc)')
 	ax3.set_ylabel('Average xi')

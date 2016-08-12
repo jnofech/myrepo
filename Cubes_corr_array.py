@@ -36,11 +36,14 @@ def generate(galaxyname='M51',vmin=40, vmax=80, ymin=200, ymax=400, xmin=360, xm
 		instead of the usual one.
 	xi_mode : int
 		For xi calculations only. 
-		When "xi_mode" is 0, the program will use a cube from the default 
-			.fits file and a "noise cube" from that same .fits file.
-		When "xi_mode" is 1, the program will use ONLY a cube from the 
-			filename+"_blank" .fits file, which is assumed to have 
-			NO NOISE.
+		When "xi_mode" is 0, the program will use a cube from the default .fits
+			file and a "convolved cube" from that same .fits file.
+		When "xi_mode" is 1 (OBSOLETE), the program will use ONLY a cube from 
+			the filename +"_blank" .fits file, which is assumed to have NO 
+			NOISE.
+		When "xi_mode" is 2, the program functions like "xi_mode==0" EXCEPT it
+			then subtracts two similar maps that are assumed to be made 
+			entirely of noise.
 	
 	Returns (DISABLED at the moment):
 	-----------
@@ -69,6 +72,8 @@ def generate(galaxyname='M51',vmin=40, vmax=80, ymin=200, ymax=400, xmin=360, xm
 		tempname = 'saved_xiarray_'+imagename+'_dV_is_'+str(deltaV)+'_dX_is_'+str(deltaX)
 	if xi_mode==1:
 		tempname = tempname+"_blank"
+	elif xi_mode==2:
+		tempname = tempname+"_subtracted"
 
 #	if normalization==True:
 #		tempname = tempname+"_norm"
@@ -86,7 +91,7 @@ def generate(galaxyname='M51',vmin=40, vmax=80, ymin=200, ymax=400, xmin=360, xm
 		print 'ERROR: Galaxy must be M51 or M33.'
 		return
 
-	theta = anglefinder( (array[0].max()-array[0])**2 ,False)			# Added the (  )**2 at Dr. Rosolowsky's suggestion.
+	theta = anglefinder( (array[0])**2 ,False)			# Added the (  )**2 at Dr. Rosolowsky's suggestion.
 	linearrayx, linearray1, linearray2, maxradius1, maxradius2 = slicer(theta, array[0], nmax)
 	linearray1_min, thres_radii, radlist = plot(theta,maxradius1,maxradius2,array,linearrayx,linearray1,linearray2, filename, imagename, deltaX, deltaV, xithreshold)
 

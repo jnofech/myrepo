@@ -388,6 +388,8 @@ def plotM51(mode='S2',vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadelt
         
         b_pos = np.zeros(table3.size)      # Slope of best fit, for xi vs. position shift
         b_vel = np.zeros(table4.size)      # Slope of best fit, for xi vs. velocity shift
+        b_pos_error = np.zeros(table3.size)
+        b_vel_error = np.zeros(table4.size)
         ymin = np.zeros(table3.size)
         ymax = np.zeros(table3.size)
         xmin = np.zeros(table3.size)
@@ -398,11 +400,14 @@ def plotM51(mode='S2',vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadelt
             xmin[i],xmax[i] = table3[i][3], table3[i][4]
 
             b_pos[i] = table3[i][6]
+            b_pos_error[i] = table3[i][8]
             b_vel[i] = table4[i][6]
-
+            b_vel_error[i] = table4[i][8]
+            
         fig = plt.gcf()
         fig.set_size_inches(15,7.5)	# Enlarges the image so as to prevent squishing.
         plt.scatter(b_pos,b_vel)
+        plt.errorbar(b_pos,b_vel,xerr=b_pos_error,yerr=b_vel_error,fmt=None)
         plt.xlabel('Slope for "xi vs. position shift" (dV==0)')
         plt.ylabel('Slope for "xi vs. velocity shift" (dR==0)')
         plt.title('Slopes for dR==0 vs. Slopes for dV==0')
@@ -793,6 +798,8 @@ def plotM33(mode='S2',vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadelt
         
         b_pos = np.zeros(table3.size)      # Slope of best fit, for xi vs. position shift
         b_vel = np.zeros(table4.size)      # Slope of best fit, for xi vs. velocity shift
+        b_pos_error = np.zeros(table3.size)
+        b_vel_error = np.zeros(table4.size)
         ymin = np.zeros(table3.size)
         ymax = np.zeros(table3.size)
         xmin = np.zeros(table3.size)
@@ -803,11 +810,14 @@ def plotM33(mode='S2',vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadelt
             xmin[i],xmax[i] = table3[i][3], table3[i][4]
 
             b_pos[i] = table3[i][6]
+            b_pos_error[i] = table3[i][8]
             b_vel[i] = table4[i][6]
-
+            b_vel_error[i] = table4[i][8]
+            
         fig = plt.gcf()
         fig.set_size_inches(15,7.5)	# Enlarges the image so as to prevent squishing.
         plt.scatter(b_pos,b_vel)
+        plt.errorbar(b_pos,b_vel,xerr=b_pos_error,yerr=b_vel_error,fmt=None)
         plt.xlabel('Slope for "xi vs. position shift" (dV==0)')
         plt.ylabel('Slope for "xi vs. velocity shift" (dR==0)')
         plt.title('Slopes for dR==0 vs. Slopes for dV==0')

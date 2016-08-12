@@ -204,15 +204,19 @@ def mapgen(xi, deltaX=30, deltaV=3, deltadeltaV=1, mapname="3Dcube", filename = 
 	plt.savefig('map_xi_'+mapname+'.png')
 	plt.clf()			# Clears the figure, allowing "Figure 2" to be used again if a function calls on mapgen more than once.
 
-def plotgen(xi, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV=3, mapname="3Dcube", filename="paws_norot"):
+def plotgen(xi, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV=3, mapname="3Dcube", filename="paws_norot", J = 10000):
 	"""Generates and saves a 1D plot of the azimuthally-averaged correlation function  
 	   versus radius, for each value of "dv".
 
 	   Argument format: (xi, deltaX, deltaV, deltadeltaX, deltadeltaV, mapname="3Dcube", 
-	   filename="paws_norot"). Plots are created using the resulting 3D matrix from corrgen, 
-	   and the same deltaX, deltaV, deltadeltaX, deltadeltaV that were used in corrgen.
+	   filename="paws_norot", J=1000). Plots are created using the resulting 3D matrix 
+	   from corrgen, and the same deltaX, deltaV, deltadeltaX, deltadeltaV that were used
+	   in corrgen. The "J" at the end is the number of iterations used in the bootstrap
+	   algorithm that will be used to generate error bars for the slope of the plot.
 
 	   Be sure that your filename and desired plot name (same as in mapgen) are in quotes."""
+
+
 
 	if deltaX != 0:
 		# Goal: Create a 1D plot, for each value of "dv", of the average value of correlation function (inside a thin ring
@@ -258,12 +262,14 @@ def plotgen(xi, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV=3, mapname="3Dcu
 		plt.figure(3)
 		fig = matplotlib.pyplot.gcf()	
 		fig.set_size_inches(15, 7)	# Enlarges the image so as to prevent squishing.
-		X = (np.arange(reselements)/mult) / ((reselements-1)/mult) * (dX**2 + dY**2)**0.5 * pixelwidthPC
+		x_axis = (np.arange(reselements)/mult) / ((reselements-1)/mult) * (dX**2 + dY**2)**0.5 * pixelwidthPC
+
+		# Creates the plot.
 		for i in range (0, np.abs(dV/ddV)+1):
-		    if velocityres > 0:
-			plt.plot(X[X<dX*pixelwidthPC], corr_funct[i][X<dX*pixelwidthPC],label='xi at +'+str('{0:.2f}'.format(i*ddV*velocityres))+' km/s')
+		    if dV*velocityres > 0:
+			plt.plot(x_axis[x_axis<dX*pixelwidthPC], corr_funct[i][x_axis<dX*pixelwidthPC],label='xi at +'+str('{0:.2f}'.format(i*ddV*velocityres*dV/np.abs(dV)))+' km/s')
 		    else:
-			plt.plot(X[X<dX*pixelwidthPC], corr_funct[i][X<dX*pixelwidthPC],label='xi at '+str('{0:.2f}'.format(i*ddV*velocityres))+' km/s')
+			plt.plot(x_axis[x_axis<dX*pixelwidthPC], corr_funct[i][x_axis<dX*pixelwidthPC],label='xi at '+str('{0:.2f}'.format(i*ddV*velocityres*dV/np.abs(dV)))+' km/s')
 		plt.title('Avg. Corr. Funct. vs. Radial "Distance" from Center of xi Plots')
 		plt.xlabel('Distance from Initial Location (pc)')
 		plt.ylabel('Average xi')
@@ -272,8 +278,8 @@ def plotgen(xi, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV=3, mapname="3Dcu
 		plt.xscale('log')
 
 		# Calculates the intercept (a) and slope (b) of log(average "xi") vs. log(radial distance) at distances between 50pc and 250pc.
-		Y = corr_funct[0][X<dX*pixelwidthPC]
-		X = X[X<dX*pixelwidthPC]
+		Y = corr_funct[0][x_axis<dX*pixelwidthPC]
+		X = x_axis[x_axis<dX*pixelwidthPC]
 
 		Y = Y[X>=50]
 		X = X[X>=50]
@@ -285,6 +291,22 @@ def plotgen(xi, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV=3, mapname="3Dcu
 		coeff_b, coeff_a = np.polyfit(X[gooddata], Y[gooddata], 1)
 		print coeff_a, coeff_b
 
+		# Generates standard deviation of slope (and, from there, error bars) using a bootstrap algorithm.
+		b_trial = [None]*J		# "J" is the number of iterations the bootstrap algorithm will loop through.
+		a_trial = [None]*J
+
+		X_good = X[gooddata]
+		Y_good = Y[gooddata]
+		index = np.arange(X_good.size)
+
+		for j in range(0,J):
+		    choices = np.random.choice(index, size=index.size, replace=True)
+		    b_trial[j],a_trial[j] = np.polyfit(X_good[choices],Y_good[choices],1)
+
+		b_error = np.std(b_trial)
+		a_error = np.std(a_trial)
+
+
 		# Plots the line (or, without the log-log plot, curve) of best fit.
 		if velocityres>0:
 			plt.plot(10**X,10**(coeff_a + coeff_b*X),'k--',label='Best fit, at +'+str('{0:.2f}'.format(0*ddV*velocityres))+' km/s')
@@ -292,7 +314,6 @@ def plotgen(xi, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV=3, mapname="3Dcu
 			plt.plot(10**X,10**(coeff_a + coeff_b*X),'k--',label='Best fit, at '+str('{0:.2f}'.format(0*ddV*velocityres))+' km/s')
 		plt.legend(loc='upper right')
 
-	#	plt.figtext(0.09,0.1,'egg')
 		if coeff_b > 0:
 			plt.figtext(.15,.15,"Best fit, from 50pc to 250pc: \nlog(xi) = "+str(coeff_a)+" + "+str(coeff_b)+"log(radius)")
 		else:
@@ -300,8 +321,16 @@ def plotgen(xi, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV=3, mapname="3Dcu
 		plt.savefig('plot_xi_'+mapname+'.png')
 		plt.clf()
 
+		# Plots and saves a histogram of the trial slopes from earlier.
+#		print b_trial
+		plt.hist(b_trial,bins=75)
+		plt.title('Distribution of Trial Slopes')
+		plt.xlabel('Trial Slope')
+		plt.ylabel('# of Appearances')
+		plt.savefig('plot_hist_xi_'+mapname+'.png')
+		plt.clf()
 
-		return coeff_a, coeff_b
+		return coeff_a, coeff_b, a_error, b_error
 
 	elif deltaX==0:
 		# Goal: Create a 1D plot of the correlation function at each shift in velocity resolution element "dv". Basically, "xi" vs. "shift in radial velocity".
@@ -361,6 +390,21 @@ def plotgen(xi, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV=3, mapname="3Dcu
 		gooddata = np.isfinite(X)*np.isfinite(Y)
 		coeff_b, coeff_a = np.polyfit(X[gooddata], Y[gooddata], 1)
 
+		# Generates standard deviation of slope (and, from there, error bars) using a bootstrap algorithm.
+		b_trial = [None]*J		# "J" is the number of iterations the bootstrap algorithm will loop through.
+		a_trial = [None]*J
+
+		X_good = X[gooddata]
+		Y_good = Y[gooddata]
+		index = np.arange(X_good.size)
+
+		for j in range(0,J):
+		    choices = np.random.choice(index, size=index.size, replace=True)
+		    b_trial[j],a_trial[j] = np.polyfit(X_good[choices],Y_good[choices],1)
+
+		b_error = np.std(b_trial)
+		a_error = np.std(a_trial)
+
 		# Plots the line (or, without the log-log plot, curve) of best fit.
 
 		plt.plot(10**X,10**(coeff_a + coeff_b*X),'k--',label='Best fit')
@@ -373,7 +417,7 @@ def plotgen(xi, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV=3, mapname="3Dcu
 		plt.savefig('plot_xi_'+mapname+'.png')
 		plt.clf()
 
-		return coeff_a, coeff_b
+		return coeff_a, coeff_b, a_error, b_error
 
 
 def everythinggen(vmin, vmax, ymin, ymax, xmin, xmax, xi, deltaX, deltaV, deltadeltaX, deltadeltaV, imagename, filename):

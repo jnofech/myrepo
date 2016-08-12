@@ -271,7 +271,7 @@ def drawM51(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, delta
 #	Cubes_corr_multi.draw(80,120,150,300,150,300,deltaX,1,deltadeltaX,deltadeltaV,filename,galaxyname,0)
 #	Cubes_corr_multi.draw(80,120,150,300,375,525,deltaX,1,deltadeltaX,deltadeltaV,filename,galaxyname,0)
 #
-#	Cubes_corr_multi.draw(40,80,75,225,450,600,deltaX,0,deltadeltaX,deltadeltaV,filename,galaxyname,1)
+#	Cubes_corr_multi.draw(40,80,75,225,450,600,deltaX,0,deltadeltaX,deltadeltaV,filename,galaxyname,2)
 
 	cubename = [None]*imax
 	ymin_array = [None]*imax

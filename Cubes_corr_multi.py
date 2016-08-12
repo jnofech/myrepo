@@ -1,4 +1,4 @@
- 
+
 # 6.15.16 - Calculates and plots xi using functions from "Cubes_corr.py".
 
 print('\nWelcome to Cubes_corr_multi! \n \nAvailable functions: \n  array: Saves a "xi" array. \n  draw: Generates a 2D map and 1D plot of xi.  \n  arrayM51: Activates "array" for several preset subcubes all at\n                        once for M51.\n  drawM51: Activates "draw" for the above subcubes.\n  arrayM33: Activates "array" for several preset subcubes all at\n                        once for M33.\n  drawM33: Activates "draw" for the above subcubes.\n  compare_xiarray: Saves xi arrays for M51 and M33 at dV=0. \n  compare_xidraw: Draws a 1D plot comparing the above xi arrays.\n \nThis program makes use of Cubes_corr.py.\n \n')
@@ -27,9 +27,11 @@ def array(vmin, vmax, ymin, ymax, xmin, xmax, deltaX = 100, deltaV = 3, deltadel
 	     as it appears on the galaxy T_max map (within the range specified).
 
 	   When "xi_mode" is 0, the program will use a cube from the default .fits file and
-		a "noise cube" from that same .fits file.
-	   When "xi_mode" is 1, the program will use ONLY a cube from the filename+"_blank"
-		.fits file, which is assumed to have NO NOISE.
+		a "convolved cube" from that same .fits file.
+	   When "xi_mode" is 1 (OBSOLETE), the program will use ONLY a cube from the filename
+		+"_blank" .fits file, which is assumed to have NO NOISE.
+	   When "xi_mode" is 2, the program functions like "xi_mode==0" EXCEPT it then
+		subtracts two similar maps that are assumed to be made entirely of noise.
 
 
 	   WARNING: Selecting too large of a subcube will hugely increase processing time.
@@ -49,17 +51,13 @@ def array(vmin, vmax, ymin, ymax, xmin, xmax, deltaX = 100, deltaV = 3, deltadel
 
 	if xi_mode==0:
 		subcube = Cubes_corr.cubegen(vmin,vmax,ymin,ymax,xmin,xmax,filename,drawmap, imagename)			# Will draw a map of the subcube if drawmap=True.
-		subcube_s = Cubes_corr.cubegen(vmin,vmax,ymin,ymax,xmin,xmax,filename+"_smooth",False, imagename)	# Smoothed subcube.
+		subcube_s = Cubes_corr.cubegen(vmin,vmax,ymin,ymax,xmin,xmax,filename+"_smooth",False, imagename)	# Convolved (smoothed) subcube.
 
 		xi_o = Cubes_corr.corrgen(subcube,deltaX,deltaV,deltadeltaX,deltadeltaV)
 		xi_s = Cubes_corr.corrgen(subcube_s,deltaX,deltaV,deltadeltaX,deltadeltaV)
 
 		xi = xi_o - xi_s
 
-		# SAVE xi into an array, with the saved filename SPECIFICALLY including the parameters used.
-		f = file(tempname+".bin","wb")
-		np.save(f,xi)
-		f.close()
 	elif xi_mode==1:
 		filename = filename+"_blank"
 		tempname = tempname+"_blank"
@@ -67,8 +65,40 @@ def array(vmin, vmax, ymin, ymax, xmin, xmax, deltaX = 100, deltaV = 3, deltadel
 
 		xi_o = Cubes_corr.corrgen(subcube,deltaX,deltaV,deltadeltaX,deltadeltaV)
 		xi = xi_o
+
+	elif xi_mode==2:
+		# Signal cube (from 40 to 80):
+		subcube = Cubes_corr.cubegen(vmin,vmax,ymin,ymax,xmin,xmax,filename,drawmap, imagename)			# Will draw a map of the subcube if drawmap=True.
+		subcube_s = Cubes_corr.cubegen(vmin,vmax,ymin,ymax,xmin,xmax,filename+"_smooth",False, imagename)	# Convolved (smoothed) subcube.
+
+		xi_o = Cubes_corr.corrgen(subcube,deltaX,deltaV,deltadeltaX,deltadeltaV)
+		xi_s = Cubes_corr.corrgen(subcube_s,deltaX,deltaV,deltadeltaX,deltadeltaV)
+		xi_signal = xi_o - xi_s
+
+		# Noise cube (from 0 to 40):
+		subcube_noise1 = Cubes_corr.cubegen(0,vmin,ymin,ymax,xmin,xmax,filename,drawmap, imagename)		# Goes from channels 0 to 40 by default.
+		subcube_noise1_s = Cubes_corr.cubegen(0,vmin,ymin,ymax,xmin,xmax,filename+"_smooth",False, imagename)	# Convolved (smoothed) subcube.
+
+		xi_noise1_o = Cubes_corr.corrgen(subcube_noise1,deltaX,deltaV,deltadeltaX,deltadeltaV)
+		xi_noise1_s = Cubes_corr.corrgen(subcube_noise1_s,deltaX,deltaV,deltadeltaX,deltadeltaV)
+		xi_1 = xi_noise1_o - xi_noise1_s
+
+		# Noise cube 2 (from 80 to 120):
+		subcube_noise2 = Cubes_corr.cubegen(vmax,120,ymin,ymax,xmin,xmax,filename,drawmap, imagename)		# Goes from channels 80 to 120 by default.
+		subcube_noise2_s = Cubes_corr.cubegen(vmax,120,ymin,ymax,xmin,xmax,filename+"_smooth",False, imagename)	# Convolved (smoothed) subcube.
+
+		xi_noise2_o = Cubes_corr.corrgen(subcube_noise2,deltaX,deltaV,deltadeltaX,deltadeltaV)
+		xi_noise2_s = Cubes_corr.corrgen(subcube_noise2,deltaX,deltaV,deltadeltaX,deltadeltaV)
+		xi_2 = xi_noise2_o - xi_noise2_s
+
+
+		# Generating that final xi map:
+		correction = xi_1+xi_2
+		correction /= correction.max()
+		correction *= xi_signal.max()
+		xi = xi_signal - correction			# Aaand, it's done!
 	else:
-		print "ERROR: Select xi_mode=0 for the default calculation, or xi_mode=1 for the blanked-cube calculation."
+		print "ERROR: Select xi_mode=0 for the default calculation, or xi_mode=1 for the blanked-cube calculation, or xi_mode==2 for the map-subtracting calculation."
 		return
 	# SAVE xi into an array, with the saved filename SPECIFICALLY including the parameters used.
 	f = file(tempname+".bin","wb")
@@ -104,12 +134,12 @@ def draw(vmin, vmax, ymin, ymax, xmin, xmax, deltaX = 100, deltaV = 3, deltadelt
 	xi = np.load(f)
 	f.close()
 
-	coeff_a, coeff_b = Cubes_corr.plotgen(xi, deltaX, deltaV, deltadeltaX, deltadeltaV, imagename, filename)		# a = intercept, b = slope
+	coeff_a, coeff_b, a_error, b_error = Cubes_corr.plotgen(xi, deltaX, deltaV, deltadeltaX, deltadeltaV, imagename, filename)		# a = intercept, b = slope
 	if deltaX != 0:
 		Cubes_corr.mapgen(xi, deltaX, deltaV, deltadeltaV, imagename, filename)
 		Cubes_corr.everythinggen(vmin, vmax, ymin, ymax, xmin, xmax, xi, deltaX, deltaV, deltadeltaX, deltadeltaV, imagename, filename)
 
-	return coeff_a, coeff_b
+	return coeff_a, coeff_b, a_error, b_error
 
 
 def arrayM51(vmin=40,vmax=80, deltaX=40, deltaV=3, deltadeltaX=1, deltadeltaV=1, drawmap = False, xi_mode=0):

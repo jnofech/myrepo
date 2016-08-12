@@ -134,8 +134,8 @@ def arrayM51(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, delt
 #	Cubes_corr_multi.array(0,40,150,300,375,525,deltaX,1,deltadeltaX,deltadeltaV,filename,drawmap,galaxyname,xi_mode)
 #	Cubes_corr_multi.array(80,120,150,300,150,300,deltaX,1,deltadeltaX,deltadeltaV,filename,drawmap,galaxyname,xi_mode)
 #	Cubes_corr_multi.array(80,120,150,300,375,525,deltaX,1,deltadeltaX,deltadeltaV,filename,drawmap,galaxyname,xi_mode)
-#
-#	Cubes_corr_multi.array(40,80,75,225,450,600,deltaX,1,deltadeltaX,deltadeltaV,filename,drawmap,galaxyname,xi_mode)
+
+#	Cubes_corr_multi.array(40,80,75,225,450,600,deltaX,0,deltadeltaX,deltadeltaV,filename,drawmap,galaxyname,xi_mode)
 
 
 def drawM51(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV=1, normalization=False, S2threshold=0.7, xi_mode=0):
@@ -242,6 +242,8 @@ def drawM51(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, delta
 
 	coeff_a = [None]*imax					# Intercept of the log-log plot of "xi" versus radius.
 	coeff_b = [None]*imax
+	a_error = [None]*imax
+	b_error = [None]*imax
 
 	### Generate EVERYTHING ###
 	for ymax in range(height, data.shape[1], height/2):
@@ -254,7 +256,8 @@ def drawM51(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, delta
 				if (mode=='s2') or (mode=='S2') or (mode=='s_2') or (mode=='S_2'):
 					Cubes_multi.draw(vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,deltadeltaX,deltadeltaV,filename,galaxyname,normalization)
 				elif (mode=='xi') or (mode=='Xi'):
-					coeff_a[i], coeff_b[i] = Cubes_corr_multi.draw(vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,deltadeltaX,deltadeltaV,filename,galaxyname,xi_mode)
+					coeff_a[i], coeff_b[i], a_error[i], b_error[i] = Cubes_corr_multi.draw(vmin,vmax,ymin,ymax,xmin,xmax,\
+											deltaX,deltaV,deltadeltaX,deltadeltaV,filename,galaxyname,xi_mode)
 				else:
 					print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."
 					return np.nan, np.nan
@@ -268,7 +271,7 @@ def drawM51(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, delta
 #	Cubes_corr_multi.draw(80,120,150,300,150,300,deltaX,1,deltadeltaX,deltadeltaV,filename,galaxyname,0)
 #	Cubes_corr_multi.draw(80,120,150,300,375,525,deltaX,1,deltadeltaX,deltadeltaV,filename,galaxyname,0)
 #
-#	Cubes_corr_multi.draw(40,80,75,225,450,600,deltaX,1,deltadeltaX,deltadeltaV,filename,galaxyname,1)
+#	Cubes_corr_multi.draw(40,80,75,225,450,600,deltaX,0,deltadeltaX,deltadeltaV,filename,galaxyname,1)
 
 	cubename = [None]*imax
 	ymin_array = [None]*imax
@@ -331,7 +334,7 @@ def drawM51(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, delta
 #		Cubes_corr_array.generate(galaxyname,80,120,150,300,150,300,deltaX,1,deltadeltaX,deltadeltaV,201,1.0-S2threshold,0)
 #		Cubes_corr_array.generate(galaxyname,80,120,150,300,375,525,deltaX,1,deltadeltaX,deltadeltaV,201,1.0-S2threshold,0)
 	
-#		Cubes_corr_array.generate(galaxyname,40,80,75,225,450,600,deltaX,1,deltadeltaX,deltadeltaV,201,1.0-S2threshold,1)
+#		Cubes_corr_array.generate(galaxyname,40,80,75,225,450,600,deltaX,0,deltadeltaX,deltadeltaV,201,1.0-S2threshold,1)
 
 		# "t" - Table containing the regions used and the corresponding extrema coordinates.
 		t = Table([cubename,ymin_array,ymax_array,xmin_array,xmax_array,ycoord1,xcoord1,ycoord2,xcoord2,ycoord3,xcoord3],names=('Cube Name','ymin','ymax','xmin','xmax',\
@@ -360,8 +363,8 @@ def drawM51(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, delta
 		# "t3" - Table containing the two coefficients of the linear fit of log(correlation function) vs log(scale) between 50pc and 250pc scales, for EACH REGION.
 
 		if (mode=='xi') or (mode=='Xi'):
-			t3 = Table([cubename,ymin_array,ymax_array,xmin_array,xmax_array,coeff_a,coeff_b],names=('Cube Name','ymin','ymax','xmin','xmax',\
-														'intercept (a)', 'slope (b)'), meta={'name': 'TABLE'})
+			t3 = Table([cubename,ymin_array,ymax_array,xmin_array,xmax_array,coeff_a,coeff_b,a_error,b_error],names=('Cube Name','ymin','ymax','xmin','xmax',\
+											'intercept (a)', 'slope (b)','intercept error', 'slope error'), meta={'name': 'TABLE'})
 			t3['ymin'].unit='pixels'
 			t3['ymax'].unit='pixels'
 			t3['xmin'].unit='pixels'
@@ -455,8 +458,8 @@ def drawM51(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, delta
 
 						i = i+1
 
-			t3 = Table([cubename,ymin_array,ymax_array,xmin_array,xmax_array,coeff_a,coeff_b],names=('Cube Name','ymin','ymax','xmin','xmax',\
-														'intercept (a)', 'slope (b)'), meta={'name': 'TABLE'})
+			t3 = Table([cubename,ymin_array,ymax_array,xmin_array,xmax_array,coeff_a,coeff_b,a_error,b_error],names=('Cube Name','ymin','ymax','xmin','xmax',\
+											'intercept (a)', 'slope (b)','intercept error', 'slope error'), meta={'name': 'TABLE'})
 			t3['ymin'].unit='pixels'
 			t3['ymax'].unit='pixels'
 			t3['xmin'].unit='pixels'
@@ -590,6 +593,8 @@ def arrayM33(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=1, delt
 #	Cubes_corr_multi.array(80,120,?,?,?,?,deltaX,1,deltadeltaX,deltadeltaV,filename,drawmap,galaxyname,xi_mode)
 #	Cubes_corr_multi.array(80,120,?,?,?,?,deltaX,1,deltadeltaX,deltadeltaV,filename,drawmap,galaxyname,xi_mode)
 
+# 	Cubes_corr_multi.array(40,80,375,525,375,525,deltaX,0,deltadeltaX,deltadeltaV,filename,drawmap,galaxyname,xi_mode)
+
 def drawM33(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=1, deltadeltaV=1, normalization=False, S2threshold=0.7, xi_mode=0):
 	"""
 	Activates Cubes_multi.draw and Cubes_array.generate for all of the previously-
@@ -694,6 +699,8 @@ def drawM33(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=1, delta
 
 	coeff_a = [None]*imax					# Intercept of the log-log plot of "xi" versus radius.
 	coeff_b = [None]*imax
+	a_error = [None]*imax
+	b_error = [None]*imax
 
 	for ymax in range(height, data.shape[1], height/2):
 		for xmax in range(width,data.shape[2],width/2):
@@ -705,7 +712,8 @@ def drawM33(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=1, delta
 				if (mode=='s2') or (mode=='S2') or (mode=='s_2') or (mode=='S_2'):
 					Cubes_multi.draw(vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,deltadeltaX,deltadeltaV,filename,galaxyname,normalization)
 				elif (mode=='xi') or (mode=='Xi'):
-					coeff_a[i], coeff_b[i] = Cubes_corr_multi.draw(vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,deltadeltaX,deltadeltaV,filename,galaxyname,xi_mode)
+					coeff_a[i], coeff_b[i], a_error[i], b_error[i] = Cubes_corr_multi.draw(vmin,vmax,ymin,ymax,xmin,xmax,\
+											deltaX,deltaV,deltadeltaX,deltadeltaV,filename,galaxyname,xi_mode)
 				else:
 					print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."
 					return np.nan, np.nan
@@ -718,6 +726,8 @@ def drawM33(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=1, delta
 #	Cubes_corr_multi.draw(0,40,?,?,?,?,deltaX,1,deltadeltaX,deltadeltaV,filename,galaxyname,0)
 #	Cubes_corr_multi.draw(80,120,?,?,?,?,deltaX,1,deltadeltaX,deltadeltaV,filename,galaxyname,0)
 #	Cubes_corr_multi.draw(80,120,?,?,?,?,deltaX,1,deltadeltaX,deltadeltaV,filename,galaxyname,0)
+
+# 	Cubes_corr_multi.draw(40,80,375,525,375,525,deltaX,0,deltadeltaX,deltadeltaV,filename,galaxyname,2)
 
 	cubename = [None]*imax
 	ymin_array = [None]*imax
@@ -781,6 +791,8 @@ def drawM33(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=1, delta
 #		Cubes_corr_array.generate(galaxyname,80,120,?,?,?,?,deltaX,1,deltadeltaX,deltadeltaV,201,1.0-S2threshold,0)
 #		Cubes_corr_array.generate(galaxyname,80,120,?,?,?,?,deltaX,1,deltadeltaX,deltadeltaV,201,1.0-S2threshold,0)
 
+# 		Cubes_corr_array.generate(galaxyname,40,80,375,525,375,525,deltaX,0,deltadeltaX,deltadeltaV,201,1.0-S2threshold,2)
+
 		# "t" - Table containing the regions used and the corresponding extrema coordinates.
 		t = Table([cubename,ymin_array,ymax_array,xmin_array,xmax_array,ycoord1,xcoord1,ycoord2,xcoord2,ycoord3,xcoord3],names=('Cube Name','ymin','ymax','xmin','xmax',\
 																	'y1','x1','y2','x2','y3','x3'), meta={'name': 'TABLE'})
@@ -808,8 +820,8 @@ def drawM33(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=1, delta
 		# "t3" - Table containing the two coefficients of the linear fit of log(correlation function) vs log(scale) between 50pc and 250pc scales, for EACH REGION.
 
 		if (mode=='xi') or (mode=='Xi'):
-			t3 = Table([cubename,ymin_array,ymax_array,xmin_array,xmax_array,coeff_a,coeff_b],names=('Cube Name','ymin','ymax','xmin','xmax',\
-														'intercept (a)', 'slope (b)'), meta={'name': 'TABLE'})
+			t3 = Table([cubename,ymin_array,ymax_array,xmin_array,xmax_array,coeff_a,coeff_b,a_error,b_error],names=('Cube Name','ymin','ymax','xmin','xmax',\
+											'intercept (a)', 'slope (b)','intercept error', 'slope error'), meta={'name': 'TABLE'})
 			t3['ymin'].unit='pixels'
 			t3['ymax'].unit='pixels'
 			t3['xmin'].unit='pixels'
@@ -903,8 +915,8 @@ def drawM33(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=1, delta
 
 						i = i+1
 
-			t3 = Table([cubename,ymin_array,ymax_array,xmin_array,xmax_array,coeff_a,coeff_b],names=('Cube Name','ymin','ymax','xmin','xmax',\
-														'intercept (a)', 'slope (b)'), meta={'name': 'TABLE'})
+			t3 = Table([cubename,ymin_array,ymax_array,xmin_array,xmax_array,coeff_a,coeff_b,a_error,b_error],names=('Cube Name','ymin','ymax','xmin','xmax',\
+											'intercept (a)', 'slope (b)','intercept error', 'slope error'), meta={'name': 'TABLE'})
 			t3['ymin'].unit='pixels'
 			t3['ymax'].unit='pixels'
 			t3['xmin'].unit='pixels'

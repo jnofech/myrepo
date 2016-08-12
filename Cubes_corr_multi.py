@@ -155,9 +155,11 @@ def arrayM51(vmin=40,vmax=80, deltaX=40, deltaV=3, deltadeltaX=1, deltadeltaV=1,
 	   deltadeltaV=1, drawmap=False, xi_mode=0).
 
 	   When "xi_mode" is 0, the program will use a cube from the default .fits file and
-		a "noise cube" from that same .fits file.
-	   When "xi_mode" is 1, the program will use ONLY a cube from the filename+"_blank"
-		.fits file, which is assumed to have NO NOISE.
+		a "convolved cube" from that same .fits file.
+	   When "xi_mode" is 1 (OBSOLETE), the program will use ONLY a cube from the filename
+		+"_blank" .fits file, which is assumed to have NO NOISE.
+	   When "xi_mode" is 2, the program functions like "xi_mode==0" EXCEPT it then
+		subtracts two similar maps that are assumed to be made entirely of noise.
 
 	   WARNING: Selecting too large of a vmax-vmin will hugely increase
 	   processing time."""
@@ -252,9 +254,11 @@ def arrayM33(vmin=40,vmax=80, deltaX=40, deltaV=6, deltadeltaX=1, deltadeltaV=1,
 	   deltadeltaV=1, drawmap=False, xi_mode=0).
 
 	   When "xi_mode" is 0, the program will use a cube from the default .fits file and
-		a "noise cube" from that same .fits file.
-	   When "xi_mode" is 1, the program will use ONLY a cube from the filename+"_blank"
-		.fits file, which is assumed to have NO NOISE.
+		a "convolved cube" from that same .fits file.
+	   When "xi_mode" is 1 (OBSOLETE), the program will use ONLY a cube from the filename
+		+"_blank" .fits file, which is assumed to have NO NOISE.
+	   When "xi_mode" is 2, the program functions like "xi_mode==0" EXCEPT it then
+		subtracts two similar maps that are assumed to be made entirely of noise.
 
 	   WARNING: Selecting too large of a vmax-vmin will hugely increase
 	   processing time."""

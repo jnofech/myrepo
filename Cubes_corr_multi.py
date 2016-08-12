@@ -67,6 +67,9 @@ def array(vmin, vmax, ymin, ymax, xmin, xmax, deltaX = 100, deltaV = 3, deltadel
 		xi = xi_o
 
 	elif xi_mode==2:
+		filename = filename
+		tempname = tempname+"_subtracted"
+
 		# Signal cube (from 40 to 80):
 		subcube = Cubes_corr.cubegen(vmin,vmax,ymin,ymax,xmin,xmax,filename,drawmap, imagename)			# Will draw a map of the subcube if drawmap=True.
 		subcube_s = Cubes_corr.cubegen(vmin,vmax,ymin,ymax,xmin,xmax,filename+"_smooth",False, imagename)	# Convolved (smoothed) subcube.
@@ -125,8 +128,9 @@ def draw(vmin, vmax, ymin, ymax, xmin, xmax, deltaX = 100, deltaV = 3, deltadelt
 
 
 	if xi_mode==1:
-#		filename = filename+"_blank"
 		tempname = tempname+"_blank"
+	elif xi_mode==2:
+		tempname = tempname+"_subtracted"
 
 
 	# File-loading.

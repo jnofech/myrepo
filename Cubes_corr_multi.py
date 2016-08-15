@@ -1,7 +1,7 @@
 
 # 6.15.16 - Calculates and plots xi using functions from "Cubes_corr.py".
 
-print('\nWelcome to Cubes_corr_multi! \n \nAvailable functions: \n  array: Saves a "xi" array. \n  draw: Generates a 2D map and 1D plot of xi.  \n  arrayM51: Activates "array" for several preset subcubes all at\n                        once for M51.\n  drawM51: Activates "draw" for the above subcubes.\n  arrayM33: Activates "array" for several preset subcubes all at\n                        once for M33.\n  drawM33: Activates "draw" for the above subcubes.\n  compare_xiarray: Saves xi arrays for M51 and M33 at dV=0. \n  compare_xidraw: Draws a 1D plot comparing the above xi arrays.\n \nThis program makes use of Cubes_corr.py.\n \n')
+print('\nWelcome to Cubes_corr_multi! \n \nAvailable functions: \n  array: Saves a "xi" array. \n  draw: Generates 3-panel image, 2D map, & 1D plot of xi.  \n  arrayM51: Activates "array" for several preset subcubes all at\n                        once for M51.\n  drawM51: Activates "draw" for the above subcubes.\n  arrayM33: Activates "array" for several preset subcubes all at\n                        once for M33.\n  drawM33: Activates "draw" for the above subcubes.\n  compare_xiarray*: Saves xi arrays for M51 and M33 at dV=0. \n  compare_xidraw*: Draws a 1D plot comparing the above xi arrays.\n*No longer supported\n\nThis program makes use of Cubes_corr.py.\n \n')
 import Cubes_corr
 import numpy as np
 import matplotlib
@@ -15,32 +15,39 @@ from tempfile import TemporaryFile
  
 def array(vmin, vmax, ymin, ymax, xmin, xmax, deltaX = 100, deltaV = 3, deltadeltaX = 10, deltadeltaV = 1, filename="paws_norot", drawmap=False, galaxyname='M51', xi_mode=0):
 	"""
-	   Generates a normalized (?) array of xi, from subcube of the 
-	   specified dimensions; using the .fits file in "Cubes_corr.py".
+	Generates an array of xi from subcube of the specified dimensions; using
+		the .fits file in "Cubes_corr.py".
 
-	   Argument format: "(vmin,vmax, ymin,ymax, xmin,xmax, deltaX=100, deltaV=3,
-	      deltadeltaX=10, deltadeltaV=1, filename="paws_norot", drawmap=False,
-	      galaxyname='M51', xi_mode=0)."
-	   ^ These are the parameters of the desired subcube, along with maximum dX/dY,
-	     maximum dV, "step sizes" for calculating xi, the selected .fits file
-	     name (minus the ".fits" extension), and an option to draw the subcube
-	     as it appears on the galaxy T_max map (within the range specified).
+	Parameters:
+	-----------
+	vmin,...,deltadeltaV : int
+		Parameters used in relevant xi map.
+		WARNING: Selecting too large of a vmax-vmin will hugely increase
+		processing time.
+	filename : str
+		Name of the .paws data file.
+		"paws_norot" for M51, "m33.co21_iram_CLEANED" for M33.
+	drawmap : bool
+		Enables or disables drawing the subcube Tmax map.
+	galaxyname : str
+		Name of the galaxy.
+		'M51' for M51, 'M33' for M33.
+	xi_mode : int
+		For xi calculations only. 
+		When "xi_mode" is 0, the program will use a cube from the 
+		   default .fits file and a "convolved cube" from that same
+		   .fits file.
+		When "xi_mode" is 1 (OBSOLETE), the program will use ONLY a 
+		   cube from the filename +"_blank" .fits file, which is 
+		   assumed to have NO NOISE.
+		When "xi_mode" is 2, the program functions like "xi_mode==0" 
+		   EXCEPT it then subtracts two similar maps that are 
+		   assumed to be made entirely of noise.
 
-	   When "xi_mode" is 0, the program will use a cube from the default .fits file and
-		a "convolved cube" from that same .fits file.
-	   When "xi_mode" is 1 (OBSOLETE), the program will use ONLY a cube from the filename
-		+"_blank" .fits file, which is assumed to have NO NOISE.
-	   When "xi_mode" is 2, the program functions like "xi_mode==0" EXCEPT it then
-		subtracts two similar maps that are assumed to be made entirely of noise.
-
-
-	   WARNING: Selecting too large of a subcube will hugely increase processing time.
-	   If you use a large cube, be sure to set deltadeltaX/V to be larger in corrgen.
-	   For reliability, make sure that deltadeltaX/V is a factor of deltaX/V.
-
-	   Be aware that processing time will increase with large deltaX and deltaV 
-	   values, but can dramatically decrease with larger deltadeltaX at the cost of
-	   plot resolution (or with larget deltadeltaV at the cost of the number of 1D plots)."""
+	Returns:
+	-----------
+	none
+	"""
 
 
 	imagename = galaxyname+"_"+str(vmin)+"to"+str(vmax)+"_"+str(ymin)+"to"+str(ymax)+"_"+str(xmin)+"to"+str(xmax)
@@ -79,7 +86,7 @@ def array(vmin, vmax, ymin, ymax, xmin, xmax, deltaX = 100, deltaV = 3, deltadel
 		xi_signal = xi_o - xi_s
 
 		# Noise cube (from 0 to 40):
-		subcube_noise1 = Cubes_corr.cubegen(0,vmin,ymin,ymax,xmin,xmax,filename,drawmap, imagename)		# Goes from channels 0 to 40 by default.
+		subcube_noise1 = Cubes_corr.cubegen(0,vmin,ymin,ymax,xmin,xmax,filename,False, imagename)		# Goes from channels 0 to 40 by default.
 		subcube_noise1_s = Cubes_corr.cubegen(0,vmin,ymin,ymax,xmin,xmax,filename+"_smooth",False, imagename)	# Convolved (smoothed) subcube.
 
 		xi_noise1_o = Cubes_corr.corrgen(subcube_noise1,deltaX,deltaV,deltadeltaX,deltadeltaV)
@@ -87,7 +94,7 @@ def array(vmin, vmax, ymin, ymax, xmin, xmax, deltaX = 100, deltaV = 3, deltadel
 		xi_1 = xi_noise1_o - xi_noise1_s
 
 		# Noise cube 2 (from 80 to 120):
-		subcube_noise2 = Cubes_corr.cubegen(vmax,120,ymin,ymax,xmin,xmax,filename,drawmap, imagename)		# Goes from channels 80 to 120 by default.
+		subcube_noise2 = Cubes_corr.cubegen(vmax,120,ymin,ymax,xmin,xmax,filename,False, imagename)		# Goes from channels 80 to 120 by default.
 		subcube_noise2_s = Cubes_corr.cubegen(vmax,120,ymin,ymax,xmin,xmax,filename+"_smooth",False, imagename)	# Convolved (smoothed) subcube.
 
 		xi_noise2_o = Cubes_corr.corrgen(subcube_noise2,deltaX,deltaV,deltadeltaX,deltadeltaV)
@@ -110,14 +117,38 @@ def array(vmin, vmax, ymin, ymax, xmin, xmax, deltaX = 100, deltaV = 3, deltadel
 
 def draw(vmin, vmax, ymin, ymax, xmin, xmax, deltaX = 100, deltaV = 3, deltadeltaX = 10, deltadeltaV = 1, filename="paws_norot", galaxyname='M51', xi_mode=0):
 	"""
-	   Generates plots of xi (including a 2D plot of xi vs position, and a 1D
-	   plot of xi vs radius) for each "dv" from subcube of the specified 
-	   dimensions; using the saved xi arrays from "array".
+	Generates plots of xi (including a 2D plot of xi vs position, and a 1D
+	plot of xi vs radius) for each "dv" from subcube of the specified 
+	dimensions; using the saved xi arrays from "array".
 
-	   Argument format: "(vmin,vmax, ymin,ymax, xmin,xmax, deltaX=100, deltaV=3,
-	      deltadeltaX=10, deltadeltaV=1, filename="paws_norot", galaxyname='M51',
-	      xi_mode=0)."
-	   ^ These MUST MATCH the args/kwargs used in "array"."""
+	Parameters:
+	-----------
+	vmin,...,deltadeltaV : int
+		Parameters used in relevant xi map.
+		WARNING: Selecting too large of a vmax-vmin will hugely increase
+		processing time.
+	filename : str
+		Name of the .paws data file.
+		"paws_norot" for M51, "m33.co21_iram_CLEANED" for M33.
+	galaxyname : str
+		Name of the galaxy.
+		'M51' for M51, 'M33' for M33.
+	xi_mode : int
+		For xi calculations only. 
+		When "xi_mode" is 0, the program will use a cube from the 
+		   default .fits file and a "convolved cube" from that same
+		   .fits file.
+		When "xi_mode" is 1 (OBSOLETE), the program will use ONLY a 
+		   cube from the filename +"_blank" .fits file, which is 
+		   assumed to have NO NOISE.
+		When "xi_mode" is 2, the program functions like "xi_mode==0" 
+		   EXCEPT it then subtracts two similar maps that are 
+		   assumed to be made entirely of noise.
+
+	Returns:
+	-----------
+	none
+	"""
 
 
 	imagename = galaxyname+"_"+str(vmin)+"to"+str(vmax)+"_"+str(ymin)+"to"+str(ymax)+"_"+str(xmin)+"to"+str(xmax)
@@ -138,31 +169,45 @@ def draw(vmin, vmax, ymin, ymax, xmin, xmax, deltaX = 100, deltaV = 3, deltadelt
 	xi = np.load(f)
 	f.close()
 
-	coeff_a, coeff_b, a_error, b_error = Cubes_corr.plotgen(xi, deltaX, deltaV, deltadeltaX, deltadeltaV, imagename, filename)		# a = intercept, b = slope
+
 	if deltaX != 0:
 		Cubes_corr.mapgen(xi, deltaX, deltaV, deltadeltaV, imagename, filename)
 		Cubes_corr.everythinggen(vmin, vmax, ymin, ymax, xmin, xmax, xi, deltaX, deltaV, deltadeltaX, deltadeltaV, imagename, filename)
-
+	coeff_a, coeff_b, a_error, b_error = Cubes_corr.plotgen(xi, deltaX, deltaV, deltadeltaX, deltadeltaV, imagename, filename)		# a = intercept, b = slope
 	return coeff_a, coeff_b, a_error, b_error
 
 
 def arrayM51(vmin=40,vmax=80, deltaX=40, deltaV=3, deltadeltaX=1, deltadeltaV=1, drawmap = False, xi_mode=0):
-	"""Activates "array" for M51 with each of the .py file's subcube selections,
+	"""
+	Activates "array" for M51 with each of the .py file's subcube selections,
 	   all under spectral range (vmin,vmax) with maximum dX/dY, maximum dV,
 	   and "step sizes". Also draws maps of all regions involved.
 
-	   Argument format: "(vmin=40,vmax=80, deltaX=40, deltaV=3, deltadeltaX=10,
-	   deltadeltaV=1, drawmap=False, xi_mode=0).
+	Parameters:
+	-----------
+	vmin,...,deltadeltaV : int
+		Parameters used in relevant xi map.
+		WARNING: Selecting too large of a vmax-vmin will hugely increase
+		processing time.
+	drawmap : bool
+		Enables or disables drawing the subcube Tmax map.
+	xi_mode : int
+		For xi calculations only. 
+		When "xi_mode" is 0, the program will use a cube from the 
+		   default .fits file and a "convolved cube" from that same
+		   .fits file.
+		When "xi_mode" is 1 (OBSOLETE), the program will use ONLY a 
+		   cube from the filename +"_blank" .fits file, which is 
+		   assumed to have NO NOISE.
+		When "xi_mode" is 2, the program functions like "xi_mode==0" 
+		   EXCEPT it then subtracts two similar maps that are 
+		   assumed to be made entirely of noise.
 
-	   When "xi_mode" is 0, the program will use a cube from the default .fits file and
-		a "convolved cube" from that same .fits file.
-	   When "xi_mode" is 1 (OBSOLETE), the program will use ONLY a cube from the filename
-		+"_blank" .fits file, which is assumed to have NO NOISE.
-	   When "xi_mode" is 2, the program functions like "xi_mode==0" EXCEPT it then
-		subtracts two similar maps that are assumed to be made entirely of noise.
+	Returns:
+	-----------
+	none
 
-	   WARNING: Selecting too large of a vmax-vmin will hugely increase
-	   processing time."""
+	"""
 
 	galaxyname = 'M51'
 	filename = "paws_norot"
@@ -216,13 +261,34 @@ def arrayM51(vmin=40,vmax=80, deltaX=40, deltaV=3, deltadeltaX=1, deltadeltaV=1,
 		array(vmin,vmax,ymin[i],ymax[i],xmin[i],xmax[i],deltaX,deltaV,deltadeltaX,deltadeltaV,filename,drawmap,galaxyname,xi_mode)
 		
 def drawM51(vmin=40,vmax=80, deltaX=40, deltaV=3, deltadeltaX=1, deltadeltaV=1,xi_mode=0):
-	"""Activates "draw" with each of the .py file's subcube selections,
+	"""
+	Activates "draw" with each of the .py file's subcube selections,
 	   with the same args as "arrayM51".
 
-	   Argument format: "(vmin=40,vmax=80, deltaX=40, deltaV=3, deltadeltaX=10,
-	   deltadeltaV=1, xi_mode=0).
+	Parameters:
+	-----------
+	vmin,...,deltadeltaV : int
+		Parameters used in relevant xi map.
+		WARNING: Selecting too large of a vmax-vmin will hugely increase
+		processing time.
+	xi_mode : int
+		For xi calculations only. 
+		When "xi_mode" is 0, the program will use a cube from the 
+		   default .fits file and a "convolved cube" from that same
+		   .fits file.
+		When "xi_mode" is 1 (OBSOLETE), the program will use ONLY a 
+		   cube from the filename +"_blank" .fits file, which is 
+		   assumed to have NO NOISE.
+		When "xi_mode" is 2, the program functions like "xi_mode==0" 
+		   EXCEPT it then subtracts two similar maps that are 
+		   assumed to be made entirely of noise.
 
-	   These MUST match the args/kwargs used in "arrayM51"!"""
+	Returns:
+	-----------
+	none
+
+	These MUST match the args/kwargs used in "arrayM51"!
+	"""
 
 	galaxyname = 'M51'
 	filename = "paws_norot"
@@ -246,22 +312,36 @@ def drawM51(vmin=40,vmax=80, deltaX=40, deltaV=3, deltadeltaX=1, deltadeltaV=1,x
 
 
 def arrayM33(vmin=40,vmax=80, deltaX=40, deltaV=6, deltadeltaX=1, deltadeltaV=1, drawmap=False, xi_mode=0):
-	"""Activates "array" for M33 with each of the .py file's subcube selections,
+	"""
+	Activates "array" for M33 with each of the .py file's subcube selections,
 	   all under spectral range (vmin,vmax) with maximum dX/dY, maximum dV,
 	   and "step sizes". Also draws maps of all regions involved.
 
-	   Argument format: "(vmin=40,vmax=80, deltaX=40, deltaV=6, deltadeltaX=10,
-	   deltadeltaV=1, drawmap=False, xi_mode=0).
+	Parameters:
+	-----------
+	vmin,...,deltadeltaV : int
+		Parameters used in relevant xi map.
+		WARNING: Selecting too large of a vmax-vmin will hugely increase
+		processing time.
+	drawmap : bool
+		Enables or disables drawing the subcube Tmax map.
+	xi_mode : int
+		For xi calculations only. 
+		When "xi_mode" is 0, the program will use a cube from the 
+		   default .fits file and a "convolved cube" from that same
+		   .fits file.
+		When "xi_mode" is 1 (OBSOLETE), the program will use ONLY a 
+		   cube from the filename +"_blank" .fits file, which is 
+		   assumed to have NO NOISE.
+		When "xi_mode" is 2, the program functions like "xi_mode==0" 
+		   EXCEPT it then subtracts two similar maps that are 
+		   assumed to be made entirely of noise.
 
-	   When "xi_mode" is 0, the program will use a cube from the default .fits file and
-		a "convolved cube" from that same .fits file.
-	   When "xi_mode" is 1 (OBSOLETE), the program will use ONLY a cube from the filename
-		+"_blank" .fits file, which is assumed to have NO NOISE.
-	   When "xi_mode" is 2, the program functions like "xi_mode==0" EXCEPT it then
-		subtracts two similar maps that are assumed to be made entirely of noise.
+	Returns:
+	-----------
+	none
 
-	   WARNING: Selecting too large of a vmax-vmin will hugely increase
-	   processing time."""
+	"""
 
 	galaxyname = 'M33'
 	filename = 'm33.co21_iram_CLEANED'
@@ -317,13 +397,34 @@ def arrayM33(vmin=40,vmax=80, deltaX=40, deltaV=6, deltadeltaX=1, deltadeltaV=1,
 		array(vmin,vmax,ymin[i],ymax[i],xmin[i],xmax[i],deltaX,deltaV,deltadeltaX,deltadeltaV,filename,drawmap,galaxyname,xi_mode)
 
 def drawM33(vmin=40,vmax=80, deltaX=40, deltaV=6, deltadeltaX=1, deltadeltaV=1,xi_mode=0):
-	"""Activates "draw" with each of the .py file's subcube selections,
+	"""
+	Activates "draw" with each of the .py file's subcube selections,
 	   with the same args as "arrayM33".
 
-	   Argument format: "(vmin=40,vmax=80, deltaX=40, deltaV=6, deltadeltaX=10,
-	   deltadeltaV=1, xi_mode=0).
+	Parameters:
+	-----------
+	vmin,...,deltadeltaV : int
+		Parameters used in relevant xi map.
+		WARNING: Selecting too large of a vmax-vmin will hugely increase
+		processing time.
+	xi_mode : int
+		For xi calculations only. 
+		When "xi_mode" is 0, the program will use a cube from the 
+		   default .fits file and a "convolved cube" from that same
+		   .fits file.
+		When "xi_mode" is 1 (OBSOLETE), the program will use ONLY a 
+		   cube from the filename +"_blank" .fits file, which is 
+		   assumed to have NO NOISE.
+		When "xi_mode" is 2, the program functions like "xi_mode==0" 
+		   EXCEPT it then subtracts two similar maps that are 
+		   assumed to be made entirely of noise.
 
-	   These MUST match the args/kwargs used in "arrayM33"!"""
+	Returns:
+	-----------
+	none
+
+	These MUST match the args/kwargs used in "arrayM33"!
+	"""
 
 	galaxyname = 'M33'
 	filename = 'm33.co21_iram_CLEANED'

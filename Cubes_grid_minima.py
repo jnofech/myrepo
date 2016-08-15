@@ -16,8 +16,8 @@ import csv
 def plotM51(mode='S2',vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadeltaV=1,drawmode=0):
     """
     drawmode=0 (DEFAULT) : "extrema distance mode"
-        Takes the table of S_2/xi minima (and their coordinates) of the NORMALIZED
-        S_2/xi surface map whose name matches the given parameters, and then 
+        Takes the table of minima (and their coordinates) of the S_2 (NORMALIZED)
+        /xi surface map whose name matches the given parameters, and then 
         plots the minima distances (i.e. the distance between the minima and
         the center of the S_2/xi map, in parsecs) as a function of the distance 
         of each region to the centre of the galaxy (in pixels).
@@ -55,12 +55,11 @@ def plotM51(mode='S2',vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadelt
     -----------
     vmin,...,deltadeltaV : int
         Parameters used in relevant S_2/xi map.
-        If deltaX==0, then "xi slope mode" will use the slopes of "xi vs.
-        radial velocity shift" instead of "xi vs. position shift".
-    drawmode : int (0, 1, or 2)
+        If deltaX==0, then "xi slope mode" (drawmode==3) will use the slopes 
+        of "xi vs. radial velocity shift" instead of "xi vs. position shift".
+    drawmode : int (0, 1, 2, or 3)
         Changes the mode of the function.
     """
-
     filename = 'paws_norot'
     #filename = 'm33.co21_iram_CLEANED'
 
@@ -131,11 +130,11 @@ def plotM51(mode='S2',vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadelt
 
         plt.plot(rdist,minima1,'r.',rdist,minima2,'b.',rdist,minima3,'g.')
         if (mode=='s2') or (mode=='S2') or (mode=='s_2') or (mode=='S_2'):
-            plt.title("S2 Extrema Distance vs. Region Distance from Galactic Centre")
+            plt.title("S2 Extrema Distances (i.e. 'dR' values at minima) vs. Region Distance from Galactic Centre")
             plt.ylabel("Minima Distance (pc)")
             plt.xlabel("Distance from M51's Centre (Pixels)")
         elif (mode=='xi') or (mode=='Xi'):
-            plt.title("xi Extrema Distance vs. Region Distance from Galactic Centre")
+            plt.title("xi Extrema Distances (i.e. 'dR' values at minima) vs. Region Distance from Galactic Centre")
             plt.ylabel("Minima Distance (pc)")
             plt.xlabel("Distance from M51's Centre (Pixels)")
         else:
@@ -207,7 +206,7 @@ def plotM51(mode='S2',vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadelt
         ax1.scatter(xcoord,ycoord,c='r',s=size1,label='1st minima distance')
         ax1.scatter(xcoord,ycoord,color='k',s=0.1)
         
-        ax1.set_title('Extrema Distances over Various Regions in M51')
+        ax1.set_title('Extrema Distances (i.e. "dR" values at minima) over Various Regions in M51')
         ax1.set_ylabel('y-position (pixels)')
         ax1.set_xlabel('x-position (pixels)')
         ax1.legend()
@@ -248,12 +247,12 @@ def plotM51(mode='S2',vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadelt
                                                             #    which S2 exceeds S2threshold.
         plt.plot(rdist,width,'r.')
         if (mode=='s2') or (mode=='S2') or (mode=='s_2') or (mode=='S_2'):
-            plt.title("S2 Map Width vs. Region Distance from Galactic Centre")
-            plt.ylabel("S2 Map Width (pc)")
+            plt.title("'S2 vs. Position Shift' Map Width vs. Region Distance from Galactic Centre")
+            plt.ylabel("'S2 vs. Position Shift' Map Width (pc)")
             plt.xlabel("Distance from M51's Centre (Pixels)")
         elif (mode=='xi') or (mode=='Xi'):
-            plt.title("xi Map Width vs. Region Distance from Galactic Centre")
-            plt.ylabel("xi Map Width (pc)")
+            plt.title("'xi vs. Position Shift' Map Width vs. Region Distance from Galactic Centre")
+            plt.ylabel("'xi vs. Position Shift' Map Width (pc)")
             plt.xlabel("Distance from M51's Centre (Pixels)")
         else:
             print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."
@@ -427,8 +426,8 @@ def plotM51(mode='S2',vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadelt
 def plotM33(mode='S2',vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadeltaV=1,drawmode=0):
     """
     drawmode=0 (DEFAULT) : "extrema distance mode"
-        Takes the table of S_2/xi minima (and their coordinates) of the NORMALIZED
-        S_2/xi surface map whose name matches the given parameters, and then 
+        Takes the table of minima (and their coordinates) of the S_2 (NORMALIZED)
+        /xi surface map whose name matches the given parameters, and then 
         plots the minima distances (i.e. the distance between the minima and
         the center of the S_2/xi map, in parsecs) as a function of the distance 
         of each region to the centre of the galaxy (in pixels).
@@ -466,9 +465,9 @@ def plotM33(mode='S2',vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadelt
     -----------
     vmin,...,deltadeltaV : int
         Parameters used in relevant S_2/xi map.
-        If deltaX==0, then "xi slope mode" will use the slopes of "xi vs.
-        radial velocity shift" instead of "xi vs. position shift".
-    drawmode : int (0, 1, or 2)
+        If deltaX==0, then "xi slope mode" (drawmode==3) will use the slopes 
+        of "xi vs. radial velocity shift" instead of "xi vs. position shift".
+    drawmode : int (0, 1, 2, or 3)
         Changes the mode of the function.
     """
 
@@ -542,11 +541,11 @@ def plotM33(mode='S2',vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadelt
 
         plt.plot(rdist,minima1,'r.',rdist,minima2,'b.',rdist,minima3,'g.')
         if (mode=='s2') or (mode=='S2') or (mode=='s_2') or (mode=='S_2'):
-            plt.title("S2 Extrema Distance vs. Region Distance from Galactic Centre")
+            plt.title("S2 Extrema Distances (i.e. 'dR' values at minima) vs. Region Distance from Galactic Centre")
             plt.ylabel("Minima Distance (pc)")
             plt.xlabel("Distance from M33's Centre (Pixels)")
         elif (mode=='xi') or (mode=='Xi'):
-            plt.title("xi Extrema Distance vs. Region Distance from Galactic Centre")
+            plt.title("xi Extrema Distances (i.e. 'dR' values at minima) vs. Region Distance from Galactic Centre")
             plt.ylabel("Minima Distance (pc)")
             plt.xlabel("Distance from M33's Centre (Pixels)")
         else:
@@ -617,7 +616,7 @@ def plotM33(mode='S2',vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadelt
         ax1.scatter(xcoord,ycoord,c='r',s=size1,label='1st minima distance')
         ax1.scatter(xcoord,ycoord,color='k',s=0.1)
         
-        ax1.set_title('Extrema Distances over Various Regions in M33')
+        ax1.set_title('Extrema Distances (i.e. "dR" values at minima) over Various Regions in M33')
         ax1.set_ylabel('y-position (pixels)')
         ax1.set_xlabel('x-position (pixels)')
         ax1.legend()
@@ -658,12 +657,12 @@ def plotM33(mode='S2',vmin=40,vmax=80,deltaX=30,deltaV=3,deltadeltaX=1,deltadelt
                                                             #    which S2 exceeds S2threshold.
         plt.plot(rdist,width,'r.')
         if (mode=='s2') or (mode=='S2') or (mode=='s_2') or (mode=='S_2'):
-            plt.title("S2 Map Width vs. Region Distance from Galactic Centre")
-            plt.ylabel("S2 Map Width (pc)")
+            plt.title("'S2 vs. Position Shift' Map Width vs. Region Distance from Galactic Centre")
+            plt.ylabel("'S2 vs. Position Shift' Map Width (pc)")
             plt.xlabel("Distance from M33's Centre (Pixels)")
         elif (mode=='xi') or (mode=='Xi'):
-            plt.title("xi Map Width vs. Region Distance from Galactic Centre")
-            plt.ylabel("xi Map Width (pc)")
+            plt.title("'xi vs. Position Shift' Map Width vs. Region Distance from Galactic Centre")
+            plt.ylabel("'xi vs. Position Shift' Map Width (pc)")
             plt.xlabel("Distance from M33's Centre (Pixels)")
         else:
             print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."

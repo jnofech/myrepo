@@ -1,7 +1,7 @@
 
 # 6.01.16 - Calculates and plots S_2 using functions from "Cubes.py". Normalization available if you don't want to correct for noise.
 
-print('\nWelcome to Cubes_multi! \n \nAvailable functions: \n  array: Saves a noise-corrected S_2 array. \n  draw: Generates a 2D map and 1D plot of the noise-corrected S_2.  \n  arrayM51: Activates array for several preset subcubes all at\n                        once for M51.\n  drawM51: Activates draw for the above subcubes.\n  arrayM33: Activates array for several preset subcubes all at\n                        once for M33.\n  drawM33: Activates draw for the above subcubes.\n  compare_S2array: Saves noise-corrected S_2 arrays for M51 and M33 at dV=0. \n  compare_S2draw: Draws a 1D plot comparing the above S_2 arrays.\n \nThis program makes use of Cubes.py.\n \n')
+print('\nWelcome to Cubes_multi! \n \nAvailable functions: \n  array: Saves a noise-corrected S_2 array. \n  draw: Generates 3-panel image, 2D map, & 1D plot of S_2.  \n  arrayM51: Activates array for several preset subcubes all at\n                        once for M51.\n  drawM51: Activates draw for the above subcubes.\n  arrayM33: Activates array for several preset subcubes all at\n                        once for M33.\n  drawM33: Activates draw for the above subcubes.\n  compare_S2array*: Saves noise-corrected S_2 arrays for M51 and M33 at dV=0. \n  compare_S2draw*: Draws a 1D plot comparing the above S_2 arrays.\n*No longer supported\n\nThis program makes use of Cubes.py.\n \n')
 import Cubes
 import numpy as np
 import matplotlib
@@ -15,31 +15,29 @@ from tempfile import TemporaryFile
  
 def array(vmin, vmax, ymin, ymax, xmin, xmax, deltaX = 100, deltaV = 3, deltadeltaX = 10, deltadeltaV = 1, filename="paws_norot", drawmap=False, galaxyname='M51', normalization=False):
 	"""
-	   Generates a noise-corrected array of S_2, from subcube of the 
-	   specified dimensions; using the .fits file in "Cubes.py".
+	Generates an array of S2 from subcube of the specified dimensions; using
+		the .fits file in "Cubes_corr.py".
 
-	   Argument format: "(vmin,vmax, ymin,ymax, xmin,xmax, deltaX=100, deltaV=3,
-	      deltadeltaX=10, deltadeltaV=1, filename="paws_norot", drawmap=False,
-	      galaxyname='M51', normalization=False)."
-	   ^ These are the parameters of the desired subcube, along with maximum dX/dY,
-	     maximum dV, "step sizes" for calculating S_2, the selected .fits file
-	     name (minus the ".fits" extension), and an option to draw the subcube
-	     as it appears on the galaxy T_max map (within the range specified).
-	     Enabling normalization will create a normalized (and still noise-corrected)
-	     S_2 map within the [0,1] interval.
+	Parameters:
+	-----------
+	vmin,...,deltadeltaV : int
+		Parameters used in relevant S2 map.
+		WARNING: Selecting too large of a vmax-vmin will hugely increase
+		processing time.
+	filename : str
+		Name of the .paws data file.
+		"paws_norot" for M51, "m33.co21_iram_CLEANED" for M33.
+	drawmap : bool
+		Enables or disables drawing the subcube Tmax map.
+	galaxyname : str
+		Name of the galaxy.
+		'M51' for M51, 'M33' for M33.
+	normalization : bool
+		Enables or disables normalization of S2.
 
-	   Note that vmin and vmax will only affect the overall structure function (from
-	     signal+noise), but not the noise-only structure function.
-
-
-	   WARNING: Selecting too large of a subcube will hugely increase processing time.
-	   If you use a large cube, be sure to set deltadeltaX/V to be larger in structgen.
-	   For reliability, make sure that deltadeltaX/V is a factor of deltaX/V.
-
-	   Be aware that processing time will increase with large deltaX and deltaV 
-	   values, but can dramatically decrease with larger deltadeltaX at the cost of
-	   plot resolution (or with larget deltadeltaV at the cost of the number of 1D 
-	   plots).
+	Returns:
+	-----------
+	none
 	"""
 
 	imagename = galaxyname+"_"+str(vmin)+"to"+str(vmax)+"_"+str(ymin)+"to"+str(ymax)+"_"+str(xmin)+"to"+str(xmax)
@@ -71,14 +69,28 @@ def array(vmin, vmax, ymin, ymax, xmin, xmax, deltaX = 100, deltaV = 3, deltadel
 
 def draw(vmin, vmax, ymin, ymax, xmin, xmax, deltaX = 100, deltaV = 3, deltadeltaX = 10, deltadeltaV = 1, filename="paws_norot", galaxyname='M51', normalization=False):
 	"""
-	   Generates plots of S_2 (including a 2D plot of S_2 vs position, and a 1D
-	   plot of S_2 vs radius) for each "dv" from subcube of the specified 
-	   dimensions; using the saved S_2 arrays from S2_plot.
+	Generates plots of S2 (including a 2D plot of S2 vs position, and a 1D
+	plot of S2 vs radius) for each "dv" from subcube of the specified 
+	dimensions; using the saved S2 arrays from "array".
 
-	   Argument format: "(vmin,vmax, ymin,ymax, xmin,xmax, deltaX=100, deltaV=3,
-	      deltadeltaX=10, deltadeltaV=1, filename="paws_norot", galaxyname='M51',
-	      normalization=False)."
-	   ^ These MUST MATCH the args/kwargs used in S2_gen."""
+	Parameters:
+	-----------
+	vmin,...,deltadeltaV : int
+		Parameters used in relevant S2 map.
+		WARNING: Selecting too large of a vmax-vmin will hugely increase
+		processing time.
+	filename : str
+		Name of the .paws data file.
+		"paws_norot" for M51, "m33.co21_iram_CLEANED" for M33.
+	galaxyname : str
+		Name of the galaxy.
+		'M51' for M51, 'M33' for M33.
+	normalization : bool
+		Enables or disables normalization of S2.
+
+	Returns:
+	-----------
+	none"""
 
 	imagename = galaxyname+"_"+str(vmin)+"to"+str(vmax)+"_"+str(ymin)+"to"+str(ymax)+"_"+str(xmin)+"to"+str(xmax)
 	if deltadeltaX == 1 and deltadeltaV == 1:
@@ -101,15 +113,26 @@ def draw(vmin, vmax, ymin, ymax, xmin, xmax, deltaX = 100, deltaV = 3, deltadelt
 
 
 def arrayM51(vmin=40,vmax=80, deltaX=40, deltaV=3, deltadeltaX=10, deltadeltaV=1, drawmap=False, normalization=False):
-	"""Activates Cubes_multi.array for M51 with each of the .py file's subcube 
-	   selections, all under spectral range (vmin,vmax) with maximum dX/dY, maximum 
-	   dV, and "step sizes". Also draws maps of all regions involved.
+	"""
+	Activates "array" for M51 with each of the .py file's subcube selections,
+	   all under spectral range (vmin,vmax) with maximum dX/dY, maximum dV,
+	   and "step sizes". Also draws maps of all regions involved.
 
-	   Argument format: "(vmin=40,vmax=80, deltaX=40, deltaV=3, deltadeltaX=10,
-	   deltadeltaV=1, drawmap=False, normalization=False).
+	Parameters:
+	-----------
+	vmin,...,deltadeltaV : int
+		Parameters used in relevant S2 map.
+		WARNING: Selecting too large of a vmax-vmin will hugely increase
+		processing time.
+	drawmap : bool
+		Enables or disables drawing the subcube Tmax map.
+	normalization : bool
+		Enables or disables normalization of S2.
 
-	   WARNING: Selecting too large of a vmax-vmin will hugely increase
-	   processing time."""
+	Returns:
+	-----------
+	none
+	"""
 
 	galaxyname = 'M51'
 	filename = "paws_norot"
@@ -163,13 +186,25 @@ def arrayM51(vmin=40,vmax=80, deltaX=40, deltaV=3, deltadeltaX=10, deltadeltaV=1
 		array(vmin,vmax,ymin[i],ymax[i],xmin[i],xmax[i],deltaX,deltaV,deltadeltaX,deltadeltaV,filename,drawmap,galaxyname,normalization)
 		
 def drawM51(vmin=40,vmax=80, deltaX=40, deltaV=3, deltadeltaX=10, deltadeltaV=1, normalization=False):
-	"""Activates Cubes_multi.draw with each of the .py file's subcube selections,
-	   with the same args as Cubes_multi.arrayM51.
+	'''
+	Activates "draw" with each of the .py file's subcube selections,
+	   with the same args as "arrayM51".
 
-	   Argument format: "(vmin=40,vmax=80, deltaX=40, deltaV=3, deltadeltaX=10,
-	   deltadeltaV=1, normalization=False).
+	Parameters:
+	-----------
+	vmin,...,deltadeltaV : int
+		Parameters used in relevant S2 map.
+		WARNING: Selecting too large of a vmax-vmin will hugely increase
+		processing time.
+	normalization : bool
+		Enables or disables normalization of S2.
 
-	   These MUST match the args/kwargs used in Cubes_multi.arrayM51!"""
+	Returns:
+	-----------
+	none
+
+	These MUST match the args/kwargs used in "arrayM51"!
+	'''
 
 	galaxyname = 'M51'
 	filename = "paws_norot"
@@ -193,15 +228,26 @@ def drawM51(vmin=40,vmax=80, deltaX=40, deltaV=3, deltadeltaX=10, deltadeltaV=1,
 
 
 def arrayM33(vmin=40,vmax=80, deltaX=40, deltaV=6, deltadeltaX=10, deltadeltaV=1, drawmap=False, normalization=False):
-	"""Activates Cubes_multi.array for M33 with each of the .py file's subcube 
-	   selections, all under spectral range (vmin,vmax) with maximum dX/dY, maximum 
-	   dV, and "step sizes". Also draws maps of all regions involved.
+	"""
+	Activates "array" for M33 with each of the .py file's subcube selections,
+	   all under spectral range (vmin,vmax) with maximum dX/dY, maximum dV,
+	   and "step sizes". Also draws maps of all regions involved.
 
-	   Argument format: "(vmin=40,vmax=80, deltaX=40, deltaV=6, deltadeltaX=10,
-	   deltadeltaV=1, drawmap=False, normalization=False).
+	Parameters:
+	-----------
+	vmin,...,deltadeltaV : int
+		Parameters used in relevant S2 map.
+		WARNING: Selecting too large of a vmax-vmin will hugely increase
+		processing time.
+	drawmap : bool
+		Enables or disables drawing the subcube Tmax map.
+	normalization : bool
+		Enables or disables normalization of S2.
 
-	   WARNING: Selecting too large of a vmax-vmin will hugely increase
-	   processing time."""
+	Returns:
+	-----------
+	none
+	"""
 
 	galaxyname = 'M33'
 	filename = 'm33.co21_iram_CLEANED'
@@ -257,13 +303,25 @@ def arrayM33(vmin=40,vmax=80, deltaX=40, deltaV=6, deltadeltaX=10, deltadeltaV=1
 		array(vmin,vmax,ymin[i],ymax[i],xmin[i],xmax[i],deltaX,deltaV,deltadeltaX,deltadeltaV,filename,drawmap,galaxyname,normalization)
 
 def drawM33(vmin=40,vmax=80, deltaX=40, deltaV=6, deltadeltaX=10, deltadeltaV=1, normalization=False):
-	"""Activates Cubes_multi.draw with each of the .py file's subcube selections,
-	   with the same args as Cubes_multi.arrayM33.
+	'''
+	Activates "draw" with each of the .py file's subcube selections,
+	   with the same args as "arrayM33".
 
-	   Argument format: "(vmin=40,vmax=80, deltaX=40, deltaV=6, deltadeltaX=10,
-	   deltadeltaV=1, normalization=False).
+	Parameters:
+	-----------
+	vmin,...,deltadeltaV : int
+		Parameters used in relevant S2 map.
+		WARNING: Selecting too large of a vmax-vmin will hugely increase
+		processing time.
+	normalization : bool
+		Enables or disables normalization of S2.
 
-	   These MUST match the args/kwargs used in Cubes_multi.arrayM33!"""
+	Returns:
+	-----------
+	none
+
+	These MUST match the args/kwargs used in "arrayM33"!
+	'''
 
 	galaxyname = 'M33'
 	filename = 'm33.co21_iram_CLEANED'
@@ -287,7 +345,8 @@ def drawM33(vmin=40,vmax=80, deltaX=40, deltaV=6, deltadeltaX=10, deltadeltaV=1,
 
 
 def compare_S2array(vmin=40,vmax=80, deltaX=40, deltadeltaX=10):
-	"""For both M51 and M33, saves a numpy array containing S_2 as a
+	"""(NO LONGER SUPPORTED)
+	For both M51 and M33, saves a numpy array containing S_2 as a
 	   function of dx, dy, and dv (where dv is only zero). These arrays
 	   can be called on in 'compare_S2draw'.
 	   Argument format: "(vmin=40,vmax=80, deltaX=40, deltadeltaX=5)."
@@ -336,7 +395,8 @@ def compare_S2array(vmin=40,vmax=80, deltaX=40, deltadeltaX=10):
 
 
 def compare_S2draw(vmin=40,vmax=80, deltaX=40, deltadeltaX=10):
-	""" Using the saved S_2 arrays from 'compare_S2gen', creates a plot
+	"""(NO LONGER SUPPORTED)
+	Using the saved S_2 arrays from 'compare_S2gen', creates a plot
 	of S_2 versus radius for M51 and M33.
 
 	Argument format: (vmin=40, vmax=80, deltaX=40, deltadeltaX=10).

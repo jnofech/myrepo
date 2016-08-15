@@ -9,21 +9,38 @@ import numpy as np
 import scipy.stats as ss
 import math
 
-print('"Cubes_corr.py" \n \nAvailable functions within Cubes_corr: \n  cubegen - generates a subcube. \n  corrgen - generates a correlation function map from a given subcube. \n  mapgen - generates some 2D maps of the correlation function, for each "dv". \n  plotgen - generates a 1D plot of averaged correlation function versus radius.')
+print('"Cubes_corr.py" \n \nAvailable functions within Cubes_corr: \n  cubegen - generates a subcube. \n  corrgen - generates a correlation function map from a given subcube. \n  mapgen - generates some 2D maps of the correlation function, for each "dv". \n  plotgen - generates a 1D plot of averaged correlation function versus radius. \n  everythinggen - generates 3-panel image with Tmax map, xi map, 1D plot.')
 
 def cubegen(vmin,vmax,ymin,ymax,xmin,xmax, filename = "paws_norot", drawmap = False, mapname="3Dcube"):
-	"""Returns a subcube of the specified dimensions from the .fits file.
-	   Also displays the subcube as it appears on the galaxy map if drawmap=True.
+	"""
+	Returns a subcube of the specified dimensions from the .fits file.
+	Also displays the subcube as it appears on the galaxy map if drawmap=True.
 
 
-	   Argument format: "(vmin,vmax, ymin,ymax, xmin,xmax, filename='paws_norot',
-	   drawmap=False, mapname='3Dcube')".
-	   ^ These are the parameters of the desired subcube. The filename (default:
-	     'paws_norot') is the name of the .fits file, minus the .fits extension.
-	     Note that the mapname is not needed if drawmap=False.
+	Parameters:
+	-----------
+	vmin,...,xmax : int
+		Parameters used in relevant xi map.
+		WARNING: Selecting too large of a vmax-vmin will hugely increase
+		processing time in later calculations.
+	filename : str
+		Name of the .paws data file.
+		"paws_norot" for M51, "m33.co21_iram_CLEANED" for M33.
+	drawmap : bool
+		Enables or disables drawing the subcube Tmax map.
+	galaxyname : str
+		Name of the galaxy.
+		'M51' for M51, 'M33' for M33.
+	mapname : str
+		Name of the saved image of the subcube's Tmax map, if
+		drawmap==True.
 
-	   WARNING: Selecting too large of a subcube will hugely increase processing time.
-	   If you use a large cube, be sure to set deltadeltaX to be larger in corrgen."""
+
+	Returns:
+	-----------
+	subcube : spectral cube (?)
+		The data inside the selected subcube.
+"""
 
 	cube = SpectralCube.read(filename+".fits")
 	data = cube.filled_data[:]   # Pulls "cube"'s information (position, spectral info (?)) into a 3D Numpy array.
@@ -53,21 +70,24 @@ def cubegen(vmin,vmax,ymin,ymax,xmin,xmax, filename = "paws_norot", drawmap = Fa
 	return subcube
 
 def corrgen(subcube0, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV = 1):
-
-	"""Returns a 3D correlation function map from a given subcube.
-	
-	   Argument format: "(<subcube>, deltaX (default=30), deltaV (default=3)),
-	   deltadeltaX (default=1), deltadeltaV (default=1), mapname (default="3Dcube"))".
-	   "deltaX" is the maximum value of dX and dY. "deltaV" is the maximum 
-	   value of dV. "deltadeltaX" is the step size along both dx and dy for the
-	   correlation function calculation, and it should be a factor of deltaX. "deltadeltaV"
-	   is the step size along dv for correlation function calculation, and it should be a 
-	   factor of deltaV.
+	"""
+	Returns a 3D correlation function map from a given subcube.
 
 
-	   Be aware that processing time will increase with large deltaX and deltaV 
-	   values, but can decrease with larger deltadeltaX at the cost of plot
-	   resolution."""
+	Parameters:
+	-----------
+	subcube : spectral cube (?)
+		The subcube generated in cubegen.
+	deltaX,...,deltadeltaV : int
+		Parameters used in relevant xi map.
+		WARNING: Selecting too large of a vmax-vmin will hugely increase
+		processing time.
+
+	Returns:
+	-----------
+	xi : array
+		3D map of the correlation function. The third dimension
+		represents shift in the spectral axis."""
 
 	data0 = subcube0.filled_data[:]
 
@@ -147,16 +167,27 @@ def corrgen(subcube0, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV = 1):
 
 
 def mapgen(xi, deltaX=30, deltaV=3, deltadeltaV=1, mapname="3Dcube", filename = "paws_norot"):
-	"""Generates and saves several 2D colour plots of the correlation function versus
+	"""
+	Generates and saves several 2D colour plots of the correlation function versus
 	   position; one for no shift in spectral dimension and one for "maximum" shift
 	   in spectral dimension.
 
-	   Argument format: (xi, deltaX=30, deltaV=3, deltadeltaV=1, mapname="3Dcube", 
-	   filename="paws_norot"). Plots are created using the resulting 3D matrix from 
-	   corrgen, and the same deltaX, deltaV, deltadeltaV that were used in corrgen. 
-	   Use the same filename as in cubegen.
+	Parameters:
+	-----------
+	xi : array
+		3D map of the correlation function, generated in corrgen.
+	deltaX,...,deltadeltaV : int
+		Parameters used in relevant xi map.
+	mapname : str
+		Name of the saved image of the subcube's xi map.
+	filename : str
+		Name of the .paws data file.
+		"paws_norot" for M51, "m33.co21_iram_CLEANED" for M33.
 
-	   Be sure that your filename and desired map name are in quotes."""
+	Returns:
+	-----------
+	none
+	"""
 
 	dX = deltaX                  	# This is simply the maximum absolute value of "dx". So if dX = 1, then dx = {-1,0,1}.
 	dY = np.copy(dX)                # Same as above, but for "dy". For simplicity, let it be the same as dX.
@@ -205,16 +236,41 @@ def mapgen(xi, deltaX=30, deltaV=3, deltadeltaV=1, mapname="3Dcube", filename = 
 	plt.clf()			# Clears the figure, allowing "Figure 2" to be used again if a function calls on mapgen more than once.
 
 def plotgen(xi, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV=3, mapname="3Dcube", filename="paws_norot", J = 10000):
-	"""Generates and saves a 1D plot of the azimuthally-averaged correlation function  
+	"""
+	Generates and saves a 1D plot of the azimuthally-averaged correlation function  
 	   versus radius, for each value of "dv".
 
-	   Argument format: (xi, deltaX, deltaV, deltadeltaX, deltadeltaV, mapname="3Dcube", 
-	   filename="paws_norot", J=1000). Plots are created using the resulting 3D matrix 
-	   from corrgen, and the same deltaX, deltaV, deltadeltaX, deltadeltaV that were used
-	   in corrgen. The "J" at the end is the number of iterations used in the bootstrap
-	   algorithm that will be used to generate error bars for the slope of the plot.
+	Parameters:
+	-----------
+	xi : array
+		3D map of the correlation function, generated in corrgen.
+	deltaX,...,deltadeltaV : int
+		Parameters used in relevant xi map.
+		Setting deltaX=0 will use velocity shift instead of
+		position shift.
+	mapname : str
+		Name of the saved image of the subcube's xi plot.
+	filename : str
+		Name of the .paws data file.
+		"paws_norot" for M51, "m33.co21_iram_CLEANED" for M33.
+	J : int
+		Number of loops used in the bootstrap algorithm (which is
+		used to generate error values for slope of log(xi) vs.
+		log(shift).
 
-	   Be sure that your filename and desired plot name (same as in mapgen) are in quotes."""
+	Returns:
+	-----------
+	coeff_a : float
+		Intercept of log(xi) vs. log(shift).
+	coeff_b : float
+		Slope of log(xi) vs. log(shift).
+	a_error : float
+		Standard error of coeff_a.
+	b_error : float
+		Standard error of coeff_b.
+
+	Note that this "shift" may be the shift of position OR radial
+		velocity, depending on your setting for deltaX."""
 
 
 
@@ -276,8 +332,21 @@ def plotgen(xi, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV=3, mapname="3Dcu
 		plt.xlabel('Distance from Initial Location (pc)')
 		plt.ylabel('Average xi')
 	#	plt.ylim([0.9,1.1])
-		plt.yscale('log')
-		plt.xscale('log')
+
+		# Turns the plot into log-log form as long as there are some positive values.
+		positive_value = False				# Checks if there are positive xi values.
+		for i in range (0, np.abs(dV/ddV)+1):
+			if np.nanmax(corr_funct[i][x_axis<dX*pixelwidthPC]) > 0:
+				positive_value = True
+
+		if positive_value == False:
+			print "~~~   ERROR: NO POSITIVE VALUES IN CORRELATION FUNCTION WHATSOEVER.  ~~~"
+			plt.savefig('plot_xi_'+mapname+'.png')
+			plt.clf()
+			return np.nan, np.nan, np.nan, np.nan		
+		else:
+			plt.yscale('log')
+			plt.xscale('log')
 
 		# Calculates the intercept (a) and slope (b) of log(average "xi") vs. log(radial distance) at distances between 50pc and 250pc.
 		Y = corr_funct[0][x_axis<dX*pixelwidthPC]
@@ -290,7 +359,11 @@ def plotgen(xi, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV=3, mapname="3Dcu
 		X = np.log10(X)
 		Y = np.log10(Y)
 		gooddata = np.isfinite(X)*np.isfinite(Y)
-		coeff_b, coeff_a = np.polyfit(X[gooddata], Y[gooddata], 1)
+		if (X[gooddata].size > 0) and (Y[gooddata].size > 0):
+			coeff_b, coeff_a = np.polyfit(X[gooddata], Y[gooddata], 1)
+		else:
+			print "ERROR: X and/or Y do not have any 'good' values."
+			return np.nan, np.nan, np.nan, np.nan
 		print coeff_a, coeff_b
 
 		# Generates standard deviation of slope (and, from there, error bars) using a bootstrap algorithm.
@@ -377,9 +450,11 @@ def plotgen(xi, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV=3, mapname="3Dcu
 		    plt.title('Corr. Funct. vs. "Radial Velocity Shift" from Center of xi Plots')
 		    plt.xlabel('Shift in Radial Velocity (km/s)')
 		    plt.ylabel('xi')
-
-		plt.yscale('log')
-		plt.xscale('log')
+		if np.nanmax(corr_funct)>0:
+			plt.yscale('log')
+			plt.xscale('log')
+		else:
+			print "ERROR!: "+mapname
 
 		# Calculates the intercept (a) and slope (b) of log(average "xi") vs. log(Radial Velocity Shift).
 		Y = corr_funct
@@ -423,7 +498,26 @@ def plotgen(xi, deltaX=30, deltaV=3, deltadeltaX=1, deltadeltaV=3, mapname="3Dcu
 
 
 def everythinggen(vmin, vmax, ymin, ymax, xmin, xmax, xi, deltaX, deltaV, deltadeltaX, deltadeltaV, imagename, filename):
-	
+	"""
+	Generates and saves a 3-panel image showing a Tmax map of the
+		selected region, a map of correlation function versus
+		position shift, and a plot of correlation function versus
+		position shift.
+
+	Parameters:
+	-----------
+	vmin,...,deltadeltaV : int
+		Parameters used in relevant xi map.
+	imagename : str
+		Name of the final saved image.
+	filename : str
+		Name of the .paws data file.
+		"paws_norot" for M51, "m33.co21_iram_CLEANED" for M33.
+
+	Returns:
+	-----------
+	none
+	"""
 	cube = SpectralCube.read(filename+".fits")
 	data = cube.filled_data[:]   # Pulls "cube"'s information (position, spectral info (?)) into a 3D Numpy array.
 	yshape = data.shape[1]/2.0
@@ -509,7 +603,7 @@ def everythinggen(vmin, vmax, ymin, ymax, xmin, xmax, xi, deltaX, deltaV, deltad
 	ax3.set_title('Avg. Corr. Funct. vs. Radial "Distance" from Center of xi Plots')
 	ax3.set_xlabel('Distance from Initial Location (pc)')
 	ax3.set_ylabel('Average xi')
-	ax3.legend(loc='lower right')
+	ax3.legend(loc='upper right')
 	### /Plot
 	plt.tight_layout()
 	plt.savefig('entire_xi_'+imagename+'.png')

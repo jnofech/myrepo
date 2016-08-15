@@ -47,18 +47,22 @@ def arrayM51(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, delt
 		Automatically DISABLED for 'xi'. (?)
 	xi_mode : int
 		For xi calculations only. 
-		When "xi_mode" is 0, the program will use a cube from the default 
-			.fits file and a "noise cube" from that same .fits file.
-		When "xi_mode" is 1, the program will use ONLY a cube from the 
-			filename+"_blank" .fits file, which is assumed to have 
-			NO NOISE. 
+		When "xi_mode" is 0, the program will use a cube from the 
+		   default .fits file and a "convolved cube" from that same
+		   .fits file.
+		When "xi_mode" is 1 (OBSOLETE), the program will use ONLY a 
+		   cube from the filename +"_blank" .fits file, which is 
+		   assumed to have NO NOISE.
+		When "xi_mode" is 2, the program functions like "xi_mode==0" 
+		   EXCEPT it then subtracts two similar maps that are 
+		   assumed to be made entirely of noise.
 	"""
 
 	galaxyname = 'M51'
 	filename = "paws_norot"
 
 	cube = SpectralCube.read(filename+".fits")
-	data = cube.filled_data[:]   				# Pulls "cube"'s information (position, spectral info (?)) into a 3D Numpy array.
+	data = cube.filled_data[:]   				# Pulls "cube"'s information (position, spectral axis) into a 3D Numpy array.
 
 	pixelwidthDEG = cube.header['CDELT2']			# The width of each pixel, in degrees.
 	distancePC = cube.header['DIST']			# The distance to the galaxy that M51's .fits file deals with, in parsecs.  (???) Is this number accurate, though?
@@ -180,37 +184,21 @@ def drawM51(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, delta
 		measured at 30% of maximum "xi").
 	xi_mode : int
 		For xi calculations only. 
-		When "xi_mode" is 0, the program will use a cube from the default 
-			.fits file and a "noise cube" from that same .fits file.
-		When "xi_mode" is 1, the program will use ONLY a cube from the 
-			filename+"_blank" .fits file, which is assumed to have 
-			NO NOISE.
+		When "xi_mode" is 0, the program will use a cube from the 
+		   default .fits file and a "convolved cube" from that same
+		   .fits file.
+		When "xi_mode" is 1 (OBSOLETE), the program will use ONLY a 
+		   cube from the filename +"_blank" .fits file, which is 
+		   assumed to have NO NOISE.
+		When "xi_mode" is 2, the program functions like "xi_mode==0" 
+		   EXCEPT it then subtracts two similar maps that are 
+		   assumed to be made entirely of noise.
 	Everything else : (various types)
 		Same variables (and selected values) as in arrayM51.
 
 	Returns:
 	-----------
-	t : Table
-		Table displaying the galaxy name and the x- and y-coordinates
-		of the first three S2/xi minima (above a certain threshold
-		radius).
-		Also saves the table in .csv and .bin formats, as 
-		'S2_minimal_M51_(vmin)to(vmax)(_norm).csv' and
-		'S2_minimal_M51_(vmin)to(vmax)(_norm).bin'.
-
-		The "_norm" bit is added onto the end if normalization is
-		activated.
-	t2 : Table
-		Table displaying the galaxy name and the x- and y-coordinates
-		of the position on the NORMALIZED S2/xi map at which S2/xi
-		crosses	S2threshold.
-		Also saves the table in .csv and .bin formats, as 
-		'S2/xi_thres_M51_(vmin)to(vmax)_norm.csv' and
-		'S2/xi_thres_M51_(vmin)to(vmax)_norm.bin'.
-
-		The "_norm" bit is added onto the end for clarity, but in 'S2'
-		mode, this table will only be generated if normalization==
-		True.
+	none
 	"""
 
 	galaxyname = 'M51'
@@ -253,6 +241,7 @@ def drawM51(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, delta
 			testcube = data[vmin:vmax,ymin:ymax,xmin:xmax]
 			if (np.float(np.count_nonzero(np.isnan(testcube))) / np.float(np.count_nonzero(testcube))) < 0.05:
 				# ^ Checks if there are a hugely-significant number of "NaN" values in the region.
+				print "LOOP: "+str(ymin)+", "+str(ymax)+", "+str(xmin)+", "+str(xmax)
 				if (mode=='s2') or (mode=='S2') or (mode=='s_2') or (mode=='S_2'):
 					Cubes_multi.draw(vmin,vmax,ymin,ymax,xmin,xmax,deltaX,deltaV,deltadeltaX,deltadeltaV,filename,galaxyname,normalization)
 				elif (mode=='xi') or (mode=='Xi'):
@@ -261,7 +250,6 @@ def drawM51(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=3, deltadeltaX=1, delta
 				else:
 					print "ERROR: 'mode' must be 'S2'/'S_2' or 'xi'."
 					return np.nan, np.nan
-				print "LOOP: "+str(ymin)+", "+str(ymax)+", "+str(xmin)+", "+str(xmax)
 				i = i+1
 	i = 0							# Resets the counter again.
 
@@ -505,11 +493,15 @@ def arrayM33(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=1, delt
 		Automatically DISABLED for 'xi'. (?)
 	xi_mode : int
 		For xi calculations only. 
-		When "xi_mode" is 0, the program will use a cube from the default 
-			.fits file and a "noise cube" from that same .fits file.
-		When "xi_mode" is 1, the program will use ONLY a cube from the 
-			filename+"_blank" .fits file, which is assumed to have 
-			NO NOISE. 
+		When "xi_mode" is 0, the program will use a cube from the 
+		   default .fits file and a "convolved cube" from that same
+		   .fits file.
+		When "xi_mode" is 1 (OBSOLETE), the program will use ONLY a 
+		   cube from the filename +"_blank" .fits file, which is 
+		   assumed to have NO NOISE.
+		When "xi_mode" is 2, the program functions like "xi_mode==0" 
+		   EXCEPT it then subtracts two similar maps that are 
+		   assumed to be made entirely of noise.
 	"""
 
 	galaxyname = 'M33'
@@ -637,11 +629,15 @@ def drawM33(mode='S2',vmin=40,vmax=80, deltaX=30, deltaV=6, deltadeltaX=1, delta
 		measured at 30% of maximum "xi").
 	xi_mode : int
 		For xi calculations only. 
-		When "xi_mode" is 0, the program will use a cube from the default 
-			.fits file and a "noise cube" from that same .fits file.
-		When "xi_mode" is 1, the program will use ONLY a cube from the 
-			filename+"_blank" .fits file, which is assumed to have 
-			NO NOISE.
+		When "xi_mode" is 0, the program will use a cube from the 
+		   default .fits file and a "convolved cube" from that same
+		   .fits file.
+		When "xi_mode" is 1 (OBSOLETE), the program will use ONLY a 
+		   cube from the filename +"_blank" .fits file, which is 
+		   assumed to have NO NOISE.
+		When "xi_mode" is 2, the program functions like "xi_mode==0" 
+		   EXCEPT it then subtracts two similar maps that are 
+		   assumed to be made entirely of noise.
 	Everything else : (various types)
 		Same variables (and selected values) as in arrayM33.
 
